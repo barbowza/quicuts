@@ -1,0 +1,9 @@
+/target
+node_modules/
+ui/dist/
+crates/quicuts-app/binaries/*.exe
+crates/quicuts-app/gen/
+.cache/
+*.log
+.claude/
+*.code-workspace

@@ -1,0 +1,10 @@
+[package]
+name = "quicuts-proto"
+description = "IPC contract between the Quicuts app and its system-agent sidecars"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }

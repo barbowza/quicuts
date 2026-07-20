@@ -1,0 +1,5 @@
+Quicuts bundles shortcut manifests from Microsoft PowerToys
+https://github.com/microsoft/PowerToys — licensed MIT (see POWERTOYS-LICENSE).
+
+Exception: Evernote.Evernote.en-US.yml is authored by the Quicuts project
+(not from PowerToys).

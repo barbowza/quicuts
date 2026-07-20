@@ -1,0 +1,541 @@
+PackageName: Evernote.Evernote
+Name: Evernote
+WindowFilter: "evernote.exe"
+BackgroundProcess: false
+Shortcuts:
+  - SectionName: Global
+    Properties:
+      - Name: Open quick note (Evernote Helper)
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - H
+      - Name: New note in a new window
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - N
+      - Name: Search in Evernote
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - F
+      - Name: Capture screen
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - S
+      - Name: Paste clipboard as new note
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - V
+  - SectionName: Frequently used
+    Properties:
+      - Name: New note
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - N
+      - Name: Quick switch to note, notebook, or tag
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - Q
+      - Name: Jump to search bar
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - F
+      - Name: Open keyboard shortcuts drawer
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "/"
+      - Name: Print note
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - P
+      - Name: Undo
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - Z
+      - Name: Redo
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - Y
+      - Name: Cut
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - X
+      - Name: Copy
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - C
+      - Name: Paste
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - V
+      - Name: Paste and match style
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - V
+      - Name: Select all
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - A
+      - Name: Find within note
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - F
+      - Name: Find next
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - G
+      - Name: Find previous
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - G
+  - SectionName: Navigation
+    Properties:
+      - Name: Show all notes
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - "<1>"
+      - Name: Show notebooks
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - "<2>"
+      - Name: Show tags
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - "<3>"
+      - Name: Open shortcut 1-9
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<1>"
+      - Name: Move back
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "["
+      - Name: Move forward
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "]"
+      - Name: Set focus to note list
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - "\\"
+      - Name: Show or hide navigation menu
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F10
+      - Name: Full screen
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F11
+      - Name: Rename item
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F2
+      - Name: Display note info
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - I
+      - Name: Move note to notebook
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - M
+      - Name: Zoom in
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - Plus
+      - Name: Zoom out
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - Minus
+      - Name: Reset zoom
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<0>"
+  - SectionName: Editing
+    Properties:
+      - Name: Copy internal note link
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - L
+      - Name: Insert date
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - D
+      - Name: Insert time
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - D
+      - Name: Encrypt selected text
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - X
+      - Name: Simplify formatting
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - Space
+      - Name: Increase indentation
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - M
+      - Name: Decrease indentation
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - M
+  - SectionName: Formatting
+    Properties:
+      - Name: Bold
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - B
+      - Name: Italic
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - I
+      - Name: Underline
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - U
+      - Name: Strikethrough
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - T
+      - Name: Highlight
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - H
+      - Name: Bulleted list
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - B
+      - Name: Numbered list
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - O
+      - Name: Insert checkbox
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - C
+      - Name: Add or edit link
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - K
+      - Name: Remove link
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - K
+      - Name: Insert divider
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - Minus
+      - Name: Align left
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - L
+      - Name: Align center
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - E
+      - Name: Align right
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - J
+      - Name: Increase font size
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "."
+      - Name: Decrease font size
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - ","
+      - Name: Superscript
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Up>"
+      - Name: Subscript
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Down>"
+  - SectionName: Note list
+    Properties:
+      - Name: Previous note
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Up>"
+      - Name: Next note
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Down>"
+      - Name: Move note to trash
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - Delete
+      - Name: Close note window
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - W
+      - Name: Set focus to note editor
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Enter>"

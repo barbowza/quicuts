@@ -1,0 +1,76 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Quicuts",
+  "version": "0.1.0",
+  "identifier": "com.barbowza.quicuts",
+  "build": {
+    "frontendDist": "../../ui/dist",
+    "beforeBuildCommand": "",
+    "beforeDevCommand": ""
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "overlay",
+        "url": "overlay.html",
+        "title": "Quicuts",
+        "width": 586,
+        "height": 720,
+        "visible": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "resizable": false,
+        "focus": false
+      },
+      {
+        "label": "badges",
+        "url": "badges.html",
+        "title": "Quicuts badges",
+        "width": 800,
+        "height": 80,
+        "visible": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "shadow": false,
+        "resizable": false,
+        "focus": false
+      },
+      {
+        "label": "settings",
+        "url": "settings.html",
+        "title": "Quicuts settings",
+        "width": 620,
+        "height": 720,
+        "minWidth": 440,
+        "minHeight": 400,
+        "maxWidth": 732,
+        "maxHeight": 1170,
+        "visible": false,
+        "resizable": true,
+        "skipTaskbar": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' asset: http://asset.localhost icon: http://icon.localhost data:; style-src 'self' 'unsafe-inline'"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "externalBin": ["binaries/quicuts-agent"],
+    "resources": ["../../manifests/*.yml", "../../manifests/*.png"]
+  }
+}

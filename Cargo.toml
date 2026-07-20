@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/quicuts-proto",
+    "crates/quicuts-manifest",
+    "crates/quicuts-agent-win",
+    "crates/quicuts-app",
+]
+# Only the platform-free crates build/test on the Linux host toolchain.
+# quicuts-agent-win and quicuts-app are cross-compiled explicitly (see justfile).
+default-members = ["crates/quicuts-proto", "crates/quicuts-manifest"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/barbowza/quicuts"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+log = "0.4"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

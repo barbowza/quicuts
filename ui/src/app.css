@@ -1,0 +1,51 @@
+:root {
+  /* Panel background opacity; driven by the settings slider via JS. */
+  --panel-alpha: 0.82;
+  --bg: rgba(243, 243, 243, var(--panel-alpha));
+  --panel: rgba(255, 255, 255, 0.6);
+  --fg: #1a1a1a;
+  --muted: #5a5a5a;
+  --accent: #0f5939;
+  --cap-bg: #ffffff;
+  --cap-border: #cfcfcf;
+  --cap-border-default: #5b9e6b; /* green: manifest default */
+  --cap-border-custom: #d0a01e; /* yellow: user customization */
+  --cap-border-redefined: #8f8f8f; /* mid-gray: reassigned default */
+  --cap-fg: #222;
+  --rail-hover: rgba(0, 0, 0, 0.06);
+  --rail-selected: rgba(15, 89, 57, 0.14);
+  --divider: rgba(0, 0, 0, 0.08);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+:root[data-theme="dark"] {
+  --bg: rgba(32, 32, 32, var(--panel-alpha));
+  --panel: rgba(48, 48, 48, 0.55);
+  --fg: #f2f2f2;
+  --muted: #b0b0b0;
+  --accent: #3ecf8e;
+  --cap-bg: #2b2b2b;
+  --cap-border: #4a4a4a;
+  --cap-border-default: #4f8a5f;
+  --cap-border-custom: #b08a2a;
+  --cap-border-redefined: #707070;
+  --cap-fg: #eee;
+  --rail-hover: rgba(255, 255, 255, 0.06);
+  --rail-selected: rgba(62, 207, 142, 0.16);
+  --divider: rgba(255, 255, 255, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: transparent;
+  color: var(--fg);
+  overflow: hidden;
+  user-select: none;
+}
