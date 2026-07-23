@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Quicuts is a cross-platform (Windows-first, macOS fast-follow) clone of PowerToys **Shortcut Guide v2**: a side-docked, app-aware panel of keyboard shortcuts shown when you hold Win/Cmd or press a hotkey chord. It imports PowerToys' YAML shortcut manifests unchanged (34 bundled in `manifests/`).
+Quicuts is a cross-platform (Windows-first, macOS fast-follow) clone of PowerToys **Shortcut Guide v2**: a side-docked, app-aware panel of keyboard shortcuts shown when you hold Win/Cmd or press a hotkey chord. It imports PowerToys' YAML shortcut manifests unchanged (39 bundled in `manifests/`).
 
 Built with **Tauri v2** — Rust backend + Svelte 5/Vite frontend.
 
@@ -67,4 +67,4 @@ Match foreground app by: lowercase exe name, strip one trailing `.exe`, then exa
 
 ## Status & references
 
-M1-level skeleton verified booting on a real Windows host. Remaining: on-host interactive verification of hold-to-show + Win-key suppression (Spike 0), then M2–M5. ADRs: `docs/adr/0001` (why Tauri v2), `docs/adr/0002` (the no-sudo cross-toolchain).
+Working daily-driver on Windows: hold-to-show with Win-key suppression, app-aware panels, taskbar badges, pinning, and customizations are verified on a real host. Experimental web-app title detection (hosted collections) is implemented behind a settings toggle. The macOS agent is not yet started — the IPC protocol is the seam it will plug into. ADRs: `docs/adr/0001` (why Tauri v2), `docs/adr/0002` (the no-sudo cross-toolchain), `docs/adr/0003` (hosted collections), `docs/adr/0004` (unsupported-app placeholder).

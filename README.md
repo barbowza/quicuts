@@ -1,11 +1,28 @@
 # Quicuts — universal shortcuts guide
 
-A cross-platform (Windows + macOS) shortcuts quick-finder modelled after
-Windows PowerToys **Shortcut Guide**, built with Tauri v2. 
+A shortcuts quick-finder modelled after Windows PowerToys
+**Shortcut Guide**, built with Tauri v2. Windows today; macOS is planned
+(the platform-specific code sits behind an IPC seam for exactly that reason).
 
-It shows a side-docked, app-aware panel of keyboard shortcuts when you 
+It shows a side-docked, app-aware panel of keyboard shortcuts when you
 hold Win/Cmd or press a hotkey, and imports PowerToys' YAML shortcut
 manifests unchanged.
+
+## Features
+
+- **Hold Win** (or a configurable hotkey chord) to show the panel; release or
+  Esc to dismiss. A quick Win tap still opens the Start menu, and Win+E-style
+  combos pass through untouched.
+- **App-aware**: the panel shows the shortcuts for whatever app is in the
+  foreground, with an app rail for browsing every loaded manifest.
+- **Taskbar badges**: number pills over the taskbar buttons while the panel
+  is up, matching the Win+1…9 launch shortcuts.
+- **Pinning** and per-shortcut **customizations** (see below), stored in plain
+  YAML separate from the bundled manifests.
+- **Web apps (experimental)**: title-based detection of hosted apps like Gmail
+  running inside a browser tab.
+- ~40 bundled manifests imported from PowerToys, plus any you drop in from a
+  PowerToys installation or write yourself.
 
 ## Architecture
 
@@ -35,8 +52,9 @@ just kill          # stop it
 just dev-server    # + `just dev-build` in another shell for frontend HMR
 ```
 
-See `docs/adr/` for the framework choice (0001) and the no-sudo cross-toolchain
-(0002).
+See `docs/adr/` for the architecture decision records: the framework choice
+(0001), the no-sudo cross-toolchain (0002), hosted web-app collections (0003),
+and the unsupported-app placeholder (0004).
 
 
 ### Running directly from Windows (restart Quicuts)
@@ -116,7 +134,13 @@ Format rules:
 
 ## Status
 
-M1-level skeleton complete and verified booting on a real Windows host (34
-manifests load, sidecar hook installs, NDJSON handshake works). Remaining:
-on-host interactive verification of hold-to-show + Win-key suppression, then
-M2–M5 per the plan.
+Working daily-driver on Windows: hold-to-show with Win-key suppression,
+app-aware panels, taskbar badges, pinning, and customizations are all in use
+on a real host. Experimental web-app title detection is implemented behind a
+settings toggle. The macOS agent is not yet started — the IPC protocol is the
+seam it will plug into.
+
+## License
+
+MIT — see `LICENSE`. The bundled manifests are from PowerToys, also MIT
+(`manifests/POWERTOYS-LICENSE`, `NOTICE.txt`).
