@@ -2,6 +2,7 @@
   import type { ChordSpec, KeyCombo } from "../lib/types";
   import { onModalEsc, setOverlayModal } from "../lib/ipc";
   import { comboToCaps, type Binding, type Platform } from "./keys";
+  import KeyIcon from "./KeyIcon.svelte";
   import KeyVisual from "./KeyVisual.svelte";
 
   let {
@@ -145,13 +146,13 @@
   <section>
     <h3>Showing the panel</h3>
     <p>
-      Hold the <kbd>⊞</kbd> key to peek at the shortcuts for the app you're using — release to
-      hide. Press the activation chord (default <kbd>⊞</kbd><kbd>⇧</kbd><kbd>/</kbd>, changeable
+      Hold the <kbd><KeyIcon name="win" /></kbd> key to peek at the shortcuts for the app you're using — release to
+      hide. Press the activation chord (default <kbd><KeyIcon name="win" /></kbd><kbd><KeyIcon name="shift" /></kbd><kbd>/</kbd>, changeable
       in Settings) to keep the panel on screen; press it again or <kbd>Esc</kbd> to close it.
     </p>
     <p>
       Real shortcuts still work while the panel is up: pressing something like
-      <kbd>⊞</kbd><kbd>E</kbd> passes through to Windows and hides the panel.
+      <kbd><KeyIcon name="win" /></kbd><kbd>E</kbd> passes through to Windows and hides the panel.
     </p>
   </section>
 
@@ -220,7 +221,7 @@
     <h3>Taskbar badges</h3>
     <p>
       While the panel is up, numbered chips appear over the taskbar buttons showing what
-      <kbd>⊞</kbd><kbd>1</kbd>…<kbd>9</kbd> launches. Toggle them in Settings.
+      <kbd><KeyIcon name="win" /></kbd><kbd>1</kbd>…<kbd>9</kbd> launches. Toggle them in Settings.
     </p>
   </section>
 
@@ -230,7 +231,7 @@
       Open with the ⚙ button{#if settingsChordEnabled}
         or press
         {#each settingsCaps as cap, i}{#if i > 0}<span class="plus">+</span>{/if}<kbd
-          >{cap.label}</kbd
+          >{#if cap.icon}<KeyIcon name={cap.icon} />{:else}{cap.label}{/if}</kbd
         >{/each}
         while the panel is focused{/if}. Activation, appearance, panel edge, and the options
       mentioned above all live there.

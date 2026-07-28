@@ -6,6 +6,10 @@ import type { Key, KeyCombo, GlyphToken } from "../lib/types";
 
 export type Platform = "windows" | "macos";
 
+/** Keys drawn as SVG icons (KeyIcon.svelte) instead of a Unicode label —
+ *  the font glyphs (⊞ ⇧ ← …) are thin and small at keycap sizes. */
+export type KeyIconName = "win" | "shift" | "up" | "down" | "left" | "right";
+
 export interface Cap {
   label: string;
   /** Typeable words for the filter box when the label is a glyph ("win",
@@ -14,6 +18,8 @@ export interface Cap {
   /** underline the single letter (for <Underlined letter>) */
   underline?: boolean;
   wide?: boolean;
+  /** Render this icon instead of the label (which stays for filtering). */
+  icon?: KeyIconName;
 }
 
 // Filter aliases for tokens whose GLYPHS entry is untypeable; word-labeled
@@ -111,6 +117,21 @@ const VK_SEARCH: Record<number, string> = {
   0x28: "down",
 };
 
+const GLYPH_ICONS: Partial<Record<GlyphToken, KeyIconName>> = {
+  left: "left",
+  right: "right",
+  up: "up",
+  down: "down",
+};
+
+const VK_ICONS: Record<number, KeyIconName> = {
+  0x10: "shift",
+  0x25: "left",
+  0x26: "up",
+  0x27: "right",
+  0x28: "down",
+};
+
 function vkLabel(vk: number): string | undefined {
   // Bare "0"-"9" manifest tokens parse as VK 0-9; render them back as digits.
   // This wins over the VK 8/9 (Backspace/Tab) reading — manifests spell those out.
@@ -123,11 +144,13 @@ function vkLabel(vk: number): string | undefined {
   return VK_LABELS[vk];
 }
 
-function winModLabel(kind: "win" | "ctrl" | "alt" | "shift", platform: Platform): string {
+function winModCap(kind: "win" | "ctrl" | "alt" | "shift", platform: Platform): Cap {
   if (platform === "macos") {
-    return { win: "⌘", ctrl: "⌃", alt: "⌥", shift: "⇧" }[kind];
+    return { label: { win: "⌘", ctrl: "⌃", alt: "⌥", shift: "⇧" }[kind], search: kind };
   }
-  return { win: "⊞", ctrl: "Ctrl", alt: "Alt", shift: "⇧" }[kind];
+  const label = { win: "⊞", ctrl: "Ctrl", alt: "Alt", shift: "⇧" }[kind];
+  const icon = kind === "win" ? ("win" as const) : kind === "shift" ? ("shift" as const) : undefined;
+  return { label, search: kind, icon };
 }
 
 function keyToCap(key: Key, platform: Platform): Cap {
@@ -137,15 +160,19 @@ function keyToCap(key: Key, platform: Platform): Cap {
     case "angle_literal":
       return { label: key.value };
     case "glyph":
-      return { label: GLYPHS[key.value] ?? key.value, search: GLYPH_SEARCH[key.value] };
+      return {
+        label: GLYPHS[key.value] ?? key.value,
+        search: GLYPH_SEARCH[key.value],
+        icon: GLYPH_ICONS[key.value],
+      };
     case "underlined_letter":
       return { label: "", underline: true };
     case "taskbar_range":
       return { label: "Num" };
     case "vk": {
       const known = vkLabel(key.value);
-      if (known === "WIN") return { label: winModLabel("win", platform), search: "win" };
-      if (known) return { label: known, search: VK_SEARCH[key.value] };
+      if (known === "WIN") return winModCap("win", platform);
+      if (known) return { label: known, search: VK_SEARCH[key.value], icon: VK_ICONS[key.value] };
       return { label: `VK${key.value}` };
     }
   }
@@ -154,10 +181,10 @@ function keyToCap(key: Key, platform: Platform): Cap {
 /** Ordered keycaps for one combo: modifiers first (Win, Ctrl, Alt, Shift). */
 export function comboToCaps(combo: KeyCombo, platform: Platform): Cap[] {
   const caps: Cap[] = [];
-  if (combo.win) caps.push({ label: winModLabel("win", platform), search: "win" });
-  if (combo.ctrl) caps.push({ label: winModLabel("ctrl", platform), search: "ctrl" });
-  if (combo.alt) caps.push({ label: winModLabel("alt", platform), search: "alt" });
-  if (combo.shift) caps.push({ label: winModLabel("shift", platform), search: "shift" });
+  if (combo.win) caps.push(winModCap("win", platform));
+  if (combo.ctrl) caps.push(winModCap("ctrl", platform));
+  if (combo.alt) caps.push(winModCap("alt", platform));
+  if (combo.shift) caps.push(winModCap("shift", platform));
   for (const k of combo.keys) caps.push(keyToCap(k, platform));
   return caps;
 }

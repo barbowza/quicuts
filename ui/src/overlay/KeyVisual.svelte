@@ -1,4 +1,5 @@
 <script lang="ts">
+  import KeyIcon from "./KeyIcon.svelte";
   import { comboToCaps, type Binding, type Platform } from "./keys";
 
   let {
@@ -17,7 +18,9 @@
         <span class="combo">
           {#each comboToCaps(combo, platform) as cap, j}
             {#if j > 0}<span class="plus">+</span>{/if}
-            <kbd class={`k-${b.kind}`} class:underline={cap.underline}>{cap.label || "•"}</kbd>
+            <kbd class={`k-${b.kind}`} class:underline={cap.underline}
+              >{#if cap.icon}<KeyIcon name={cap.icon} />{:else}{cap.label || "•"}{/if}</kbd
+            >
           {/each}
         </span>
       </span>

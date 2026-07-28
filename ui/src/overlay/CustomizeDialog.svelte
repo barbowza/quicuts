@@ -8,6 +8,7 @@
     setOverlayModal,
   } from "../lib/ipc";
   import { customBindings, defaultBindings, eventToKey, type Platform } from "./keys";
+  import KeyIcon from "./KeyIcon.svelte";
   import KeyVisual from "./KeyVisual.svelte";
 
   let {
@@ -154,7 +155,7 @@
             title="Add the ⊞ Win modifier to the next chord (the physical Win key is reserved by the system)"
           >
             <input type="checkbox" bind:checked={winMod} />
-            ⊞
+            <KeyIcon name="win" />
           </label>
         </div>
         <div class="capture-foot">
