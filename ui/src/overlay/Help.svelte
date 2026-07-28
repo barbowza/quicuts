@@ -204,7 +204,7 @@
     <h3>Customizing shortcuts</h3>
     <p>
       Double-click a shortcut row to open its customization dialog: add your own key combos
-      (type the chords, <kbd>↵</kbd> saves) or mark a default as reassigned when you've changed
+      (type the chords, <kbd><KeyIcon name="enter" /></kbd> saves) or mark a default as reassigned when you've changed
       it in the app itself.
     </p>
   </section>

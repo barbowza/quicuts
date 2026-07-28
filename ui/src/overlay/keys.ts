@@ -7,8 +7,19 @@ import type { Key, KeyCombo, GlyphToken } from "../lib/types";
 export type Platform = "windows" | "macos";
 
 /** Keys drawn as SVG icons (KeyIcon.svelte) instead of a Unicode label —
- *  the font glyphs (⊞ ⇧ ← …) are thin and small at keycap sizes. */
-export type KeyIconName = "win" | "shift" | "up" | "down" | "left" | "right";
+ *  the font glyphs (⊞ ⇧ ← ↵ ⌫ …) are thin and small at keycap sizes. */
+export type KeyIconName =
+  | "win"
+  | "shift"
+  | "up"
+  | "down"
+  | "left"
+  | "right"
+  | "arrow"
+  | "arrowLr"
+  | "arrowUd"
+  | "enter"
+  | "backspace";
 
 export interface Cap {
   label: string;
@@ -122,9 +133,16 @@ const GLYPH_ICONS: Partial<Record<GlyphToken, KeyIconName>> = {
   right: "right",
   up: "up",
   down: "down",
+  arrow: "arrow",
+  arrow_l_r: "arrowLr",
+  arrow_u_d: "arrowUd",
+  enter: "enter",
+  backspace: "backspace",
 };
 
 const VK_ICONS: Record<number, KeyIconName> = {
+  0x08: "backspace",
+  0x0d: "enter",
   0x10: "shift",
   0x25: "left",
   0x26: "up",
