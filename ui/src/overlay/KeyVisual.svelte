@@ -32,7 +32,7 @@
     display: inline-flex;
     flex-direction: column;
     align-items: flex-end;
-    gap: 4px;
+    gap: 0.25rem;
   }
   .combos.start {
     align-items: flex-start;
@@ -40,16 +40,16 @@
   .combo {
     display: inline-flex;
     align-items: center;
-    gap: 3px;
+    gap: 0.1875rem;
   }
   kbd {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 24px;
-    height: 26px;
-    padding: 0 7px;
-    font-size: 12px;
+    min-width: 1.5rem;
+    height: 1.625rem;
+    padding: 0 0.4375rem;
+    font-size: 0.75rem;
     font-family: inherit;
     background: var(--cap-bg);
     color: var(--cap-fg);
@@ -79,15 +79,15 @@
   .line {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 0.375rem;
   }
   .plus {
     color: var(--muted);
-    font-size: 11px;
+    font-size: 0.6875rem;
   }
   .sep {
     color: var(--muted);
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-style: italic;
   }
 </style>

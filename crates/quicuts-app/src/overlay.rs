@@ -5,7 +5,8 @@ use tauri::{AppHandle, Emitter, LogicalSize, Manager, PhysicalPosition, Physical
 
 use crate::app_state::AppState;
 
-const PANEL_WIDTH: f64 = 586.0;
+/// The classic panel width; also the minimum the user can drag down to.
+const MIN_PANEL_WIDTH: f64 = 586.0;
 
 /// Recompute the overlay view model and push it to the overlay window.
 pub fn push_state(app: &AppHandle) {
@@ -197,12 +198,99 @@ fn position_panel(app: &AppHandle, window: &tauri::WebviewWindow, edge: &str) {
         }
         None => (0, 0, 1920, 1080, 1.0),
     };
-    let panel_px = (PANEL_WIDTH * scale) as u32;
+    let mh_logical = mh as f64 / scale;
+    // Half the work area is the drag ceiling as well as the auto-mode clamp.
+    let max_w = (mw as f64 / scale / 2.0).max(MIN_PANEL_WIDTH);
+    let width = desired_panel_width(app).clamp(MIN_PANEL_WIDTH, max_w);
+    // Width-only drag resizing: pin the height via min/max, bound the width.
+    let _ = window.set_min_size(Some(LogicalSize::new(MIN_PANEL_WIDTH, mh_logical)));
+    let _ = window.set_max_size(Some(LogicalSize::new(max_w, mh_logical)));
+    // Our own set_size calls echo back as Resized events; remember the width
+    // so on_resized can tell them apart from a user drag.
+    *app.state::<AppState>().panel_expected_w.lock().unwrap() = Some(width.round() as u32);
+    let panel_px = (width * scale) as u32;
     let _ = window.set_size(PhysicalSize::new(panel_px, mh));
     let x = if edge == "left" { mx } else { mx + mw as i32 - panel_px as i32 };
     let _ = window.set_position(PhysicalPosition::new(x, my));
     // Keep the logical width stable regardless of DPI for the web layout.
-    let _ = window.set_size(LogicalSize::new(PANEL_WIDTH, mh as f64 / scale));
+    let _ = window.set_size(LogicalSize::new(width, mh_logical));
+}
+
+/// Logical panel width from settings: the dragged base width, times the
+/// font scale in auto-width mode (ADR 0005). Monitor clamping happens in
+/// `position_panel`, where the work area is known.
+fn desired_panel_width(app: &AppHandle) -> f64 {
+    let state = app.state::<AppState>();
+    let s = state.settings.lock().unwrap();
+    let base = s.appearance.panel_width.max(MIN_PANEL_WIDTH);
+    if s.appearance.auto_width_resize { base * s.appearance.font_scale } else { base }
+}
+
+/// Re-apply the panel's size/position from settings while it is visible —
+/// font-scale changes in auto-width mode move the dragged edge live.
+pub fn reposition(app: &AppHandle) {
+    let state = app.state::<AppState>();
+    if !*state.overlay_visible.lock().unwrap() {
+        return;
+    }
+    let Some(window) = app.get_webview_window("overlay") else {
+        return;
+    };
+    let edge = state.settings.lock().unwrap().appearance.panel_edge.clone();
+    position_panel(app, &window, &edge);
+}
+
+/// A Resized event on the overlay. Our own set_size calls echo back here
+/// (matching `panel_expected_w`); anything else while visible is the user
+/// dragging the panel edge — persist the new width, debounced because a
+/// drag fires a burst of events.
+pub fn on_resized(app: &AppHandle, size: PhysicalSize<u32>) {
+    let state = app.state::<AppState>();
+    if !*state.overlay_visible.lock().unwrap() {
+        return;
+    }
+    let Some(window) = app.get_webview_window("overlay") else {
+        return;
+    };
+    let scale = window.scale_factor().unwrap_or(1.0);
+    let logical_w = (size.width as f64 / scale).round();
+    {
+        let mut expected = state.panel_expected_w.lock().unwrap();
+        match *expected {
+            // ±1 px absorbs DPI rounding between our two set_size calls.
+            Some(w) if (logical_w - w as f64).abs() <= 1.0 => return,
+            _ => *expected = Some(logical_w as u32),
+        }
+    }
+    // The user dragged the *effective* width; in auto mode store the base
+    // that multiplies back to it, so the drag doesn't compound with scale.
+    let base = {
+        let s = state.settings.lock().unwrap();
+        let b = if s.appearance.auto_width_resize {
+            logical_w / s.appearance.font_scale
+        } else {
+            logical_w
+        };
+        b.max(MIN_PANEL_WIDTH)
+    };
+    let gen = {
+        let mut g = state.panel_resize_gen.lock().unwrap();
+        *g += 1;
+        *g
+    };
+    let app = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(400));
+        let state = app.state::<AppState>();
+        if *state.panel_resize_gen.lock().unwrap() != gen {
+            return; // a newer drag event superseded this one
+        }
+        let mut s = state.settings.lock().unwrap();
+        s.appearance.panel_width = base;
+        if let Err(e) = s.save(&state.config_dir) {
+            log::error!("failed to save panel width: {e}");
+        }
+    });
 }
 
 /// Monitor whose bounds contain the given physical point.

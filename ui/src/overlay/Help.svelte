@@ -59,6 +59,17 @@
       : []),
     { name: "Find shortcuts", desc: "Focus the find box", bindings: asBindings(ctrlKey("F")) },
     { name: "Help", desc: "Toggle this page", bindings: asBindings(ctrlKey("H")) },
+    {
+      name: "Bigger text",
+      desc: "Increase the panel's font size",
+      bindings: asBindings(ctrlKey("+")),
+    },
+    {
+      name: "Smaller text",
+      desc: "Decrease the panel's font size",
+      bindings: asBindings(ctrlKey("-")),
+    },
+    { name: "Reset text size", desc: "Back to 100%", bindings: asBindings(ctrlKey("0")) },
     ...(settingsChordEnabled
       ? [
           {
@@ -234,7 +245,7 @@
 
 <style>
   .help {
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1.55;
   }
   header {
@@ -245,7 +256,7 @@
   }
   .title {
     flex: 1;
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 600;
   }
   .close {
@@ -253,7 +264,7 @@
     background: transparent;
     color: var(--muted);
     cursor: pointer;
-    font-size: 14px;
+    font-size: 0.875rem;
     padding: 2px 4px;
   }
   .close:hover {
@@ -277,17 +288,17 @@
     min-width: 0;
   }
   .name {
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
   .desc {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--muted);
   }
   .keys {
     flex-shrink: 0;
   }
   h3 {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -316,7 +327,7 @@
   }
   code {
     padding: 1px 5px;
-    font-size: 12px;
+    font-size: 0.75rem;
     background: var(--panel);
     border: 1px solid var(--divider);
     border-radius: 4px;
@@ -325,11 +336,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 20px;
-    height: 21px;
-    padding: 0 5px;
+    min-width: 1.25rem;
+    height: 1.3125rem;
+    padding: 0 0.3125rem;
     margin: 0 1px;
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-family: inherit;
     background: var(--cap-bg);
     color: var(--cap-fg);
@@ -352,7 +363,7 @@
   }
   .plus {
     color: var(--muted);
-    font-size: 11px;
+    font-size: 0.6875rem;
     margin: 0 1px;
   }
 </style>

@@ -110,7 +110,7 @@
     background: transparent;
     padding: 4px 6px;
     cursor: pointer;
-    font-size: 11px;
+    font-size: 0.6875rem;
     border-radius: 5px;
     /* Hidden until the row is hovered or the pin is set. */
     opacity: 0;
@@ -133,7 +133,7 @@
     border: none;
     background: transparent;
     color: var(--muted);
-    font-size: 11px;
+    font-size: 0.6875rem;
     line-height: 1.4;
     cursor: pointer;
   }
@@ -141,8 +141,8 @@
     color: var(--fg);
   }
   img {
-    width: 18px;
-    height: 18px;
+    width: 1.125rem;
+    height: 1.125rem;
     flex-shrink: 0;
   }
   /* Letter-tile fallback for apps without an icon (e.g. hosted
@@ -151,19 +151,19 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 18px;
-    height: 18px;
+    width: 1.125rem;
+    height: 1.125rem;
     flex-shrink: 0;
     border-radius: 4px;
     background: var(--cap-bg);
     border: 1px solid var(--cap-border);
     color: var(--cap-fg);
-    font-size: 11px;
+    font-size: 0.6875rem;
     font-weight: 600;
     line-height: 1;
   }
   .label {
-    font-size: 12.5px;
+    font-size: 0.78125rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

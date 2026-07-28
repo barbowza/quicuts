@@ -254,6 +254,7 @@ pub fn send(app: &AppHandle, cmd: &AgentCommand) {
 struct AppearancePayload {
     theme: String,
     panel_opacity: f64,
+    font_scale: f64,
 }
 
 #[cfg(test)]
@@ -311,6 +312,7 @@ pub fn emit_appearance(app: &AppHandle) {
         AppearancePayload {
             theme: settings.appearance.theme.clone(),
             panel_opacity: settings.appearance.panel_opacity,
+            font_scale: settings.appearance.font_scale,
         }
     };
     let _ = app.emit("appearance://changed", payload);

@@ -71,10 +71,11 @@ pub fn run() {
             commands::set_pinned_app,
             commands::get_settings,
             commands::set_settings,
+            commands::adjust_font_scale,
         ])
         .on_window_event(|window, event| match window.label() {
-            "overlay" => {
-                if let WindowEvent::Focused(false) = event {
+            "overlay" => match event {
+                WindowEvent::Focused(false) => {
                     let app = window.app_handle();
                     // Sticky mode: keep the panel up while the user returns to
                     // their app to try the shortcuts.
@@ -90,7 +91,12 @@ pub fn run() {
                         &quicuts_proto::AgentCommand::SetOverlayVisible { visible: false },
                     );
                 }
-            }
+                // Dragging the panel edge persists the width (ADR 0005).
+                WindowEvent::Resized(size) => {
+                    overlay::on_resized(window.app_handle(), *size);
+                }
+                _ => {}
+            },
             // Keep the settings/badges windows alive across closes so they can
             // be reopened; hide instead of destroy.
             "settings" | "badges" => {
@@ -140,6 +146,8 @@ pub fn run() {
                 overlay_visible: Mutex::new(false),
                 filter_active: Mutex::new(false),
                 overlay_modal: Mutex::new("none".into()),
+                panel_expected_w: Mutex::new(None),
+                panel_resize_gen: Mutex::new(0),
             });
 
             tray::build(&handle)?;

@@ -16,6 +16,7 @@
     selectApp,
     setPinnedApp,
     openSettings,
+    adjustFontScale,
   } from "../lib/ipc";
   import { applyAppearance } from "../lib/theme";
   import { comboToCaps, sequenceEntryKeys } from "./keys";
@@ -165,9 +166,9 @@
 
   $effect(() => {
     const unlisten = onOverlayState((s) => (view = s));
-    const unlistenAppearance = onAppearance((a) => applyAppearance(a));
+    const unlistenAppearance = onAppearance((a) => applyAppearance(a, true));
     const unlistenClear = onClearFilter(() => (filter = ""));
-    getAppearance().then((a) => a && applyAppearance(a));
+    getAppearance().then((a) => a && applyAppearance(a, true));
     const onKey = (e: KeyboardEvent) => {
       // Settings chord (default Ctrl+,): only while the panel has focus —
       // keydown never reaches this webview otherwise. The host toggles.
@@ -203,6 +204,22 @@
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "h") {
         e.preventDefault();
         toggleHelp();
+      }
+      // Font scale (ADR 0005): Ctrl+=/+ up, Ctrl+- down, Ctrl+0 reset.
+      // preventDefault keeps WebView2's own browser zoom out of the way.
+      // e.key covers the numpad +/- too; Shift stays allowed ("+" is
+      // Shift+= on most layouts).
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        if (e.key === "=" || e.key === "+") {
+          e.preventDefault();
+          adjustFontScale("increase");
+        } else if (e.key === "-") {
+          e.preventDefault();
+          adjustFontScale("decrease");
+        } else if (e.key === "0") {
+          e.preventDefault();
+          adjustFontScale("reset");
+        }
       }
     };
     const onFocus = () => (focused = true);
@@ -297,8 +314,7 @@
     <button class="gear" title="Help (Ctrl+H)" onclick={toggleHelp}>
       <svg
         aria-hidden="true"
-        width="15"
-        height="15"
+        style="width: 0.9375rem; height: 0.9375rem"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -354,13 +370,13 @@
     color: var(--fg);
     border-radius: 7px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
   .gear:hover {
     background: var(--rail-hover);
   }
   .gear span[aria-hidden] {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
   .content {
     flex: 1;
@@ -372,7 +388,7 @@
     padding: 7px 10px;
     margin-bottom: 12px;
     font: inherit;
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--fg);
     background: var(--panel);
     border: 1px solid var(--divider);
@@ -387,12 +403,12 @@
   }
   .placeholder {
     color: var(--muted);
-    font-size: 13px;
+    font-size: 0.8125rem;
     padding: 20px 8px;
   }
   .unsupported {
     color: var(--muted);
-    font-size: 13px;
+    font-size: 0.8125rem;
     text-align: center;
     padding: 48px 16px;
   }

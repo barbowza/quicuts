@@ -212,7 +212,7 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: min(92vw, 480px);
+    width: min(92vw, 30rem);
     max-height: 80vh;
     overflow-y: auto;
     background: var(--bg);
@@ -233,11 +233,11 @@
     min-width: 0;
   }
   .title {
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 600;
   }
   .desc {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--muted);
     margin-top: 2px;
   }
@@ -246,14 +246,14 @@
     background: transparent;
     color: var(--muted);
     cursor: pointer;
-    font-size: 14px;
+    font-size: 0.875rem;
     padding: 2px 4px;
   }
   .close:hover {
     color: var(--fg);
   }
   h3 {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -261,7 +261,7 @@
     margin: 14px 0 6px;
   }
   .hint {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--muted);
     margin: 4px 0;
   }
@@ -277,7 +277,7 @@
     background: transparent;
     color: var(--muted);
     cursor: pointer;
-    font-size: 13px;
+    font-size: 0.8125rem;
     padding: 2px 4px;
   }
   .remove:hover {
@@ -287,7 +287,7 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--muted);
     white-space: nowrap;
   }
@@ -295,7 +295,7 @@
     margin-top: 4px;
     padding: 6px 10px;
     font: inherit;
-    font-size: 13px;
+    font-size: 0.8125rem;
     color: var(--fg);
     background: var(--panel);
     border: 1px dashed var(--divider);
@@ -323,7 +323,7 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 14px;
+    font-size: 0.875rem;
     color: var(--muted);
     cursor: pointer;
     white-space: nowrap;
@@ -344,7 +344,7 @@
   }
   .capture-actions button {
     font: inherit;
-    font-size: 12px;
+    font-size: 0.75rem;
     padding: 4px 10px;
     border: 1px solid var(--divider);
     border-radius: 6px;

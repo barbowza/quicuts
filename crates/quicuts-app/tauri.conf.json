@@ -17,13 +17,14 @@
         "title": "Quicuts",
         "width": 586,
         "height": 720,
+        "minWidth": 586,
         "visible": false,
         "decorations": false,
         "transparent": true,
         "alwaysOnTop": true,
         "skipTaskbar": true,
         "shadow": false,
-        "resizable": false,
+        "resizable": true,
         "focus": false
       },
       {

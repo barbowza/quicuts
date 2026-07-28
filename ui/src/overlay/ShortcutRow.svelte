@@ -70,7 +70,7 @@
     background: transparent;
     color: var(--muted);
     cursor: pointer;
-    font-size: 14px;
+    font-size: 0.875rem;
     line-height: 1;
     padding: 2px;
   }
@@ -82,10 +82,10 @@
     min-width: 0;
   }
   .name {
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
   .desc {
-    font-size: 11px;
+    font-size: 0.6875rem;
     color: var(--muted);
   }
   .keys {

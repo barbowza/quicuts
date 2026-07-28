@@ -45,7 +45,7 @@
     margin-bottom: 18px;
   }
   h2 {
-    font-size: 12px;
+    font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -57,7 +57,7 @@
     color: var(--accent);
   }
   .empty {
-    font-size: 12px;
+    font-size: 0.75rem;
     color: var(--muted);
     margin: 2px 8px;
   }

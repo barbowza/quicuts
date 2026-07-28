@@ -39,4 +39,10 @@ pub struct AppState {
     /// "capture"), reported by the webview; Esc peels layers before the
     /// filter/close logic runs.
     pub overlay_modal: Mutex<String>,
+    /// Logical overlay width we last set ourselves; a Resized event with a
+    /// different width is the user dragging the panel edge (ADR 0005).
+    pub panel_expected_w: Mutex<Option<u32>>,
+    /// Bumped per user-resize event; the debounced save only fires when it
+    /// is still current after the delay.
+    pub panel_resize_gen: Mutex<u64>,
 }

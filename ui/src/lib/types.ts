@@ -98,8 +98,10 @@ export type ComboDisplayMode = "default" | "custom" | "all" | "customElseDefault
 
 export type Theme = "system" | "light" | "dark";
 
-/** Payload of appearance://changed — theme plus panel opacity (0–1). */
+/** Payload of appearance://changed — theme, panel opacity (0–1), and the
+ * overlay font scale (0.8–2.0, ADR 0005). */
 export interface Appearance {
   theme: Theme;
   panelOpacity: number;
+  fontScale: number;
 }

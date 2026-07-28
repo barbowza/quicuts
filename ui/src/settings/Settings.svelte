@@ -27,6 +27,10 @@
       overlayStyle: "panel" | "classic";
       panelEdge: "left" | "right";
       panelOpacity: number;
+      fontScale: number;
+      /** Set by dragging the panel edge, not edited here; must round-trip. */
+      panelWidth: number;
+      autoWidthResize: boolean;
     };
     excludedExes: string[];
     launchAtLogin: boolean;
@@ -231,6 +235,27 @@
             if (s) s.appearance.panelOpacity = e.currentTarget.valueAsNumber / 100;
           }}
           onchange={save}
+        />
+      </label>
+      <label class="range">
+        Font size: {Math.round(s.appearance.fontScale * 100)}%
+        <input
+          type="range"
+          min="80"
+          max="200"
+          step="5"
+          value={Math.round(s.appearance.fontScale * 100)}
+          oninput={(e) => {
+            if (s) s.appearance.fontScale = e.currentTarget.valueAsNumber / 100;
+          }}
+          onchange={save}
+        />
+      </label>
+      <label class="check">
+        <input type="checkbox" bind:checked={s.appearance.autoWidthResize} onchange={save} />
+        Resize panel with font size
+        <HelpTip
+          text="The panel's width can always be adjusted by dragging its inner edge, like a normal window. With this on, changing the font size also widens or narrows the panel by the same amount; with it off, the text reflows at the current width. Ctrl+Plus, Ctrl+Minus, and Ctrl+0 change the font size while the panel is focused."
         />
       </label>
     </section>

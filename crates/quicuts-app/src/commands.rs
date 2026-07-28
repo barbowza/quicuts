@@ -160,9 +160,34 @@ pub fn get_settings(state: State<AppState>) -> Settings {
     state.settings.lock().unwrap().clone()
 }
 
+/// Step (or reset) the overlay font scale from the panel's zoom hotkeys
+/// (Ctrl+= / Ctrl+- / Ctrl+0, ADR 0005). The host owns clamping and
+/// persistence so the settings slider, the panel, and disk never disagree.
 #[tauri::command]
-pub fn set_settings(app: AppHandle, settings: Settings) -> Result<(), String> {
+pub fn adjust_font_scale(app: AppHandle, action: String) {
     let state = app.state::<AppState>();
+    {
+        let mut s = state.settings.lock().unwrap();
+        let next = match action.as_str() {
+            "increase" => s.appearance.font_scale + 0.10,
+            "decrease" => s.appearance.font_scale - 0.10,
+            _ => 1.0,
+        };
+        s.appearance.font_scale = crate::settings::clamp_font_scale(next);
+        if let Err(e) = s.save(&state.config_dir) {
+            log::error!("failed to save settings: {e}");
+        }
+    }
+    agent::emit_appearance(&app);
+    overlay::reposition(&app);
+}
+
+#[tauri::command]
+pub fn set_settings(app: AppHandle, mut settings: Settings) -> Result<(), String> {
+    let state = app.state::<AppState>();
+    // panel_width is only ever set by dragging the panel edge (host-side);
+    // keep the live value over the settings UI's round-tripped copy.
+    settings.appearance.panel_width = state.settings.lock().unwrap().appearance.panel_width;
     settings.save(&state.config_dir).map_err(|e| e.to_string())?;
     let cmd = settings.to_configure();
     if !settings.title_detection {
@@ -175,6 +200,8 @@ pub fn set_settings(app: AppHandle, settings: Settings) -> Result<(), String> {
     // re-sync the overlay (arms/disarms taskbar badges).
     agent::send(&app, &cmd);
     agent::emit_appearance(&app);
+    // Font scale / auto-width changes can move the panel edge live.
+    overlay::reposition(&app);
     overlay::push_state(&app);
     crate::apply_autostart(&app);
     Ok(())

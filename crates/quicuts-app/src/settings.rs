@@ -31,10 +31,39 @@ pub struct Appearance {
     /// Panel background opacity, 0.0 (fully transparent) – 1.0 (opaque).
     #[serde(default = "default_panel_opacity")]
     pub panel_opacity: f64,
+    /// Accessibility zoom for the overlay window's text and keycaps,
+    /// 0.8–2.0 on a 5% grid (ADR 0005).
+    #[serde(default = "default_font_scale")]
+    pub font_scale: f64,
+    /// User-dragged overlay width in logical px; never below the classic
+    /// 586. Only changed by dragging the panel edge, so `set_settings`
+    /// keeps the live value rather than the UI's round-tripped copy.
+    #[serde(default = "default_panel_width")]
+    pub panel_width: f64,
+    /// When true, the effective panel width is panel_width × font_scale.
+    #[serde(default)]
+    pub auto_width_resize: bool,
 }
 
 fn default_panel_opacity() -> f64 {
     0.82
+}
+
+fn default_font_scale() -> f64 {
+    1.0
+}
+
+fn default_panel_width() -> f64 {
+    586.0
+}
+
+pub const FONT_SCALE_MIN: f64 = 0.8;
+pub const FONT_SCALE_MAX: f64 = 2.0;
+
+/// Clamp to the supported range and snap to the 5% grid so persisted
+/// values stay clean (e.g. 1.15, never 1.1500000000000001).
+pub fn clamp_font_scale(scale: f64) -> f64 {
+    (scale.clamp(FONT_SCALE_MIN, FONT_SCALE_MAX) * 20.0).round() / 20.0
 }
 
 fn default_true() -> bool {
@@ -92,6 +121,9 @@ impl Default for Settings {
                 overlay_style: "panel".into(),
                 panel_edge: "right".into(),
                 panel_opacity: default_panel_opacity(),
+                font_scale: default_font_scale(),
+                panel_width: default_panel_width(),
+                auto_width_resize: false,
             },
             excluded_exes: Vec::new(),
             launch_at_login: false,
@@ -164,6 +196,18 @@ mod tests {
         let s: Settings = serde_json::from_str(old).unwrap();
         assert!(!s.title_detection);
         assert!(s.extra_browser_exes.is_empty());
+        // ADR 0005 fields default when absent.
+        assert_eq!(s.appearance.font_scale, 1.0);
+        assert_eq!(s.appearance.panel_width, 586.0);
+        assert!(!s.appearance.auto_width_resize);
+    }
+
+    #[test]
+    fn font_scale_clamps_and_snaps() {
+        assert_eq!(clamp_font_scale(0.5), 0.8);
+        assert_eq!(clamp_font_scale(3.0), 2.0);
+        assert_eq!(clamp_font_scale(1.0 + 0.1 + 0.1 + 0.1), 1.3); // no float drift
+        assert_eq!(clamp_font_scale(1.13), 1.15); // snaps to the 5% grid
     }
 
     #[test]

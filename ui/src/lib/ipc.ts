@@ -60,7 +60,11 @@ export async function getAppearance(): Promise<Appearance | null> {
   // treat a failed invoke as "unknown" — the host re-pushes appearance on show.
   const s = await invokeCmd<{ appearance?: Appearance }>("get_settings").catch(() => null);
   if (!s?.appearance?.theme) return null;
-  return { theme: s.appearance.theme, panelOpacity: s.appearance.panelOpacity ?? 0.82 };
+  return {
+    theme: s.appearance.theme,
+    panelOpacity: s.appearance.panelOpacity ?? 0.82,
+    fontScale: s.appearance.fontScale ?? 1,
+  };
 }
 
 export const hideOverlay = () => invokeCmd("hide_overlay");
@@ -86,3 +90,5 @@ export const setDefaultRedefined = (
 ) => invokeCmd("set_default_redefined", { manifestId, entryName, chords, redefined });
 export const setComboDisplayMode = (mode: string) =>
   invokeCmd("set_combo_display_mode", { mode });
+export const adjustFontScale = (action: "increase" | "decrease" | "reset") =>
+  invokeCmd("adjust_font_scale", { action });

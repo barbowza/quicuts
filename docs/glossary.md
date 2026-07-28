@@ -46,6 +46,27 @@ in docs, settings UI copy, and code identifiers.
   auto-selects a hosted collection whose `TitleMatch` hits. Fully live:
   selection follows the match in both directions; a pinned app overrides.
 
+## Font scaling (ADR 0005)
+
+- **Font scale** — the single accessibility zoom factor
+  (`appearance.fontScale`, 80–200%, default 100%) sizing all text and
+  keycaps inside the overlay window: panel, Help, Customize dialog, and
+  rail. Settings window and taskbar badges do not scale. Adjusted by the
+  settings slider (5% steps) or Ctrl+`=`/Ctrl+`-` (10% steps) and
+  Ctrl+`0` (reset) while the overlay is focused.
+- **Panel width** — the overlay's user-set width
+  (`appearance.panelWidth`), changed by dragging the panel edge like a
+  normal window. Minimum 586 logical px (the classic width), maximum
+  half the display's width. Persists across sessions.
+- **Auto width resize** — the settings toggle ("Resize panel with font
+  size", off by default). On: effective width = panel width × font
+  scale. Off (**manual**): font changes reflow content at the current
+  width and only dragging moves the edge.
+- **Focused-only hotkey** — the default scope for every Quicuts
+  shortcut: it fires only while a Quicuts window has focus (webview
+  keydown), never via the agent's global hook. Shortcuts are global only
+  when explicitly designated.
+
 ## Unsupported apps (ADR 0004)
 
 - **Unsupported app** — a foreground app whose exe is known but matches
