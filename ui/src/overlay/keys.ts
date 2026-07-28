@@ -31,6 +31,10 @@ export interface Cap {
   wide?: boolean;
   /** Render this icon instead of the label (which stays for filtering). */
   icon?: KeyIconName;
+  /** Hover tooltip naming the key ("Shift", "Windows") — set where the cap's
+   *  visual is a glyph/icon or abbreviation rather than the key's plain name.
+   *  Caps without one fall back to the row's own tooltip. */
+  title?: string;
 }
 
 // Filter aliases for tokens whose GLYPHS entry is untypeable; word-labeled
@@ -45,6 +49,22 @@ const GLYPH_SEARCH: Partial<Record<GlyphToken, string>> = {
   arrow_u_d: "arrow",
   enter: "enter",
   backspace: "backspace",
+};
+
+// Tooltip names for tokens whose cap shows a glyph/icon or abbreviation;
+// word-labeled tokens ("Home", "Page Up", ...) need none.
+const GLYPH_TITLES: Partial<Record<GlyphToken, string>> = {
+  left: "Left arrow",
+  right: "Right arrow",
+  up: "Up arrow",
+  down: "Down arrow",
+  arrow: "Arrow keys",
+  arrow_l_r: "Left / right arrow",
+  arrow_u_d: "Up / down arrow",
+  enter: "Enter",
+  backspace: "Backspace",
+  escape: "Escape",
+  prt_scr: "Print Screen",
 };
 
 const GLYPHS: Record<GlyphToken, string> = {
@@ -66,7 +86,7 @@ const GLYPHS: Record<GlyphToken, string> = {
   delete: "Delete",
   pause: "Pause",
   prt_scr: "PrtScr",
-  copilot: "Copilot",
+  copilot: "Copilot-key",
   office: "Office",
 };
 
@@ -128,6 +148,23 @@ const VK_SEARCH: Record<number, string> = {
   0x28: "down",
 };
 
+// Tooltip names for the glyph/abbreviation-labeled VK entries above.
+const VK_TITLES: Record<number, string> = {
+  0x08: "Backspace",
+  0x0d: "Enter",
+  0x10: "Shift",
+  0x14: "Caps Lock",
+  0x1b: "Escape",
+  0x21: "Page Up",
+  0x22: "Page Down",
+  0x25: "Left arrow",
+  0x26: "Up arrow",
+  0x27: "Right arrow",
+  0x28: "Down arrow",
+  0x2c: "Print Screen",
+  0x5d: "Menu",
+};
+
 const GLYPH_ICONS: Partial<Record<GlyphToken, KeyIconName>> = {
   left: "left",
   right: "right",
@@ -164,11 +201,16 @@ function vkLabel(vk: number): string | undefined {
 
 function winModCap(kind: "win" | "ctrl" | "alt" | "shift", platform: Platform): Cap {
   if (platform === "macos") {
-    return { label: { win: "⌘", ctrl: "⌃", alt: "⌥", shift: "⇧" }[kind], search: kind };
+    return {
+      label: { win: "⌘", ctrl: "⌃", alt: "⌥", shift: "⇧" }[kind],
+      search: kind,
+      title: { win: "Command", ctrl: "Control", alt: "Option", shift: "Shift" }[kind],
+    };
   }
   const label = { win: "⊞", ctrl: "Ctrl", alt: "Alt", shift: "⇧" }[kind];
   const icon = kind === "win" ? ("win" as const) : kind === "shift" ? ("shift" as const) : undefined;
-  return { label, search: kind, icon };
+  const title = { win: "Windows", ctrl: "Control", alt: "Alt", shift: "Shift" }[kind];
+  return { label, search: kind, icon, title };
 }
 
 function keyToCap(key: Key, platform: Platform): Cap {
@@ -182,15 +224,26 @@ function keyToCap(key: Key, platform: Platform): Cap {
         label: GLYPHS[key.value] ?? key.value,
         search: GLYPH_SEARCH[key.value],
         icon: GLYPH_ICONS[key.value],
+        title: GLYPH_TITLES[key.value],
       };
     case "underlined_letter":
-      return { label: "", underline: true };
+      return {
+        label: "letter",
+        underline: true,
+        title: "Press the letter underlined in the app's menus",
+      };
     case "taskbar_range":
-      return { label: "Num" };
+      return { label: "Num", title: "Number keys 1–9" };
     case "vk": {
       const known = vkLabel(key.value);
       if (known === "WIN") return winModCap("win", platform);
-      if (known) return { label: known, search: VK_SEARCH[key.value], icon: VK_ICONS[key.value] };
+      if (known)
+        return {
+          label: known,
+          search: VK_SEARCH[key.value],
+          icon: VK_ICONS[key.value],
+          title: VK_TITLES[key.value],
+        };
       return { label: `VK${key.value}` };
     }
   }
@@ -203,7 +256,13 @@ export function comboToCaps(combo: KeyCombo, platform: Platform): Cap[] {
   if (combo.ctrl) caps.push(winModCap("ctrl", platform));
   if (combo.alt) caps.push(winModCap("alt", platform));
   if (combo.shift) caps.push(winModCap("shift", platform));
-  for (const k of combo.keys) caps.push(keyToCap(k, platform));
+  for (const k of combo.keys) {
+    // PowerToys' Shell manifest uses `Keys: [""]` to mean "the modifiers
+    // alone" (Ctrl+Shift = switch layout, Win = Start menu); drop the empty
+    // token instead of rendering a blank "•" cap.
+    if ((k.kind === "literal" || k.kind === "angle_literal") && k.value.trim() === "") continue;
+    caps.push(keyToCap(k, platform));
+  }
   return caps;
 }
 

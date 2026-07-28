@@ -18,7 +18,7 @@
         <span class="combo">
           {#each comboToCaps(combo, platform) as cap, j}
             {#if j > 0}<span class="plus">+</span>{/if}
-            <kbd class={`k-${b.kind}`} class:underline={cap.underline}
+            <kbd class={`k-${b.kind}`} class:underline={cap.underline} title={cap.title}
               >{#if cap.icon}<KeyIcon name={cap.icon} />{:else}{cap.label || "•"}{/if}</kbd
             >
           {/each}
