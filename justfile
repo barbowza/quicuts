@@ -68,3 +68,36 @@ dev-server:
 log:
     tail -f "{{deploy_dir}}/logs/Quicuts.log" 2>/dev/null || \
       tail -f "/mnt/c/Users/{{winuser}}/AppData/Roaming/com.barbowza.quicuts/logs/Quicuts.log"
+
+# --- macOS (native build on the Mac; see docs/macos-dev.md) ---
+
+mac_triple := "aarch64-apple-darwin"
+
+# Rust/manifest/state-machine tests on the native toolchain.
+mac-test:
+    cargo test -p quicuts-proto -p quicuts-manifest -p quicuts-agent-mac
+
+# Build the agent sidecar and stage it where tauri-build expects it.
+# (tauri-build re-copies the staged file over target/debug/quicuts-agent on
+# every app build, so restaging here is what keeps the dev sidecar fresh.)
+mac-agent:
+    cargo build -p quicuts-agent-mac
+    mkdir -p crates/quicuts-app/binaries
+    cp target/debug/quicuts-agent crates/quicuts-app/binaries/quicuts-agent-{{mac_triple}}
+
+# Build the frontend.
+mac-ui:
+    cd ui && pnpm install --prefer-offline && pnpm build
+
+# Full .app bundle build (permission-realistic; TCC attributes to the app).
+mac-build: mac-agent mac-ui
+    cd crates/quicuts-app && cargo tauri build --config conf/macos.json
+
+# Dev run from the terminal (TCC attributes to the terminal app).
+mac-run: mac-agent mac-ui
+    @echo "TIP: permission checkpoints can be removed — see docs/macos-dev.md § Autonomous mode"
+    cd crates/quicuts-app && cargo tauri dev --config conf/macos.json
+
+# Tail the mac-side log.
+mac-log:
+    tail -f "$HOME/Library/Logs/com.barbowza.quicuts/Quicuts.log"

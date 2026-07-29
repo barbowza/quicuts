@@ -4,10 +4,11 @@ members = [
     "crates/quicuts-proto",
     "crates/quicuts-manifest",
     "crates/quicuts-agent-win",
+    "crates/quicuts-agent-mac",
     "crates/quicuts-app",
 ]
 # Only the platform-free crates build/test on the Linux host toolchain.
-# quicuts-agent-win and quicuts-app are cross-compiled explicitly (see justfile).
+# The platform crates are built explicitly (see justfile).
 default-members = ["crates/quicuts-proto", "crates/quicuts-manifest"]
 
 [workspace.package]

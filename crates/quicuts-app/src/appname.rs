@@ -84,7 +84,25 @@ fn file_description(exe_path: &str) -> Option<String> {
     }
 }
 
-#[cfg(not(windows))]
+/// macOS: `exe_path` is the `.app` bundle path the agent reported; the
+/// display name lives in `Contents/Info.plist`. A plain file read — no TCC,
+/// no AppKit. Falls back to the stem (the raw bundle id) via `display_name`.
+#[cfg(target_os = "macos")]
+fn file_description(app_path: &str) -> Option<String> {
+    let value =
+        plist::Value::from_file(std::path::Path::new(app_path).join("Contents/Info.plist"))
+            .ok()?;
+    let dict = value.into_dictionary()?;
+    ["CFBundleDisplayName", "CFBundleName"].iter().find_map(|key| {
+        dict.get(*key)
+            .and_then(|v| v.as_string())
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .map(str::to_string)
+    })
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
 fn file_description(_exe_path: &str) -> Option<String> {
     None
 }

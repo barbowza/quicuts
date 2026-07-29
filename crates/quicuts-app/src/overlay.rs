@@ -133,6 +133,7 @@ pub fn dismiss(app: &AppHandle) {
 /// flyout's own handle puts the flyout on top while the panel stays above
 /// the user's app windows. A missed close event can't wedge the panel low:
 /// `show` re-asserts topmost.
+#[cfg_attr(not(windows), allow(unused_variables))]
 pub fn duck_under_flyout(app: &AppHandle, open: bool, flyout: Option<u64>) {
     for label in ["overlay", "badges"] {
         let Some(w) = app.get_webview_window(label) else {

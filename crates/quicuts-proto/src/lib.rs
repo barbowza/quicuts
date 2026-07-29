@@ -40,17 +40,30 @@ pub struct ChordSpec {
 }
 
 impl Default for ChordSpec {
-    /// PTSG default: Win+Shift+/ (VK_OEM_2).
+    /// Overlay-toggle default. Windows keeps the PTSG default Win+Shift+/
+    /// (VK_OEM_2). macOS uses ⌃⌘/ — ⌘⇧/, the literal equivalent, is the
+    /// system Help-menu shortcut and must not be taken. (`win` means ⌘ on
+    /// macOS; the VK stays 0xBF because the settings UI captures Windows-
+    /// style keycodes on both platforms — agents translate internally.)
     fn default() -> Self {
-        Self { win: true, ctrl: false, shift: true, alt: false, vk: 0xBF }
+        if cfg!(target_os = "macos") {
+            Self { win: true, ctrl: true, shift: false, alt: false, vk: 0xBF }
+        } else {
+            Self { win: true, ctrl: false, shift: true, alt: false, vk: 0xBF }
+        }
     }
 }
 
 impl ChordSpec {
-    /// Default settings-window toggle: Ctrl+, (VK_OEM_COMMA). Handled inside
+    /// Default settings-window toggle: Ctrl+, on Windows, ⌘, on macOS (the
+    /// universal prefs shortcut; VK_OEM_COMMA either way). Handled inside
     /// the app's own focused windows, never by the agent hook.
     pub fn settings_default() -> Self {
-        Self { win: false, ctrl: true, shift: false, alt: false, vk: 0xBC }
+        if cfg!(target_os = "macos") {
+            Self { win: true, ctrl: false, shift: false, alt: false, vk: 0xBC }
+        } else {
+            Self { win: false, ctrl: true, shift: false, alt: false, vk: 0xBC }
+        }
     }
 }
 
@@ -240,5 +253,29 @@ mod tests {
     fn tag_shape_is_stable() {
         let line = to_line(&AgentEvent::Pong).unwrap();
         assert_eq!(line, r#"{"type":"pong"}"#);
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn mac_defaults_are_ctrl_cmd_slash_and_cmd_comma() {
+        // ⌃⌘/ (win == ⌘): ⌘⇧/ is the system Help-menu shortcut, keep off it.
+        let chord = ChordSpec::default();
+        assert!(chord.win && chord.ctrl && !chord.shift && !chord.alt);
+        assert_eq!(chord.vk, 0xBF);
+        // ⌘,
+        let settings = ChordSpec::settings_default();
+        assert!(settings.win && !settings.ctrl && !settings.shift && !settings.alt);
+        assert_eq!(settings.vk, 0xBC);
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    #[test]
+    fn non_mac_defaults_keep_ptsg_values() {
+        let chord = ChordSpec::default();
+        assert!(chord.win && !chord.ctrl && chord.shift && !chord.alt);
+        assert_eq!(chord.vk, 0xBF);
+        let settings = ChordSpec::settings_default();
+        assert!(!settings.win && settings.ctrl && !settings.shift && !settings.alt);
+        assert_eq!(settings.vk, 0xBC);
     }
 }

@@ -114,6 +114,9 @@ pub fn run() {
             _ => {}
         })
         .setup(|app| {
+            // Tray-only on macOS: no Dock icon, no ⌘Tab entry.
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             let handle = app.handle().clone();
             let config_dir = handle
                 .path()
@@ -185,6 +188,15 @@ pub fn apply_autostart(app: &tauri::AppHandle) {
 /// Resolve the bundled-manifests directory across dev and installed layouts.
 fn bundled_manifests_dir(app: &tauri::AppHandle) -> PathBuf {
     let mut candidates: Vec<PathBuf> = Vec::new();
+    // macOS ships its own manifest set; check those locations first.
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(res) = app.path().resource_dir() {
+            candidates.push(res.join("manifests-mac"));
+            candidates.push(res.join("_up_/_up_/manifests-mac"));
+        }
+        candidates.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../manifests-mac"));
+    }
     if let Ok(res) = app.path().resource_dir() {
         candidates.push(res.join("manifests"));
         candidates.push(res.join("_up_/_up_/manifests")); // tauri "../../" resource mapping
