@@ -94,11 +94,13 @@ app that hosts the session (System Settings → Privacy & Security →
 Accessibility → iTerm/Terminal → on). Everything a session spawns from
 that terminal — `cargo`, `cargo tauri dev`, the app, the agent sidecar —
 inherits the terminal's TCC attribution, so this single grant covers
-unlimited rebuilds. Observed in this workflow: before the grant the agent
-emitted `PermissionRequired` on every supervisor attempt; the grant is the
-only state that changes that. No stable signing identity is needed for the
-terminal loop (that mitigation only matters for bundled .app builds, whose
-ad-hoc CDHash changes per rebuild).
+unlimited rebuilds. Confirmed empirically in this workflow: before the
+grant the agent emitted `PermissionRequired` on every supervisor attempt;
+after enabling iTerm in the Accessibility pane — changing nothing else,
+same binaries — the next `just mac-run` reached `agent ready (proto 1)` on
+attempt 0. No per-binary grant, no relaunch of iTerm, no stable signing
+identity needed for the terminal loop (that mitigation only matters for
+bundled .app builds, whose ad-hoc CDHash changes per rebuild).
 
 **What a session can then do unattended:**
 - build and test everything (`just mac-test`, `mac-agent`, `mac-build`);

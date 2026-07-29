@@ -62,9 +62,12 @@ Concretely:
   Accessibility subsumes it). Without the grant, `CGEventTapCreate`
   returns NULL; the agent checks `AXIsProcessTrusted()` first and emits
   `Fatal { kind: PermissionRequired }`, which the protocol had already
-  reserved for exactly this. This path was exercised live: on an
-  ungranted machine the agent emits the Fatal, `agent.rs` logs it,
-  backs off through its 5 restarts, and flags the tray.
+  reserved for exactly this. Both sides of this path were exercised live:
+  on the ungranted machine the agent emitted the Fatal, `agent.rs` logged
+  it, backed off through its 5 restarts, and flagged the tray; enabling
+  *iTerm* (only) in the Accessibility pane flipped the sidecar's
+  `AXIsProcessTrusted()` to true and the next launch reached `Ready` on
+  attempt 0 — the responsible-process attribution working as researched.
 - There is no Info.plist purpose string for Accessibility/Input
   Monitoring; the user always flips the toggle in System Settings.
 
