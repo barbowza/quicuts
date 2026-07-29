@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Quicuts is a cross-platform (Windows-first, macOS fast-follow) clone of PowerToys **Shortcut Guide v2**: a side-docked, app-aware panel of keyboard shortcuts shown when you hold Win/Cmd or press a hotkey chord. It imports PowerToys' YAML shortcut manifests unchanged (39 bundled in `manifests/`).
+Quicuts is a cross-platform (Windows-first, macOS fast-follow) clone of PowerToys **Shortcut Guide v2**: a side-docked, app-aware panel of keyboard shortcuts shown when you hold Win/Cmd or press a hotkey chord. It imports PowerToys' YAML shortcut manifests unchanged (36 bundled in `manifests/`).
 
 Built with **Tauri v2** — Rust backend + Svelte 5/Vite frontend.
 
@@ -45,11 +45,11 @@ Set `WINUSER` to your Windows username. `deploy` must target a Windows-local pat
 
 ## Architecture: the four crates + UI
 
-The **IPC protocol is the platform seam.** `quicuts-agent-mac` (future) will implement the same commands/events, so keep platform specifics behind the protocol.
+The **IPC protocol is the platform seam.** Every platform agent implements the same commands and events, so keep platform specifics behind the protocol — never leak them into `quicuts-app` or the UI.
 
 - **`crates/quicuts-proto`** — the NDJSON IPC contract. `AgentCommand` (app→agent: `Configure`, `SetOverlayVisible`, `QueryTaskbar`, `SubscribeForeground`, `Ping`, `Shutdown`) and `AgentEvent` (agent→app: `Ready{caps}`, `HoldActivated`, `HoldReleased`, `ChordActivated`, `Dismissed`, `ForegroundChanged`, `Taskbar`, `Pong`, `Fatal`). Enums are `#[non_exhaustive]`; `PROTO_VERSION` is negotiated in `Ready`. `to_line`/`from_line` are the NDJSON helpers. Changing this contract touches both the agent and the app.
 
-- **`crates/quicuts-manifest`** — the PTSG-compatible manifest engine, **platform-free and the most heavily unit-tested crate**. Pipeline: `schema.rs` (tolerant serde — `LaxBool` accepts `True`/`true`, `RawKeyToken` handles numbers/strings/null-for-`~`) → `keys.rs` (`normalize_token` → `Key` enum: `Literal`/`Vk`/`Glyph`/`UnderlinedLetter`/`TaskbarRange`/`AngleLiteral`) → `parse.rs` (`parse_manifest`, filename `<Package>.<locale>.yml` splitting, meta/taskbar section handling) → `store.rs` (`ManifestStore` layers sources — Bundled/PtsgRuntime/User, later wins whole-file; `match_foreground` by exe). Per-file parse errors are logged, never fatal. `tests/real_manifests.rs` runs the whole bundled set through it — run this after any schema/parse change.
+- **`crates/quicuts-manifest`** — the PTSG-compatible manifest engine, **platform-free and the most heavily unit-tested crate**. Pipeline: `schema.rs` (tolerant serde — `LaxBool` accepts `True`/`true`, `RawKeyToken` handles numbers/strings/null-for-`~`) → `keys.rs` (`normalize_token` → `Key` enum: `Literal`/`Vk`/`Glyph`/`UnderlinedLetter`/`TaskbarRange`/`AngleLiteral`) → `parse.rs` (`parse_manifest`, filename `<Package>.<locale>.yml` splitting, meta/taskbar section handling) → `store.rs` (`ManifestStore` layers sources — Bundled/PtsgRuntime/User, later wins whole-file; `match_foreground` by reported app identity). Per-file parse errors are logged, never fatal. `tests/real_manifests.rs` runs the whole bundled set through it — run this after any schema/parse change.
 
 - **`crates/quicuts-agent-win`** — the Windows sidecar (only binary that installs global hooks). `hook.rs` is the **highest-risk code**: a `WH_KEYBOARD_LL` hook driving a hold/chord state machine (`Idle → WinDown → {Combo | HoldActive} → Idle`), plus PowerToys' dummy-key injection (`SendInput` VK 0xFF with a magic `dwExtraInfo`) so holding Win doesn't open the Start menu. `foreground.rs` = `SetWinEventHook` foreground watcher; `taskbar.rs` = `IUIAutomation` taskbar-rect reader; `ipc.rs`/`state.rs` = NDJSON transport + cached config atomics (the hook callback must never block on IPC). Everything is `#[cfg(windows)]`.
 
