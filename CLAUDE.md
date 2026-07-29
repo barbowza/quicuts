@@ -4,20 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Quicuts is a cross-platform (Windows-first, macOS fast-follow) clone of PowerToys **Shortcut Guide v2**: a side-docked, app-aware panel of keyboard shortcuts shown when you hold Win/Cmd or press a hotkey chord. It imports PowerToys' YAML shortcut manifests unchanged (39 bundled in `manifests/`).
+Quicuts is a cross-platform (Windows-first, macOS fast-follow) clone of PowerToys **Shortcut Guide v2**: a side-docked, app-aware panel of keyboard shortcuts shown when you hold Win/Cmd or press a hotkey chord. It imports PowerToys' YAML shortcut manifests unchanged (36 bundled in `manifests/`; macOS-specific ones live in `manifests-mac/`).
 
 Built with **Tauri v2** — Rust backend + Svelte 5/Vite frontend.
 
 ## The two hard constraints (read before changing architecture)
 
-1. **All system-input access lives in sidecar processes, never the main app binary.** The keyboard hook, foreground-app watcher, and taskbar reader are in `quicuts-agent-win` (a separate `.exe` shipped as a Tauri `externalBin` sidecar). This isolation is deliberate: it keeps AV/keylogger heuristics from flagging the main Quicuts app. Do not move hook/input code into `quicuts-app`.
+1. **All system-input access lives in sidecar processes, never the main app binary.** Each platform gets its own agent binary, shipped as a Tauri `externalBin` sidecar. On Windows that's `quicuts-agent-win` (keyboard hook, foreground-app watcher, taskbar reader); the macOS agent follows the same rule. This isolation is deliberate: on Windows it keeps AV/keylogger heuristics from flagging the main Quicuts app, and on both platforms it buys crash isolation plus one shared supervision path in `agent.rs`. Do not move hook/tap/input code into `quicuts-app`.
 2. **Privacy invariant: no IPC message ever carries the identity of a key the user pressed.** The only key data on the wire is the activation-chord *configuration* flowing app→agent (`ChordSpec`). The agent reports semantic transitions only (`hold_activated`, `chord_activated`, `dismissed`, `foreground_changed`), never keystrokes. Enforced by convention in `quicuts-proto`; preserve it when adding events.
 
-## Development environment: WSL2 → Windows host
+## Development environments
 
-Development happens in WSL2; the app **runs on the Windows host**. Two of the four crates are Windows-only and are cross-compiled with `cargo-xwin`; the other two are platform-free and test on the Linux toolchain.
+Quicuts targets two platforms and the dev loop differs by target. Jump to the section for the machine you are on.
 
-`Cargo.toml` `default-members` is limited to `quicuts-proto` + `quicuts-manifest` on purpose — so `cargo build`/`cargo test` on the Linux host don't try to build the Windows crates. The `just` targets cross-compile the Windows crates explicitly.
+Common to both: `Cargo.toml` `default-members` is limited to `quicuts-proto` + `quicuts-manifest` on purpose, so a plain `cargo build`/`cargo test` never tries to build a platform crate that can't compile on the current host. Platform crates are built explicitly by the `just` recipes.
+
+## Windows target — built in WSL2, runs on the Windows host
+
+Development happens in WSL2; the app **runs on the Windows host**. The Windows-only crates are cross-compiled with `cargo-xwin`; the platform-free crates test on the Linux toolchain.
 
 One-time toolchain setup (no sudo — stages clang-cl + llvm-rc from Ubuntu debs; see `docs/adr/0002`):
 ```bash
@@ -43,15 +47,29 @@ Set `WINUSER` to your Windows username. `deploy` must target a Windows-local pat
 
 `just dev-build` builds a debug exe pointed at a Vite dev server (via `conf/dev-remote.json`); `just dev-server` runs Vite on `0.0.0.0:1420` in WSL. Windows↔WSL `localhost` forwarding gives the frontend hot reload. Rust changes still require a rebuild (`just run`).
 
-## Architecture: the four crates + UI
+## macOS target — built natively on the Mac
 
-The **IPC protocol is the platform seam.** `quicuts-agent-mac` (future) will implement the same commands/events, so keep platform specifics behind the protocol.
+**Status: not built yet.** The macOS agent is in progress on the `mac-version` branch. If you are working on macOS, read `docs/macos-slice-brief.md` first — it carries the agreed scope, the settled architecture decisions, and what is deliberately out of scope. Once that work lands, `docs/macos-dev.md` is the setup and dev-loop reference and the `mac-*` `just` recipes are the entry points.
+
+How the mac loop differs from the Windows one:
+
+- **Native build, no cross-compilation.** Target `aarch64-apple-darwin`; `cargo tauri` runs on the Mac itself.
+- **The agent needs a TCC permission** (Accessibility / Input Monitoring) granted by hand in System Settings. No amount of code grants it — an agent that starts without it emits `Fatal { kind: PermissionRequired }`, which the protocol already defines. Expect human checkpoints in the loop.
+- **App identity is the bundle ID** (`com.apple.Safari`), not an exe name — see *Manifest matching rules*.
+- **macOS manifests live in `manifests-mac/`**, kept separate from the Windows set in `manifests/`.
+- **No taskbar badges.** macOS has no ⌘1–9 Dock switching, so there is nothing to badge; the mac agent simply doesn't advertise the `taskbar` capability and ignores `QueryTaskbar`.
+
+## Architecture: the crates + UI
+
+The **IPC protocol is the platform seam.** Every platform agent implements the same commands and events, so keep platform specifics behind the protocol — never leak them into `quicuts-app` or the UI.
 
 - **`crates/quicuts-proto`** — the NDJSON IPC contract. `AgentCommand` (app→agent: `Configure`, `SetOverlayVisible`, `QueryTaskbar`, `SubscribeForeground`, `Ping`, `Shutdown`) and `AgentEvent` (agent→app: `Ready{caps}`, `HoldActivated`, `HoldReleased`, `ChordActivated`, `Dismissed`, `ForegroundChanged`, `Taskbar`, `Pong`, `Fatal`). Enums are `#[non_exhaustive]`; `PROTO_VERSION` is negotiated in `Ready`. `to_line`/`from_line` are the NDJSON helpers. Changing this contract touches both the agent and the app.
 
-- **`crates/quicuts-manifest`** — the PTSG-compatible manifest engine, **platform-free and the most heavily unit-tested crate**. Pipeline: `schema.rs` (tolerant serde — `LaxBool` accepts `True`/`true`, `RawKeyToken` handles numbers/strings/null-for-`~`) → `keys.rs` (`normalize_token` → `Key` enum: `Literal`/`Vk`/`Glyph`/`UnderlinedLetter`/`TaskbarRange`/`AngleLiteral`) → `parse.rs` (`parse_manifest`, filename `<Package>.<locale>.yml` splitting, meta/taskbar section handling) → `store.rs` (`ManifestStore` layers sources — Bundled/PtsgRuntime/User, later wins whole-file; `match_foreground` by exe). Per-file parse errors are logged, never fatal. `tests/real_manifests.rs` runs the whole bundled set through it — run this after any schema/parse change.
+- **`crates/quicuts-manifest`** — the PTSG-compatible manifest engine, **platform-free and the most heavily unit-tested crate**. Pipeline: `schema.rs` (tolerant serde — `LaxBool` accepts `True`/`true`, `RawKeyToken` handles numbers/strings/null-for-`~`) → `keys.rs` (`normalize_token` → `Key` enum: `Literal`/`Vk`/`Glyph`/`UnderlinedLetter`/`TaskbarRange`/`AngleLiteral`) → `parse.rs` (`parse_manifest`, filename `<Package>.<locale>.yml` splitting, meta/taskbar section handling) → `store.rs` (`ManifestStore` layers sources — Bundled/PtsgRuntime/User, later wins whole-file; `match_foreground` by reported app identity). Per-file parse errors are logged, never fatal. `tests/real_manifests.rs` runs the whole bundled set through it — run this after any schema/parse change.
 
 - **`crates/quicuts-agent-win`** — the Windows sidecar (only binary that installs global hooks). `hook.rs` is the **highest-risk code**: a `WH_KEYBOARD_LL` hook driving a hold/chord state machine (`Idle → WinDown → {Combo | HoldActive} → Idle`), plus PowerToys' dummy-key injection (`SendInput` VK 0xFF with a magic `dwExtraInfo`) so holding Win doesn't open the Start menu. `foreground.rs` = `SetWinEventHook` foreground watcher; `taskbar.rs` = `IUIAutomation` taskbar-rect reader; `ipc.rs`/`state.rs` = NDJSON transport + cached config atomics (the hook callback must never block on IPC). Everything is `#[cfg(windows)]`.
+
+- **`crates/quicuts-agent-mac`** — *planned, not yet written.* The macOS sidecar: a `CGEventTap` driving the same hold/chord state machine, an `NSWorkspace` frontmost-app watcher, and no taskbar reader. It speaks the identical `AgentCommand`/`AgentEvent` protocol, so `agent.rs` on the app side needs no per-platform branching. Scope and decisions: `docs/macos-slice-brief.md`.
 
 - **`crates/quicuts-app`** — the Tauri host. `agent.rs` supervises the sidecar (spawn, NDJSON handling, backoff restart). `engine.rs` builds the overlay view-model on each foreground change and emits `overlay://state`; the frontend is dumb-render. `overlay.rs`/`tray.rs` manage windows and the tray menu. `commands.rs` holds the `#[tauri::command]` handlers invoked from the UI. `settings.rs` (persisted to `{app_config_dir}/settings.json`, pushed live to the agent as `Configure` — no restart), `pinned.rs`, `icons.rs` (Windows icon → data-URI for the app rail). `lib.rs::run()` wires `invoke_handler` + `on_window_event`.
 
@@ -63,8 +81,14 @@ Overlay/badges/settings windows are **pre-created hidden** and reused. On close 
 
 ## Manifest matching rules
 
-Match foreground app by: lowercase exe name, strip one trailing `.exe`, then exact-match ∪ `"*"` wildcard manifests ∪ all `BackgroundProcess: true` manifests. Section render order: Pinned → Recommended → categories in file order → Taskbar. Ignore PowerToys' own `index.yml` — Quicuts builds its own in-memory index. Bundled manifests are MIT-licensed from PowerToys (`manifests/POWERTOYS-LICENSE`, `NOTICE.txt`).
+`match_foreground` is platform-agnostic on purpose: it lowercases the manifest's `WindowFilter`, strips one trailing `.exe`, and compares it to whatever **identity string the agent reported** — an exe name on Windows, a bundle ID (`com.apple.Safari`) on macOS. Don't add platform branches to it; give it the right identity instead.
+
+Match foreground app by that identity, then exact-match ∪ `"*"` wildcard manifests ∪ all `BackgroundProcess: true` manifests. Section render order: Pinned → Recommended → categories in file order → Taskbar. Ignore PowerToys' own `index.yml` — Quicuts builds its own in-memory index. Bundled manifests are MIT-licensed from PowerToys (`manifests/POWERTOYS-LICENSE`, `NOTICE.txt`).
 
 ## Status & references
 
-Working daily-driver on Windows: hold-to-show with Win-key suppression, app-aware panels, taskbar badges, pinning, and customizations are verified on a real host. Experimental web-app title detection (hosted collections) is implemented behind a settings toggle. The macOS agent is not yet started — the IPC protocol is the seam it will plug into. ADRs: `docs/adr/0001` (why Tauri v2), `docs/adr/0002` (the no-sudo cross-toolchain), `docs/adr/0003` (hosted collections), `docs/adr/0004` (unsupported-app placeholder), `docs/adr/0005` (overlay font scaling / accessibility zoom).
+Working daily-driver on Windows: hold-to-show with Win-key suppression, app-aware panels, taskbar badges, pinning, and customizations are verified on a real host. Experimental web-app title detection (hosted collections) is implemented behind a settings toggle.
+
+macOS: nothing shipped yet. The first vertical slice is scoped in `docs/macos-slice-brief.md` and being built on the `mac-version` branch; the IPC protocol is the seam it plugs into, and `docs/adr/0006` will record what came out of it.
+
+ADRs: `docs/adr/0001` (why Tauri v2), `docs/adr/0002` (the no-sudo cross-toolchain), `docs/adr/0003` (hosted collections), `docs/adr/0004` (unsupported-app placeholder), `docs/adr/0005` (overlay font scaling / accessibility zoom).
