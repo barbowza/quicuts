@@ -1,8 +1,9 @@
 # Quicuts — universal shortcuts guide
 
 A shortcuts quick-finder modelled after Windows PowerToys
-**Shortcut Guide**, built with Tauri v2. Windows today; macOS is planned
-(the platform-specific code sits behind an IPC seam for exactly that reason).
+**Shortcut Guide**, built with Tauri v2. Windows today as a daily driver; a
+first macOS slice (hold-⌘ panel, app-aware matching by bundle ID) works too —
+the platform-specific code sits behind an IPC seam for exactly that reason.
 
 It shows a side-docked, app-aware panel of keyboard shortcuts when you
 hold Win/Cmd or press a hotkey, and imports PowerToys' YAML shortcut
@@ -21,8 +22,12 @@ manifests unchanged.
   YAML separate from the bundled manifests.
 - **Web apps (experimental)**: title-based detection of hosted apps like Gmail
   running inside a browser tab.
-- ~40 bundled manifests imported from PowerToys, plus any you drop in from a
-  PowerToys installation or write yourself.
+- 36 bundled manifests imported from PowerToys, plus any you drop in from a
+  PowerToys installation or write yourself. macOS uses its own smaller set in
+  `manifests-mac/`, matched by bundle ID.
+
+Windows-only for now: taskbar badges (macOS has no ⌘1–9 Dock switching to
+badge), app icons in the rail, and web-app title detection.
 
 ## Architecture
 
@@ -31,9 +36,11 @@ manifests unchanged.
 | `crates/quicuts-proto` | NDJSON IPC contract (app ↔ sidecar) |
 | `crates/quicuts-manifest` | PTSG-compatible manifest engine (parse/index/match/assemble) — platform-free, unit-tested |
 | `crates/quicuts-agent-win` | **Sidecar**: WH_KEYBOARD_LL hook, foreground watcher, taskbar reader. The only binary that touches system input, isolated so AV heuristics don't flag the main app. |
+| `crates/quicuts-agent-mac` | **Sidecar**: CGEventTap + NSWorkspace frontmost watcher — the only macOS binary that touches system input. Same IPC contract; its hold/chord state machine is pure and unit-tested. |
 | `crates/quicuts-app` | Tauri host: tray, overlay/badges/settings windows, engine, agent supervisor, icon extraction |
 | `ui/` | Svelte 5 + Vite frontend (overlay, badges, settings windows) |
 | `manifests/` | Bundled PowerToys manifests (MIT — see `POWERTOYS-LICENSE`) |
+| `manifests-mac/` | macOS manifest set, matched by bundle ID |
 
 ## Build & run (WSL2 → Windows host)
 
@@ -52,9 +59,26 @@ just kill          # stop it
 just dev-server    # + `just dev-build` in another shell for frontend HMR
 ```
 
+## Build & run (macOS)
+
+Built natively on the Mac — no cross-compilation. The event tap needs a
+one-time **Accessibility** grant in System Settings (in dev it is attributed to
+the terminal you launch from, so granting once covers every rebuild).
+
+```bash
+just mac-test      # Rust/manifest/state-machine tests
+just mac-run       # build agent + ui, run the dev app
+just mac-build     # full .app bundle
+just mac-log       # tail the log
+```
+
+Setup, dev loop, and gotchas: `docs/macos-dev.md`. Decisions and known gaps:
+`docs/adr/0006-macos-agent.md`.
+
 See `docs/adr/` for the architecture decision records: the framework choice
 (0001), the no-sudo cross-toolchain (0002), hosted web-app collections (0003),
-and the unsupported-app placeholder (0004).
+the unsupported-app placeholder (0004), overlay font scaling (0005), and the
+macOS agent (0006).
 
 
 ### Running directly from Windows (restart Quicuts)

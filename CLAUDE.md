@@ -49,11 +49,11 @@ Set `WINUSER` to your Windows username. `deploy` must target a Windows-local pat
 
 ## macOS target — built natively on the Mac
 
-**Status: not built yet.** The macOS agent is in progress on the `mac-version` branch. If you are working on macOS, read `docs/macos-slice-brief.md` first — it carries the agreed scope, the settled architecture decisions, and what is deliberately out of scope. Once that work lands, `docs/macos-dev.md` is the setup and dev-loop reference and the `mac-*` `just` recipes are the entry points.
+**Status: first vertical slice working.** Hold-⌘ panel, `⌃⌘/` toggle, Esc dismiss, and bundle-ID app matching are verified on a real Mac. `docs/macos-dev.md` is the setup and dev-loop reference (the `mac-*` `just` recipes are the entry points; TCC needs a one-time Accessibility grant to your terminal — see its *Autonomous mode* section). Decisions and known gaps: `docs/adr/0006-macos-agent.md`.
 
 How the mac loop differs from the Windows one:
 
-- **Native build, no cross-compilation.** Target `aarch64-apple-darwin`; `cargo tauri` runs on the Mac itself.
+- **Native build, no cross-compilation.** `cargo tauri` runs on the Mac itself; the sidecar's staged filename is derived from `rustc -vV`, so Apple silicon and Intel both work.
 - **The agent needs a TCC permission** (Accessibility / Input Monitoring) granted by hand in System Settings. No amount of code grants it — an agent that starts without it emits `Fatal { kind: PermissionRequired }`, which the protocol already defines. Expect human checkpoints in the loop.
 - **App identity is the bundle ID** (`com.apple.Safari`), not an exe name — see *Manifest matching rules*.
 - **macOS manifests live in `manifests-mac/`**, kept separate from the Windows set in `manifests/`.
@@ -69,7 +69,7 @@ The **IPC protocol is the platform seam.** Every platform agent implements the s
 
 - **`crates/quicuts-agent-win`** — the Windows sidecar (only binary that installs global hooks). `hook.rs` is the **highest-risk code**: a `WH_KEYBOARD_LL` hook driving a hold/chord state machine (`Idle → WinDown → {Combo | HoldActive} → Idle`), plus PowerToys' dummy-key injection (`SendInput` VK 0xFF with a magic `dwExtraInfo`) so holding Win doesn't open the Start menu. `foreground.rs` = `SetWinEventHook` foreground watcher; `taskbar.rs` = `IUIAutomation` taskbar-rect reader; `ipc.rs`/`state.rs` = NDJSON transport + cached config atomics (the hook callback must never block on IPC). Everything is `#[cfg(windows)]`.
 
-- **`crates/quicuts-agent-mac`** — *planned, not yet written.* The macOS sidecar: a `CGEventTap` driving the same hold/chord state machine, an `NSWorkspace` frontmost-app watcher, and no taskbar reader. It speaks the identical `AgentCommand`/`AgentEvent` protocol, so `agent.rs` on the app side needs no per-platform branching. Scope and decisions: `docs/macos-slice-brief.md`.
+- **`crates/quicuts-agent-mac`** — the macOS sidecar. `activation.rs` is the **pure, unit-tested** hold/chord state machine (`Idle → CmdDown → {Combo | HoldActive} → Idle`, no dummy-key injection — ⌘ alone triggers nothing on macOS); `tap.rs` is a thin active-`CGEventTap` adapter that translates CGKeyCode → the protocol's Windows-style VK codes, re-enables the tap after `TapDisabledByTimeout` (plus a watchdog for taps killed with no callbacks), and resets the state machine on every re-enable; `foreground.rs` is an `NSWorkspace` frontmost watcher reporting bundle IDs; `ipc.rs` is a verbatim copy of the Windows one. No taskbar reader. Same `AgentCommand`/`AgentEvent` protocol, so `agent.rs` needs no per-platform branching. Decisions and known gaps: `docs/adr/0006-macos-agent.md`. **`activation.rs` builds and tests on the Linux toolchain** — `just test` runs it, so a WSL session can catch regressions in it.
 
 - **`crates/quicuts-app`** — the Tauri host. `agent.rs` supervises the sidecar (spawn, NDJSON handling, backoff restart). `engine.rs` builds the overlay view-model on each foreground change and emits `overlay://state`; the frontend is dumb-render. `overlay.rs`/`tray.rs` manage windows and the tray menu. `commands.rs` holds the `#[tauri::command]` handlers invoked from the UI. `settings.rs` (persisted to `{app_config_dir}/settings.json`, pushed live to the agent as `Configure` — no restart), `pinned.rs`, `icons.rs` (Windows icon → data-URI for the app rail). `lib.rs::run()` wires `invoke_handler` + `on_window_event`.
 
@@ -89,6 +89,6 @@ Match foreground app by that identity, then exact-match ∪ `"*"` wildcard manif
 
 Working daily-driver on Windows: hold-to-show with Win-key suppression, app-aware panels, taskbar badges, pinning, and customizations are verified on a real host. Experimental web-app title detection (hosted collections) is implemented behind a settings toggle.
 
-macOS: nothing shipped yet. The first vertical slice is scoped in `docs/macos-slice-brief.md` and being built on the `mac-version` branch; the IPC protocol is the seam it plugs into, and `docs/adr/0006` will record what came out of it.
+macOS: first slice verified on-screen (hold/chord/Esc, app-aware panels by bundle ID, tray-only). The IPC protocol was the seam it plugged into and needed no new commands or events. Deliberate gaps are listed in ADR 0006 — most visibly, showing the panel activates Quicuts (needs a non-activating `NSPanel`, which Tauri v2 doesn't expose), no rail icons, no running-apps detection, and no signing/notarization.
 
-ADRs: `docs/adr/0001` (why Tauri v2), `docs/adr/0002` (the no-sudo cross-toolchain), `docs/adr/0003` (hosted collections), `docs/adr/0004` (unsupported-app placeholder), `docs/adr/0005` (overlay font scaling / accessibility zoom).
+ADRs: `docs/adr/0001` (why Tauri v2), `docs/adr/0002` (the no-sudo cross-toolchain), `docs/adr/0003` (hosted collections), `docs/adr/0004` (unsupported-app placeholder), `docs/adr/0005` (overlay font scaling / accessibility zoom), `docs/adr/0006` (the macOS agent + TCC responsible-process findings). `docs/macos-slice-brief.md` is the handoff brief that scoped the macOS slice — historical now, kept for the reasoning. `docs/two-agent-review-process.md` is how the Mac and Windows Claude sessions review each other's PRs.
