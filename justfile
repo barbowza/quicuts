@@ -16,8 +16,12 @@ export XWIN_CACHE_DIR := justfile_directory() + "/.cache/xwin"
 default: run
 
 # Fast Rust/manifest checks on the Linux toolchain (no cross-compile).
+# quicuts-agent-mac builds here too — its mac deps are target-gated and the
+# activation state machine is platform-free — so the Windows side gets free
+# regression coverage on it.
 test:
     cargo test
+    cargo test -p quicuts-agent-mac
 
 # Cross-compile the agent sidecar and stage it for the app bundle.
 agent:
@@ -71,7 +75,10 @@ log:
 
 # --- macOS (native build on the Mac; see docs/macos-dev.md) ---
 
-mac_triple := "aarch64-apple-darwin"
+# The sidecar must be named for the *host* triple tauri-build looks up, so it
+# is derived, not hardcoded — Apple silicon and Intel both build here.
+# Computed inside the recipes so a machine without rustc can still parse this
+# justfile and run the Windows recipes.
 
 # Rust/manifest/state-machine tests on the native toolchain.
 mac-test:
@@ -81,16 +88,29 @@ mac-test:
 # (tauri-build re-copies the staged file over target/debug/quicuts-agent on
 # every app build, so restaging here is what keeps the dev sidecar fresh.)
 mac-agent:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    triple=$(rustc -vV | sed -n 's/^host: //p')
     cargo build -p quicuts-agent-mac
     mkdir -p crates/quicuts-app/binaries
-    cp target/debug/quicuts-agent crates/quicuts-app/binaries/quicuts-agent-{{mac_triple}}
+    cp target/debug/quicuts-agent "crates/quicuts-app/binaries/quicuts-agent-$triple"
+
+# Release build of the sidecar, staged the same way. `cargo tauri build` is a
+# release build, so staging the debug binary would ship it inside the .app.
+mac-agent-release:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    triple=$(rustc -vV | sed -n 's/^host: //p')
+    cargo build -p quicuts-agent-mac --release
+    mkdir -p crates/quicuts-app/binaries
+    cp target/release/quicuts-agent "crates/quicuts-app/binaries/quicuts-agent-$triple"
 
 # Build the frontend.
 mac-ui:
     cd ui && pnpm install --prefer-offline && pnpm build
 
 # Full .app bundle build (permission-realistic; TCC attributes to the app).
-mac-build: mac-agent mac-ui
+mac-build: mac-agent-release mac-ui
     cd crates/quicuts-app && cargo tauri build --config conf/macos.json
 
 # Dev run from the terminal (TCC attributes to the terminal app).

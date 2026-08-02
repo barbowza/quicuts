@@ -76,7 +76,10 @@ enum Phase {
 #[derive(Debug)]
 pub struct Activation {
     phase: Phase,
-    cmd_down: bool,
+    /// ⌘ is tracked per side: with both keys held, releasing one must not
+    /// end the hold. `cmd_down()` is the "any ⌘ still down" predicate.
+    lcmd: bool,
+    rcmd: bool,
     shift: bool,
     ctrl: bool,
     alt: bool,
@@ -102,7 +105,8 @@ impl Activation {
     pub const fn new() -> Self {
         Self {
             phase: Phase::Idle,
-            cmd_down: false,
+            lcmd: false,
+            rcmd: false,
             shift: false,
             ctrl: false,
             alt: false,
@@ -110,12 +114,40 @@ impl Activation {
         }
     }
 
+    /// Drop every key we believe is held and return to `Idle`, reporting the
+    /// event the app needs to stay in sync.
+    ///
+    /// Called when the event tap is re-enabled after the system disabled it:
+    /// transitions during the outage were never delivered, so our view of the
+    /// keyboard is stale. Without this, a ⌘ key-up dropped mid-hold leaves the
+    /// panel up with no key left that can close it, and hold activation dead
+    /// until an unrelated ⌘ press releases it.
+    ///
+    /// A chord-shown panel is *not* dismissed — it is meant to outlive the
+    /// keypress, and the phase is `Idle` there anyway.
+    pub fn reset(&mut self) -> Option<Event> {
+        let was_hold = self.phase == Phase::HoldActive;
+        *self = Self::new();
+        was_hold.then_some(Event::HoldReleased)
+    }
+
+    fn cmd_down(&self) -> bool {
+        self.lcmd || self.rcmd
+    }
+
+    /// A ⌘ key-up that leaves no ⌘ still held — the real end of the press.
+    /// Call after `track_modifier` has applied this transition.
+    fn cmd_fully_released(&self, vk: u32, up: bool) -> bool {
+        up && is_cmd(vk) && !self.cmd_down()
+    }
+
     fn track_modifier(&mut self, vk: u32, down: bool) {
         match vk {
             0x10 | 0xA0 | 0xA1 => self.shift = down,
             0x11 | 0xA2 | 0xA3 => self.ctrl = down,
             0x12 | 0xA4 | 0xA5 => self.alt = down,
-            v if is_cmd(v) => self.cmd_down = down,
+            VK_LWIN => self.lcmd = down,
+            VK_RWIN => self.rcmd = down,
             _ => {}
         }
     }
@@ -123,7 +155,7 @@ impl Activation {
     fn chord_matches(&self, cfg: &Config, vk: u32) -> bool {
         cfg.chord_enabled
             && vk == cfg.chord_vk
-            && self.cmd_down == cfg.chord_win
+            && self.cmd_down() == cfg.chord_win
             && self.shift == cfg.chord_shift
             && self.ctrl == cfg.chord_ctrl
             && self.alt == cfg.chord_alt
@@ -190,7 +222,7 @@ impl Activation {
                 Decision::PASS
             }
             Phase::CmdDown => {
-                if up && is_cmd(vk) {
+                if self.cmd_fully_released(vk, up) {
                     // Quick ⌘ tap: nothing to suppress on macOS.
                     self.phase = Phase::Idle;
                     Decision { timer: Some(TimerCmd::Cancel), ..Decision::PASS }
@@ -203,7 +235,7 @@ impl Activation {
                 }
             }
             Phase::HoldActive => {
-                if up && is_cmd(vk) {
+                if self.cmd_fully_released(vk, up) {
                     self.phase = Phase::Idle;
                     Decision {
                         event: Some(Event::HoldReleased),
@@ -223,7 +255,7 @@ impl Activation {
                 }
             }
             Phase::Combo => {
-                if up && is_cmd(vk) {
+                if self.cmd_fully_released(vk, up) {
                     self.phase = Phase::Idle;
                 }
                 Decision::PASS
@@ -412,6 +444,54 @@ mod tests {
         assert_eq!(a.on_key(&c, 0x45, false), Decision::PASS);
         let d = a.on_key(&c, VK_LWIN, false);
         assert_eq!(d.event, None);
+    }
+
+    /// Regression: the tap can be disabled mid-hold (timeout, sleep/wake), and
+    /// the ⌘ key-up that happens while it is dead is never delivered. Without
+    /// a reset on re-enable the panel stays up and hold activation is dead —
+    /// the next ⌘ press re-arms nothing, because `HoldActive` ignores a ⌘ down.
+    #[test]
+    fn reset_on_tap_reenable_clears_a_wedged_hold() {
+        let mut a = Activation::new();
+        let c = cfg(false);
+        a.on_key(&c, VK_LWIN, true);
+        assert_eq!(a.on_hold_timer(&c, false).event, Some(Event::HoldActivated));
+
+        // Tap dies here; the ⌘ up is swallowed by the outage. Re-enabling it
+        // must tell the app the hold is over.
+        assert_eq!(a.reset(), Some(Event::HoldReleased));
+
+        // And the state machine is live again: the next ⌘ press arms and holds.
+        let d = a.on_key(&c, VK_LWIN, true);
+        assert_eq!(d.timer, Some(TimerCmd::Arm(900)));
+        assert_eq!(a.on_hold_timer(&c, false).event, Some(Event::HoldActivated));
+    }
+
+    /// Resetting outside a hold reports nothing — a chord-shown panel is meant
+    /// to outlive the keypress and must not be dismissed by tap recovery.
+    #[test]
+    fn reset_outside_a_hold_is_silent() {
+        let mut a = Activation::new();
+        let c = cfg(true);
+        assert_eq!(Activation::new().reset(), None);
+        a.on_key(&c, VK_LWIN, true); // CmdDown, timer armed
+        assert_eq!(a.reset(), None);
+        // The stale timer fire that outlived the reset must not activate.
+        assert_eq!(a.on_hold_timer(&c, false), Decision::PASS);
+    }
+
+    /// Both ⌘ keys held: releasing one is not the end of the press.
+    #[test]
+    fn releasing_one_cmd_while_the_other_is_held_keeps_the_hold() {
+        let mut a = Activation::new();
+        let c = cfg(false);
+        a.on_key(&c, VK_LWIN, true);
+        a.on_key(&c, VK_RWIN, true);
+        assert_eq!(a.on_hold_timer(&c, false).event, Some(Event::HoldActivated));
+        // Left ⌘ up, right still down: the panel stays.
+        assert_eq!(a.on_key(&c, VK_LWIN, false).event, None);
+        // The last ⌘ up ends it.
+        assert_eq!(a.on_key(&c, VK_RWIN, false).event, Some(Event::HoldReleased));
     }
 
     #[test]

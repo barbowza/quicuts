@@ -36,7 +36,10 @@ extern "C" {
     /// TCC check for the Accessibility grant an active keyboard tap needs.
     /// Attributed to the *responsible process* (the Quicuts app bundle, or
     /// the terminal in dev) — not this binary.
-    fn AXIsProcessTrusted() -> bool;
+    ///
+    /// Returns `Boolean` (`unsigned char`), not C `_Bool`: declaring it as a
+    /// Rust `bool` would be UB for any value other than 0/1.
+    fn AXIsProcessTrusted() -> u8;
 }
 
 #[link(name = "CoreGraphics", kind = "framework")]
@@ -47,15 +50,34 @@ extern "C" {
 
 static ACTIVATION: Mutex<Activation> = Mutex::new(Activation::new());
 
+/// Lock the state machine, recovering from poisoning rather than panicking.
+/// A panic in one tap callback would otherwise poison the mutex and make
+/// every later callback panic *through the CoreFoundation callback
+/// boundary*, killing the run loop. The state machine holds no invariant
+/// worth that: a stale `Activation` self-heals within one keypress.
+fn activation() -> std::sync::MutexGuard<'static, Activation> {
+    ACTIVATION.lock().unwrap_or_else(|e| e.into_inner())
+}
+
 /// The tap's CFMachPort, for re-enabling from the callback / watchdog. Set
-/// once after creation; the port outlives both users (the tap is never
-/// dropped).
+/// once after creation; the tap is leaked on purpose (see `run`) so this
+/// stays valid for the process lifetime.
 static TAP_PORT: AtomicPtr<std::ffi::c_void> = AtomicPtr::new(std::ptr::null_mut());
 
-fn reenable_tap() {
+/// Revive a tap the system disabled, and resync the state machine.
+///
+/// Key transitions during the outage were never delivered, so anything we
+/// still believe about the keyboard is stale — most visibly a ⌘ key-up
+/// dropped mid-hold, which would leave the panel up with no key able to
+/// close it. Resetting reports the hold as released so the app's view can't
+/// drift from ours.
+fn reenable_tap(sink: &EventSink) {
     let port = TAP_PORT.load(Ordering::Acquire);
     if !port.is_null() {
         unsafe { CGEventTapEnable(port as _, true) };
+    }
+    if let Some(ev) = activation().reset() {
+        emit_semantic(sink, ev);
     }
 }
 
@@ -80,7 +102,7 @@ fn spawn_hold_timer(sink: EventSink) -> Sender<TimerMsg> {
                     let fg = foreground::current();
                     let excluded =
                         state::is_excluded(fg.as_ref().and_then(|f| f.exe_name.as_deref()));
-                    let d = ACTIVATION.lock().unwrap().on_hold_timer(&cfg, excluded);
+                    let d = activation().on_hold_timer(&cfg, excluded);
                     if let Some(ev) = d.event {
                         emit_semantic(&sink, ev);
                     }
@@ -157,7 +179,7 @@ fn on_tap_event(
     match etype {
         CGEventType::TapDisabledByTimeout | CGEventType::TapDisabledByUserInput => {
             eprintln!("tap disabled ({etype:?}), re-enabling");
-            reenable_tap();
+            reenable_tap(sink);
             return CallbackResult::Keep;
         }
         CGEventType::KeyDown | CGEventType::KeyUp | CGEventType::FlagsChanged => {}
@@ -167,7 +189,7 @@ fn on_tap_event(
         return CallbackResult::Keep;
     };
     let cfg = CONFIG.snapshot();
-    let d = ACTIVATION.lock().unwrap().on_key(&cfg, vk, down);
+    let d = activation().on_key(&cfg, vk, down);
     if let Some(cmd) = d.timer {
         let _ = timer_tx.send(match cmd {
             TimerCmd::Arm(ms) => TimerMsg::Arm(ms),
@@ -319,7 +341,7 @@ pub fn run() -> anyhow::Result<()> {
     let sink = ipc::spawn_writer();
     let commands = ipc::spawn_reader();
 
-    if !unsafe { AXIsProcessTrusted() } {
+    if unsafe { AXIsProcessTrusted() } == 0 {
         sink.send(AgentEvent::Fatal {
             kind: FatalKind::PermissionRequired,
             message: "Accessibility permission missing: System Settings → Privacy & Security → \
@@ -369,15 +391,21 @@ pub fn run() -> anyhow::Result<()> {
         tap.mach_port().as_concrete_TypeRef() as *mut _,
         Ordering::Release,
     );
+    // Deliberate process-lifetime leak. `TAP_PORT` holds an *unretained*
+    // reference to this tap's CFMachPort and the watchdog thread below keeps
+    // polling it; if `run_current()` ever returns, dropping the tap here would
+    // leave both users pointing at a freed port.
+    std::mem::forget(tap);
 
     // Watchdog: a tap killed while no events flow (sleep/wake, lock/unlock)
     // never gets a TapDisabled callback; poll and revive.
-    std::thread::spawn(|| loop {
+    let wd_sink = sink.clone();
+    std::thread::spawn(move || loop {
         std::thread::sleep(Duration::from_secs(5));
         let port = TAP_PORT.load(Ordering::Acquire);
         if !port.is_null() && !unsafe { CGEventTapIsEnabled(port as _) } {
             eprintln!("tap found disabled by watchdog, re-enabling");
-            reenable_tap();
+            reenable_tap(&wd_sink);
         }
     });
 

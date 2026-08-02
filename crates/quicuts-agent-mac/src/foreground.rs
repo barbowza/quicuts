@@ -32,8 +32,13 @@ const OWN_BUNDLE_ID: &str = "com.barbowza.quicuts";
 
 fn info_from(app: &NSRunningApplication) -> ForegroundInfo {
     let exe_name = app.bundleIdentifier().map(|s| s.to_string());
+    // Prefer the `.app` bundle path — that is what the app-side Info.plist
+    // reader consumes. An unbundled process (a `cargo tauri dev` build, a
+    // bare binary) has no `bundleURL` at all, so fall back to the executable
+    // itself; without that fallback the dev build has *no* identifying field.
     let exe_path = app
         .bundleURL()
+        .or_else(|| app.executableURL())
         .and_then(|u| u.path())
         .map(|s| s.to_string());
     ForegroundInfo {
@@ -45,8 +50,8 @@ fn info_from(app: &NSRunningApplication) -> ForegroundInfo {
 }
 
 fn is_own(info: &ForegroundInfo) -> bool {
-    // In dev the app runs unbundled (no bundle id), so also match the bare
-    // executable name.
+    // Bundled: the bundle id. Unbundled (dev), there is no bundle id, so
+    // match the bare executable path `info_from` fell back to.
     info.exe_name.as_deref() == Some(OWN_BUNDLE_ID)
         || info
             .exe_path
@@ -60,7 +65,10 @@ fn is_own(info: &ForegroundInfo) -> bool {
 fn refresh() -> Option<ForegroundInfo> {
     let app = NSWorkspace::sharedWorkspace().frontmostApplication()?;
     let info = info_from(&app);
-    if is_own(&info) {
+    // Ours, or carrying nothing `match_foreground` could ever key on: either
+    // way, caching it would replace the user's real app with a panel that
+    // shows the unsupported-app placeholder. Leave the cache alone.
+    if is_own(&info) || (info.exe_name.is_none() && info.exe_path.is_none()) {
         return None;
     }
     *CURRENT.lock().unwrap() = Some(info.clone());
