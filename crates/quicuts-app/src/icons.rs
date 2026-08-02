@@ -134,4 +134,5 @@ mod windows_impl {
 
 /// Manifest icon files (platform-free) live in the manifest crate; exe
 /// icons share its base64.
+#[cfg_attr(not(windows), allow(unused_imports))]
 pub use quicuts_manifest::icon::{base64_encode, file_data_uri};

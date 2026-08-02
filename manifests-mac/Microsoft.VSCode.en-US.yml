@@ -1,0 +1,75 @@
+PackageName: Microsoft.VSCode
+Name: Visual Studio Code
+WindowFilter: "com.microsoft.VSCode"
+BackgroundProcess: false
+Shortcuts:
+  - SectionName: General
+    Properties:
+      - Name: Command Palette
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - P
+      - Name: Quick Open
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - P
+      - Name: Toggle terminal
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "`"
+      - Name: Toggle sidebar
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - B
+  - SectionName: Editing
+    Properties:
+      - Name: Find in files
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - F
+      - Name: Go to line
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - G
+      - Name: Add next match to selection
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - D
+      - Name: Format document
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - F

@@ -7,3 +7,4 @@ crates/quicuts-app/gen/
 *.log
 .claude/
 *.code-workspace
+crates/quicuts-app/binaries/

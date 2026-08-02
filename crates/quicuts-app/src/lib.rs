@@ -114,6 +114,9 @@ pub fn run() {
             _ => {}
         })
         .setup(|app| {
+            // Tray-only on macOS: no Dock icon, no ⌘Tab entry.
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             let handle = app.handle().clone();
             let config_dir = handle
                 .path()
@@ -184,22 +187,46 @@ pub fn apply_autostart(app: &tauri::AppHandle) {
 
 /// Resolve the bundled-manifests directory across dev and installed layouts.
 fn bundled_manifests_dir(app: &tauri::AppHandle) -> PathBuf {
-    let mut candidates: Vec<PathBuf> = Vec::new();
-    if let Ok(res) = app.path().resource_dir() {
-        candidates.push(res.join("manifests"));
-        candidates.push(res.join("_up_/_up_/manifests")); // tauri "../../" resource mapping
-    }
-    if let Ok(exe) = std::env::current_exe() {
-        if let Some(dir) = exe.parent() {
-            candidates.push(dir.join("manifests"));
-            candidates.push(dir.join("../manifests"));
+    // macOS ships its own manifest set and must never fall back to the
+    // Windows one: that would put Win+E / File Explorer entries on every mac
+    // panel, which is exactly what the sibling directory exists to prevent.
+    // A missing `manifests-mac` is an empty store, not the wrong store.
+    #[cfg(target_os = "macos")]
+    {
+        let mut candidates: Vec<PathBuf> = Vec::new();
+        if let Ok(res) = app.path().resource_dir() {
+            candidates.push(res.join("manifests-mac"));
+            candidates.push(res.join("_up_/_up_/manifests-mac"));
         }
+        // Dev workspace fallback.
+        candidates.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../manifests-mac"));
+        first_existing(candidates)
     }
-    // Dev workspace fallback.
-    candidates.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../manifests"));
+    #[cfg(not(target_os = "macos"))]
+    {
+        let mut candidates: Vec<PathBuf> = Vec::new();
+        if let Ok(res) = app.path().resource_dir() {
+            candidates.push(res.join("manifests"));
+            candidates.push(res.join("_up_/_up_/manifests")); // tauri "../../" resource mapping
+        }
+        if let Ok(exe) = std::env::current_exe() {
+            if let Some(dir) = exe.parent() {
+                candidates.push(dir.join("manifests"));
+                candidates.push(dir.join("../manifests"));
+            }
+        }
+        // Dev workspace fallback.
+        candidates.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../manifests"));
+        first_existing(candidates)
+    }
+}
+
+/// First candidate that exists, else the last one (the dev fallback) so the
+/// caller has a path to log.
+fn first_existing(mut candidates: Vec<PathBuf>) -> PathBuf {
     candidates
         .iter()
         .find(|p| p.exists())
         .cloned()
-        .unwrap_or_else(|| candidates.pop().unwrap())
+        .unwrap_or_else(|| candidates.pop().expect("at least one candidate"))
 }
