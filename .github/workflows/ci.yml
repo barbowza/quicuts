@@ -1,0 +1,100 @@
+# CI runs entirely on a Linux runner. That is not a compromise: the Windows
+# app is *already* built by cross-compiling from Linux (see the justfile and
+# docs/adr/0002-wsl-cross-toolchain.md), so CI does exactly what a dev box
+# does. No Windows or macOS runner is needed.
+#
+# What this catches that `just test` alone cannot: build-script and config
+# failures. quicuts-app's tauri-build script validates cargo features against
+# tauri.conf.json, and that check is invisible to unit tests — only an actual
+# cross-compile exercises it.
+#
+# Not covered here (and not coverable on a Linux runner): the macOS .app
+# bundle, and anything that needs real system input — hook.rs and tap.rs stay
+# manually verified on their respective hosts.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Test + cross-build for Windows
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # clang-cl and llvm-rc, needed by cc-rs and tauri-winres when targeting
+      # MSVC. This is the sudo path that scripts/setup-wsl-toolchain.sh takes
+      # when it can; the deb-staging fallback in that script exists only for
+      # sudo-less WSL boxes.
+      - name: Install clang-cl + llvm-rc
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y lld clang llvm
+
+      - name: Install Rust + the MSVC target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Cache cargo registry + target dir
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install just + cargo-xwin
+        uses: taiki-e/install-action@v2
+        with:
+          tool: just,cargo-xwin
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Pin the store to a fixed path rather than asking `pnpm store path` for
+      # it — that can fail on a runner where no store exists yet, and a literal
+      # path is what the cache step wants anyway.
+      - name: Install pnpm
+        run: |
+          npm install -g pnpm@10
+          pnpm config set --global store-dir "$HOME/.pnpm-store"
+
+      - name: Cache the pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-${{ runner.os }}-${{ hashFiles('ui/pnpm-lock.yaml') }}
+          restore-keys: pnpm-${{ runner.os }}-
+
+      # cargo-xwin downloads and splats the Windows SDK + CRT headers into
+      # XWIN_CACHE_DIR (the justfile points that at ./.cache/xwin). It is a few
+      # hundred MB and immutable for a given cargo-xwin version, so key on that
+      # version and let it persist.
+      - name: Resolve cargo-xwin version for the cache key
+        id: xwin
+        run: echo "version=$(cargo xwin --version | tr ' ' '-')" >> "$GITHUB_OUTPUT"
+
+      - name: Cache the xwin Windows SDK/CRT
+        uses: actions/cache@v4
+        with:
+          path: .cache/xwin
+          key: xwin-${{ runner.os }}-${{ steps.xwin.outputs.version }}
+
+      - name: Test (platform-free crates + the macOS activation state machine)
+        run: just test
+
+      - name: Cross-build the app, sidecar, and frontend
+        run: just build
