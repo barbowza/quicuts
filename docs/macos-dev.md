@@ -71,9 +71,14 @@ just mac-log     # tail ~/Library/Logs/com.barbowza.quicuts/Quicuts.log
   `target/debug/quicuts-agent` during app builds. `just mac-run` restages
   the agent first, so always go through it (a bare `cargo tauri dev` can
   run a stale agent).
-- **Transparent overlay needs `macOSPrivateApi`:** supplied by
-  `conf/macos.json` (merged via `--config` by the `mac-*` recipes) plus the
-  `macos-private-api` cargo feature on `tauri`. Don't drop either.
+- **Transparent overlay needs `macOSPrivateApi`:** the `macos-private-api`
+  cargo feature on `tauri` plus `app.macOSPrivateApi: true` in the *base*
+  `tauri.conf.json`. Don't drop either, and don't move the flag into
+  `conf/macos.json` — `tauri-build` compares the cargo feature against the
+  config with no idea what target it is building for, so a mac-only config
+  overlay against an unconditional cargo feature breaks the Windows build
+  (`features on the Cargo.toml file does not match the allowlist`). The flag
+  is inert off macOS: the feature is empty and only gates `wkwebview` code.
 - **Manifests:** the mac set lives in `manifests-mac/` (bundle-id
   `WindowFilter`s); `bundled_manifests_dir` prefers it on macOS. In dev it
   resolves through the workspace path, in bundles through
