@@ -57,9 +57,11 @@ kill:
 
 # Frontend HMR: Vite in WSL + a debug exe pointed at it (localhost forwards
 # WSL<->Windows). Rebuild the exe with the dev-remote config once, then run.
+# The overlay goes in via TAURI_CONFIG (a JSON *string*, json-patch-merged by
+# tauri-build) — `cargo --config` is cargo's own flag and only parses TOML.
 dev-build: agent
-    cargo xwin build -p quicuts-app --target {{target}} \
-        --config crates/quicuts-app/conf/dev-remote.json
+    TAURI_CONFIG="$(cat crates/quicuts-app/conf/dev-remote.json)" \
+        cargo xwin build -p quicuts-app --target {{target}}
     mkdir -p "{{deploy_dir}}"
     cp target/{{target}}/{{profile}}/quicuts.exe "{{deploy_dir}}/"
     cp crates/quicuts-app/binaries/quicuts-agent-{{triple}}.exe "{{deploy_dir}}/quicuts-agent.exe"
