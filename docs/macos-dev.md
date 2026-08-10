@@ -62,6 +62,7 @@ just mac-ui      # pnpm build the frontend
 just mac-run     # agent + ui + `cargo tauri dev` (dev loop; TCC → terminal)
 just mac-build   # full .app bundle → target/release/bundle/macos/Quicuts.app
 just mac-log     # tail ~/Library/Logs/com.barbowza.quicuts/Quicuts.log
+just mac-input   # post synthetic activation input — read the warning below first
 ```
 
 ## Gotchas
@@ -88,6 +89,38 @@ just mac-log     # tail ~/Library/Logs/com.barbowza.quicuts/Quicuts.log
   `package.json#pnpm` field; without the yaml the vite build fails.
 - **Logs:** `just mac-log` in a second terminal. Agent stderr lines appear
   as `agent: …` at Info level.
+- **Synthetic input can't be driven by AppleScript.** `osascript … keystroke
+  "/" using {command down}` will *never* activate Quicuts. `tap.rs`'s
+  `translate()` decides whether a modifier went down or up from the
+  **device-dependent** `NX_DEVICE*` flag bits (`0x1` left ⌃, `0x2` left ⇧,
+  `0x8` left ⌘ — see `device_bit()`), because the generic
+  `CGEventFlags::maskCommand` bit stays set while *either* ⌘ is held and so
+  cannot distinguish press from release. AppleScript sets only the generic
+  bits, so the state machine reads every modifier as already released and
+  nothing fires. To drive activation programmatically, post `CGEvent`s with
+  **both** bit sets — e.g. for a ⌘ hold, a `.flagsChanged` event with
+  keycode `0x37` and flags `maskCommand | 0x8`, then the same keycode with
+  flags `0` to release. This is a property of the agent, not a bug: real
+  hardware events always carry the device bits.
+
+  `scripts/mac-synthetic-input.swift` does exactly that, and is the way to
+  drive activation from a script: `just mac-input hold [ms] | holddown |
+  cmdup | chord | esc`, or `just mac-input help`. It needs no dependencies
+  beyond CoreGraphics, is compiled on the fly by the `swift` interpreter (no
+  cargo, so it cannot affect any build), and inherits the same Accessibility
+  grant the terminal already has for `just mac-run`. Its header carries the
+  full explanation of the device bits.
+
+  ⚠️ **Only run it on an idle machine with nothing important focused.**
+  Synthetic events are posted at the session event tap, so they are delivered
+  to whatever app currently has **focus** — Quicuts merely observes them in
+  passing. A stray Esc dismisses whatever dialog or sheet is open; a stray
+  keystroke replaces whatever an editor has selected. Either can destroy
+  unsaved work, and nearly did on 2026-08-10. Check the frontmost app before
+  every run, and prefer a scratch window. If you only need to exercise the
+  overlay render path, the tray menu's **"Show shortcuts"** item
+  (`tray.rs`) reaches `overlay::show` directly without posting a single
+  event.
 
 ## Autonomous mode
 
