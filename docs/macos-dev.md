@@ -149,10 +149,43 @@ bundled .app builds, whose ad-hoc CDHash changes per rebuild).
 
 **What still needs a human:**
 - clicking the TCC toggle itself — no command can grant it;
-- *visual* verification (panel actually slides in, rail shows "Safari",
-  ⌘Tab untouched): the logs prove events fired, not what was painted on
-  screen. Treat log-level verification as "plumbing works" and keep
-  on-screen claims out of reports unless a human confirmed them;
+- judging what was actually *painted* — whether the panel looks right, not
+  merely where it is (see below: geometry is checkable, rendering is not);
 - anything involving a bundled .app's own grant (fresh grant per ad-hoc
   rebuild, or set up a stable Apple Development signing identity once to
   make bundle grants durable too).
+
+### Checking the panel without a human, and without screenshots
+
+Split "did it work" into two questions. **Geometry and visibility are fully
+checkable unattended, and should be the default** — no TCC grant beyond the
+Accessibility one, and no privacy exposure:
+
+```bash
+# real frame of every Quicuts window, in points, top-left origin
+CGWindowListCopyWindowInfo(.optionAll, kCGNullWindowID)
+```
+
+Filter on `kCGWindowOwnerName == "quicuts"` and read `kCGWindowBounds` plus
+`kCGWindowIsOnscreen`. That is the *actual* frame macOS gave the window, so it
+catches a panel that is mispositioned, mis-sized, or sitting outside every
+display — which is exactly how the mixed-DPI placement bugs were found and
+verified fixed. `.optionOnScreenOnly` **excludes** a window that is on no
+display, so a window present under `.optionAll` but absent from the on-screen
+list is itself the "shown but invisible" signal. Note `kCGWindowName` (the
+title) needs Screen Recording; owner, bounds and the on-screen flag do not, so
+filter by owner and never depend on titles.
+
+**Only reach for `screencapture` when the question is genuinely about
+rendering** — transparency, colours, glyphs, layout. It needs Screen Recording
+on the terminal (a separate TCC bucket from Accessibility; Quicuts itself never
+needs it), and it takes the *whole screen*, including whatever confidential
+material happens to be visible. Never attach captures to PRs or artifacts, and
+delete them when the check is done. Pixel-diffing before/after frames also only
+isolates the overlay on an otherwise-idle screen: against a video call or a
+busy editor, every changed bounding box is someone else's repaint.
+
+⚠️ And the hazard that applies to *any* of this: synthetic input is delivered
+to whatever app has **focus**, not to Quicuts — see the `just mac-input`
+warning above. Check the frontmost app and what is unsaved before posting a
+single event.
