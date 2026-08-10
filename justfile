@@ -123,3 +123,15 @@ mac-run: mac-agent mac-ui
 # Tail the mac-side log.
 mac-log:
     tail -f "$HOME/Library/Logs/com.barbowza.quicuts/Quicuts.log"
+
+# Subcommands: hold [ms] | holddown | cmdup | chord | esc | help. The only way
+# to drive activation programmatically — the agent reads modifier direction
+# from the device-dependent NX_DEVICE* flag bits, which AppleScript never sets;
+# the script's header and docs/macos-dev.md explain why. Compiled on the fly by
+# the `swift` interpreter, with no cargo involvement, so it cannot affect any
+# build.
+# A stray Esc or keystroke lands in whatever is frontmost and can dismiss a
+# dialog or replace an editor selection, losing unsaved work.
+# DANGER: synthetic input goes to the FOCUSED app, not Quicuts — idle machine only.
+mac-input *ARGS:
+    swift scripts/mac-synthetic-input.swift {{ARGS}}
