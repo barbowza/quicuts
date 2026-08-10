@@ -88,6 +88,19 @@ just mac-log     # tail ~/Library/Logs/com.barbowza.quicuts/Quicuts.log
   `package.json#pnpm` field; without the yaml the vite build fails.
 - **Logs:** `just mac-log` in a second terminal. Agent stderr lines appear
   as `agent: …` at Info level.
+- **Synthetic input can't be driven by AppleScript.** `osascript … keystroke
+  "/" using {command down}` will *never* activate Quicuts. `tap.rs`'s
+  `translate()` decides whether a modifier went down or up from the
+  **device-dependent** `NX_DEVICE*` flag bits (`0x1` left ⌃, `0x2` left ⇧,
+  `0x8` left ⌘ — see `device_bit()`), because the generic
+  `CGEventFlags::maskCommand` bit stays set while *either* ⌘ is held and so
+  cannot distinguish press from release. AppleScript sets only the generic
+  bits, so the state machine reads every modifier as already released and
+  nothing fires. To drive activation programmatically, post `CGEvent`s with
+  **both** bit sets — e.g. for a ⌘ hold, a `.flagsChanged` event with
+  keycode `0x37` and flags `maskCommand | 0x8`, then the same keycode with
+  flags `0` to release. This is a property of the agent, not a bug: real
+  hardware events always carry the device bits.
 
 ## Autonomous mode
 
@@ -123,3 +136,33 @@ bundled .app builds, whose ad-hoc CDHash changes per rebuild).
 - anything involving a bundled .app's own grant (fresh grant per ad-hoc
   rebuild, or set up a stable Apple Development signing identity once to
   make bundle grants durable too).
+
+### Automating the visual check — possible, but read the hazards first
+
+The "needs a human" item above is narrower than it looks. A session *can*
+in principle capture its own evidence: grant the terminal **Screen
+Recording** (a separate TCC bucket from Accessibility), drive activation
+with correctly-flagged `CGEvent`s per the gotcha above, and `screencapture
+-x` the result. Quicuts itself never needs Screen Recording — that grant is
+purely for the harness. Two hazards make this a deliberate choice rather
+than a default, both hit for real on 2026-08-10:
+
+- **Synthetic input goes to whoever has focus.** A ⌘-hold, `⌃⌘/`, or Esc
+  posted at the session tap lands in the frontmost app, not in Quicuts. On
+  a live machine that can mean Esc dismissing a dialog or a keystroke
+  replacing a large editor selection. **Check what is focused and what is
+  unsaved before posting anything**, and prefer a scratch app as the
+  foreground.
+- **Pixel-diffing needs a quiet screen.** Diffing before/after frames finds
+  the overlay only if nothing else repaints. Against a video call or a busy
+  editor, every bounding box is someone else's churn and the overlay is
+  lost in the noise. Verify on an idle desktop.
+
+And the obvious one: `screencapture` takes the *whole screen*, including
+whatever confidential material happens to be visible. Don't attach captures
+to PRs or artifacts, and delete them when the check is done.
+
+A safer alternative that skips input synthesis entirely: the tray menu's
+**"Show shortcuts"** item (`tray.rs`) reaches `overlay::show` directly, so
+it exercises the render path — including overlay transparency — without
+posting a single key event.
