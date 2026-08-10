@@ -209,12 +209,42 @@ fn position_panel(app: &AppHandle, window: &tauri::WebviewWindow, edge: &str) {
     // Our own set_size calls echo back as Resized events; remember the width
     // so on_resized can tell them apart from a user drag.
     *app.state::<AppState>().panel_expected_w.lock().unwrap() = Some(width.round() as u32);
-    let panel_px = (width * scale) as u32;
-    let _ = window.set_size(PhysicalSize::new(panel_px, mh));
-    let x = if edge == "left" { mx } else { mx + mw as i32 - panel_px as i32 };
-    let _ = window.set_position(PhysicalPosition::new(x, my));
-    // Keep the logical width stable regardless of DPI for the web layout.
-    let _ = window.set_size(LogicalSize::new(width, mh_logical));
+
+    // The frame has to be expressed in whichever space is unambiguous for the
+    // platform, so the two differ deliberately.
+    //
+    // macOS: logical points only. Tauri converts a Physical* value using the
+    // scale factor of the monitor the window *currently* sits on — and 1.0
+    // while it is still hidden — neither of which need equal the target
+    // monitor's scale. On a 2.0 built-in + 1.0 external pair that misplaced
+    // the panel by the scale ratio: it straddled both displays, and on the
+    // first show of a fresh process it landed outside every display, visible
+    // nowhere. A Logical* value is passed through unconverted, so points in ==
+    // points out regardless of where the window happens to be.
+    #[cfg(target_os = "macos")]
+    {
+        let (lx, ly) = (mx as f64 / scale, my as f64 / scale);
+        let lw = mw as f64 / scale;
+        // Size before position: a macOS resize anchors at the bottom-left, so
+        // sizing after the move would walk the panel off its docked edge.
+        let _ = window.set_size(LogicalSize::new(width, mh_logical));
+        let x = if edge == "left" { lx } else { lx + lw - width };
+        let _ = window.set_position(tauri::LogicalPosition::new(x, ly));
+    }
+    // Windows: physical pixels, unchanged. Every monitor rect lives in one
+    // virtual-screen pixel space there, so physical is already exact and
+    // switching to points would reintroduce the same conversion ambiguity in
+    // reverse on a mixed-DPI setup. Not touched without a Windows host to
+    // verify against.
+    #[cfg(not(target_os = "macos"))]
+    {
+        let panel_px = (width * scale) as u32;
+        let _ = window.set_size(PhysicalSize::new(panel_px, mh));
+        let x = if edge == "left" { mx } else { mx + mw as i32 - panel_px as i32 };
+        let _ = window.set_position(PhysicalPosition::new(x, my));
+        // Keep the logical width stable regardless of DPI for the web layout.
+        let _ = window.set_size(LogicalSize::new(width, mh_logical));
+    }
 }
 
 /// Logical panel width from settings: the dragged base width, times the
@@ -306,22 +336,54 @@ fn monitor_at(window: &tauri::WebviewWindow, x: i32, y: i32) -> Option<tauri::Mo
     None
 }
 
+/// Monitor the cursor is on.
+///
+/// `cursor_position` and the monitor rects are not in the same coordinate
+/// space on macOS once two displays have different scale factors: measured on
+/// a 2.0 built-in + 1.0 external pair, the cursor comes back scaled by the
+/// *primary* monitor's factor while each monitor's rect is scaled by its own.
+/// Hit-testing the two against each other therefore missed the external
+/// display everywhere except the sub-region where the mis-scaling happened to
+/// still land inside it, and fell through to the primary — so the panel
+/// always opened on the built-in screen. `monitor_from_point` is no help; it
+/// consumes the same mismatched space.
+///
+/// Normalising both sides to logical points fixes it, but only macOS is known
+/// to need it, so that attempt is `cfg`-gated: everywhere else this keeps
+/// hit-testing raw physical coordinates exactly as it always did. That matters
+/// because a raw test is not merely wrong on macOS, it is *ambiguous* — with a
+/// display to the right of the built-in, one mis-scaled point can fall inside
+/// two monitors' rects at once and the answer depends on enumeration order.
 fn monitor_under_cursor(
     app: &AppHandle,
     window: &tauri::WebviewWindow,
 ) -> Option<tauri::Monitor> {
     let cursor = app.cursor_position().ok()?;
     let monitors = window.available_monitors().ok()?;
-    for m in &monitors {
-        let p = m.position();
-        let s = m.size();
-        let (x0, y0) = (p.x as f64, p.y as f64);
-        let (x1, y1) = (x0 + s.width as f64, y0 + s.height as f64);
-        if cursor.x >= x0 && cursor.x < x1 && cursor.y >= y0 && cursor.y < y1 {
-            return Some(m.clone());
-        }
+    let primary = window.primary_monitor().ok().flatten();
+    // `logical`: divide each monitor's rect by its own scale factor. Passing
+    // 1.0 leaves the rects in the physical space the original code compared.
+    let hit = |x: f64, y: f64, logical: bool| {
+        monitors
+            .iter()
+            .find(|m| {
+                let s = if logical { m.scale_factor() } else { 1.0 };
+                let p = m.position();
+                let size = m.size();
+                let (x0, y0) = (p.x as f64 / s, p.y as f64 / s);
+                let (x1, y1) = (x0 + size.width as f64 / s, y0 + size.height as f64 / s);
+                x >= x0 && x < x1 && y >= y0 && y < y1
+            })
+            .cloned()
+    };
+    #[allow(unused_mut, unused_assignments)]
+    let mut found = None;
+    #[cfg(target_os = "macos")]
+    {
+        let primary_scale = primary.as_ref().map(|m| m.scale_factor()).unwrap_or(1.0);
+        found = hit(cursor.x / primary_scale, cursor.y / primary_scale, true);
     }
-    window.primary_monitor().ok().flatten()
+    found.or_else(|| hit(cursor.x, cursor.y, false)).or(primary)
 }
 
 #[derive(Serialize, Clone)]
