@@ -1,6 +1,7 @@
 # ADR 0003 — Hosted collections (shortcuts for apps living inside a host app)
 
-Status: accepted (2026-07-12)
+Status: accepted (2026-07-12). Extended by ADR 0007 (multi-pattern
+`TitleMatch` + user title-signature bindings).
 
 ## Context
 

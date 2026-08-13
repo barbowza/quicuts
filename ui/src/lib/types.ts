@@ -96,6 +96,21 @@ export interface ChordSpec {
 
 export type ComboDisplayMode = "default" | "custom" | "all" | "customElseDefault";
 
+/** Mirror of quicuts_manifest::TitleBinding: a user-captured title
+ * signature bound to a hosted collection (experimental title detection). */
+export interface TitleBinding {
+  pattern: string;
+  manifestId: string;
+}
+
+/** One installed hosted collection, a valid target for a title binding. */
+export interface HostedCollection {
+  manifestId: string;
+  displayName: string;
+  /** The manifest's own TitleMatch patterns (for collision hints). */
+  titleMatch: string[];
+}
+
 export type Theme = "system" | "light" | "dark";
 
 /** Payload of appearance://changed — theme, panel opacity (0–1), and the

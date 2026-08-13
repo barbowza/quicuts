@@ -182,6 +182,39 @@ pub fn adjust_font_scale(app: AppHandle, action: String) {
     overlay::reposition(&app);
 }
 
+/// Title of the most recent browser-class foreground window, for the
+/// signature-capture flow in settings (the browser is no longer foreground
+/// once the settings window has focus).
+#[tauri::command]
+pub fn get_last_browser_title(state: State<AppState>) -> Option<String> {
+    state.last_browser_title.lock().unwrap().clone()
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct HostedCollection {
+    pub manifest_id: String,
+    pub display_name: String,
+    /// The manifest's own TitleMatch patterns, so the capture UI can warn
+    /// when a new binding's pattern collides with a bundled signature.
+    pub title_match: Vec<String>,
+}
+
+/// Installed hosted collections — the valid targets for a signature binding.
+#[tauri::command]
+pub fn list_hosted_collections(state: State<AppState>) -> Vec<HostedCollection> {
+    let engine = state.engine.lock().unwrap();
+    engine
+        .hosted_manifests()
+        .into_iter()
+        .map(|(manifest_id, display_name, title_match)| HostedCollection {
+            manifest_id,
+            display_name,
+            title_match,
+        })
+        .collect()
+}
+
 #[tauri::command]
 pub fn set_settings(app: AppHandle, mut settings: Settings) -> Result<(), String> {
     let state = app.state::<AppState>();

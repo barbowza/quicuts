@@ -95,11 +95,13 @@ impl Engine {
     }
 
     /// Hosted collection auto-detected from the foreground window title
-    /// (experimental title detection), if any.
+    /// (experimental title detection), if any. `bindings` are the user's
+    /// captured signatures; they beat manifest `TitleMatch` patterns.
     pub fn title_match(
         &self,
         fg: &ForegroundInfo,
         host_classes: &HostClasses,
+        bindings: &[quicuts_manifest::TitleBinding],
     ) -> Option<String> {
         self.store
             .match_title(
@@ -107,8 +109,25 @@ impl Engine {
                 fg.title.as_deref(),
                 &self.locale,
                 host_classes,
+                bindings,
             )
             .map(|lm| lm.manifest.id.clone())
+    }
+
+    /// Installed hosted collections as (manifest id, display name, own
+    /// TitleMatch patterns) — the valid targets for a signature binding.
+    pub fn hosted_manifests(&self) -> Vec<(String, String, Vec<String>)> {
+        self.store
+            .hosted(&self.locale)
+            .into_iter()
+            .map(|lm| {
+                (
+                    lm.manifest.id.clone(),
+                    lm.manifest.display_name().to_string(),
+                    lm.manifest.title_match.clone(),
+                )
+            })
+            .collect()
     }
 
     /// Friendly name for a foreground exe, cached by path (the version-info

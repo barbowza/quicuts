@@ -72,6 +72,8 @@ pub fn run() {
             commands::get_settings,
             commands::set_settings,
             commands::adjust_font_scale,
+            commands::get_last_browser_title,
+            commands::list_hosted_collections,
         ])
         .on_window_event(|window, event| match window.label() {
             "overlay" => match event {
@@ -144,6 +146,7 @@ pub fn run() {
                 selected: Mutex::new(None),
                 pinned_app: Mutex::new(None),
                 title_matched: Mutex::new(None),
+                last_browser_title: Mutex::new(None),
                 agent_child: Mutex::new(None),
                 last_taskbar: Mutex::new(None),
                 overlay_visible: Mutex::new(false),

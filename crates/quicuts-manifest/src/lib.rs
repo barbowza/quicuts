@@ -62,9 +62,10 @@ pub struct Manifest {
     /// Host class for a hosted collection ("browser"), lowercased. A hosted
     /// manifest matches only via its host class, never via `window_filter`.
     pub host: Option<String>,
-    /// Case-insensitive substring matched against the foreground window
+    /// Case-insensitive substrings matched against the foreground window
     /// title to auto-detect the hosted app (experimental title detection).
-    pub title_match: Option<String>,
+    /// Empty = no title patterns. All entries are trimmed and non-empty.
+    pub title_match: Vec<String>,
     /// Image filename next to the manifest, used as the rail icon.
     pub icon: Option<String>,
     pub sections: Vec<Section>,
@@ -82,6 +83,19 @@ impl Manifest {
     pub fn has_taskbar_section(&self) -> bool {
         self.sections.iter().any(|s| s.is_taskbar)
     }
+}
+
+/// A user-captured title signature bound to a hosted collection: when
+/// `pattern` (case-insensitive substring, same semantics as `TitleMatch`)
+/// hits the foreground title of a host-class window, the collection named by
+/// `manifest_id` auto-selects. User bindings always beat manifest
+/// `TitleMatch` patterns. Persisted in settings, not in manifest files, so
+/// bindings survive manifest updates.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TitleBinding {
+    pub pattern: String,
+    pub manifest_id: String,
 }
 
 /// Normalize an exe identifier for matching: lowercase, strip one trailing
@@ -301,7 +315,7 @@ mod tests {
             window_filter: "test.exe".into(),
             background_process: false,
             host: None,
-            title_match: None,
+            title_match: Vec::new(),
             icon: None,
             sections: vec![
                 Section {

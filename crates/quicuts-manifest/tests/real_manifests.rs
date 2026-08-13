@@ -31,7 +31,7 @@ fn gmail_manifest_shape() {
     let m = &gmail.manifest;
     assert_eq!(m.display_name(), "Gmail");
     assert_eq!(m.host.as_deref(), Some("browser"));
-    assert_eq!(m.title_match.as_deref(), Some("- Gmail"));
+    assert_eq!(m.title_match, vec!["- Gmail"]);
     assert_eq!(m.icon.as_deref(), Some("Google.Gmail.png"));
     assert_eq!(m.window_filter, "");
     assert!(!m.background_process);
@@ -70,11 +70,28 @@ fn gmail_title_detection() {
         Some("Inbox (3) - a@b.com - Gmail — Mozilla Firefox"),
         "en-US",
         &hc,
+        &[],
     );
     assert_eq!(hit.unwrap().manifest.id, "Google.Gmail");
     assert!(s
-        .match_title(Some("notepad.exe"), Some("notes - Gmail"), "en-US", &hc)
+        .match_title(Some("notepad.exe"), Some("notes - Gmail"), "en-US", &hc, &[])
         .is_none());
+}
+
+#[test]
+fn workspace_gmail_via_user_binding() {
+    // The motivating case for signature bindings: Workspace Gmail's title
+    // carries the org name, not "Gmail" — only a user binding can match it.
+    let s = store();
+    let hc = HostClasses::builtin();
+    let title = "Inbox (7) - michael@example.co.uk - Example Corp Mail";
+    assert!(s.match_title(Some("chrome.exe"), Some(title), "en-US", &hc, &[]).is_none());
+    let bindings = [quicuts_manifest::TitleBinding {
+        pattern: "Example Corp Mail".into(),
+        manifest_id: "Google.Gmail".into(),
+    }];
+    let hit = s.match_title(Some("chrome.exe"), Some(title), "en-US", &hc, &bindings);
+    assert_eq!(hit.unwrap().manifest.id, "Google.Gmail");
 }
 
 #[test]
@@ -88,7 +105,7 @@ fn ptsg_manifests_have_no_hosted_fields() {
             || m.lm.manifest.id.starts_with("Microsoft.")
         {
             assert_eq!(m.lm.manifest.host, None, "{}", m.lm.manifest.id);
-            assert_eq!(m.lm.manifest.title_match, None, "{}", m.lm.manifest.id);
+            assert!(m.lm.manifest.title_match.is_empty(), "{}", m.lm.manifest.id);
             assert_eq!(m.lm.manifest.icon, None, "{}", m.lm.manifest.id);
         }
     }
