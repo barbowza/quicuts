@@ -185,10 +185,12 @@ fn handle_event(app: &AppHandle, ev: AgentEvent) {
         // visible and focused -> hide, returning focus to the previous app.
         AgentEvent::ChordActivated { foreground } => {
             let window = app.get_webview_window("overlay");
-            let visible = window
-                .as_ref()
-                .map(|w| w.is_visible().unwrap_or(false))
-                .unwrap_or(false);
+            // Branch on our own flag, not `is_visible()`: hide() dispatches
+            // fire-and-forget to the main thread, so the OS getter can still
+            // report the pre-hide state when a chord lands right after a
+            // hold-release. `overlay_visible` is updated synchronously by
+            // overlay::show/hide, and events are drained serially (#9).
+            let visible = *state.overlay_visible.lock().unwrap();
             let focused = window
                 .as_ref()
                 .map(|w| w.is_focused().unwrap_or(false))
