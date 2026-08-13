@@ -98,6 +98,12 @@ pub struct Settings {
     /// Extra browser exe names extending the built-in "browser" host class.
     #[serde(default)]
     pub extra_browser_exes: Vec<String>,
+    /// User-captured title signatures bound to hosted collections (part of
+    /// experimental title detection). A binding's pattern beats any manifest
+    /// `TitleMatch` on the same title; bindings referencing an uninstalled
+    /// manifest are kept (shown as dangling in the UI), never auto-deleted.
+    #[serde(default)]
+    pub title_bindings: Vec<quicuts_manifest::TitleBinding>,
 }
 
 fn default_combo_display_mode() -> String {
@@ -133,6 +139,7 @@ impl Default for Settings {
             combo_display_mode: default_combo_display_mode(),
             title_detection: false,
             extra_browser_exes: Vec::new(),
+            title_bindings: Vec::new(),
         }
     }
 }
@@ -215,11 +222,18 @@ mod tests {
         let mut s = Settings::default();
         s.title_detection = true;
         s.extra_browser_exes = vec!["thorium.exe".into()];
+        s.title_bindings = vec![quicuts_manifest::TitleBinding {
+            pattern: "Carbon Register Mail".into(),
+            manifest_id: "Google.Gmail".into(),
+        }];
         let json = serde_json::to_string(&s).unwrap();
         assert!(json.contains("\"titleDetection\":true"));
+        // camelCase on the wire, like every settings field the UI touches.
+        assert!(json.contains("\"manifestId\":\"Google.Gmail\""));
         let back: Settings = serde_json::from_str(&json).unwrap();
         assert!(back.title_detection);
         assert_eq!(back.extra_browser_exes, vec!["thorium.exe"]);
+        assert_eq!(back.title_bindings, s.title_bindings);
         match back.to_configure() {
             quicuts_proto::AgentCommand::Configure { title_events_enabled, .. } => {
                 assert!(title_events_enabled)

@@ -106,8 +106,11 @@ fn normalize(raw: RawManifest, fallback_package_name: &str) -> Manifest {
             .filter(|h| !h.is_empty()),
         title_match: raw
             .title_match
+            .0
+            .into_iter()
             .map(|t| t.trim().to_string())
-            .filter(|t| !t.is_empty()),
+            .filter(|t| !t.is_empty())
+            .collect(),
         icon: raw.icon.map(|i| i.trim().to_string()).filter(|i| !i.is_empty()),
         sections,
     }
@@ -198,16 +201,26 @@ mod tests {
         )
         .unwrap();
         assert_eq!(m.host.as_deref(), Some("browser")); // lowercased
-        assert_eq!(m.title_match.as_deref(), Some("- Gmail")); // trimmed
+        assert_eq!(m.title_match, vec!["- Gmail"]); // trimmed
         assert_eq!(m.icon.as_deref(), Some("Google.Gmail.png"));
         assert_eq!(m.window_filter, ""); // Host manifests need no WindowFilter
+    }
+
+    #[test]
+    fn title_match_accepts_a_list() {
+        let m = parse_manifest(
+            "PackageName: X\nHost: browser\nTitleMatch:\n  - \" - Gmail \"\n  - \"\"\n  - \"– Gmail\"\nShortcuts:\n",
+            "X",
+        )
+        .unwrap();
+        assert_eq!(m.title_match, vec!["- Gmail", "– Gmail"]); // trimmed, empties dropped
     }
 
     #[test]
     fn hosted_fields_absent_or_empty_are_none() {
         let m = parse_manifest("PackageName: X\nShortcuts:\n", "X").unwrap();
         assert_eq!(m.host, None);
-        assert_eq!(m.title_match, None);
+        assert!(m.title_match.is_empty());
         assert_eq!(m.icon, None);
 
         let m = parse_manifest(
@@ -216,7 +229,7 @@ mod tests {
         )
         .unwrap();
         assert_eq!(m.host, None);
-        assert_eq!(m.title_match, None);
+        assert!(m.title_match.is_empty());
         assert_eq!(m.icon, None);
     }
 

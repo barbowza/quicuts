@@ -46,6 +46,46 @@ impl<'de> Deserialize<'de> for LaxBool {
     }
 }
 
+/// String-or-list field: `TitleMatch: "- Gmail"` and
+/// `TitleMatch: ["- Gmail", "– Gmail"]` both parse. Null/missing = empty.
+#[derive(Debug, Default, Clone, PartialEq)]
+pub struct LaxStringList(pub Vec<String>);
+
+impl<'de> Deserialize<'de> for LaxStringList {
+    fn deserialize<D: Deserializer<'de>>(de: D) -> Result<Self, D::Error> {
+        struct V;
+        impl<'de> serde::de::Visitor<'de> for V {
+            type Value = LaxStringList;
+            fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+                f.write_str("a string or a list of strings")
+            }
+            fn visit_str<E>(self, v: &str) -> Result<LaxStringList, E> {
+                Ok(LaxStringList(vec![v.to_string()]))
+            }
+            fn visit_seq<A: serde::de::SeqAccess<'de>>(
+                self,
+                mut seq: A,
+            ) -> Result<LaxStringList, A::Error> {
+                let mut out = Vec::new();
+                while let Some(item) = seq.next_element::<String>()? {
+                    out.push(item);
+                }
+                Ok(LaxStringList(out))
+            }
+            fn visit_unit<E>(self) -> Result<LaxStringList, E> {
+                Ok(LaxStringList(Vec::new()))
+            }
+            fn visit_none<E>(self) -> Result<LaxStringList, E> {
+                Ok(LaxStringList(Vec::new()))
+            }
+            fn visit_some<D: Deserializer<'de>>(self, de: D) -> Result<LaxStringList, D::Error> {
+                de.deserialize_any(V)
+            }
+        }
+        de.deserialize_any(V)
+    }
+}
+
 /// A `Keys` list item: YAML may give an unquoted int (`91`) or a string
 /// (`"A"`, `"91"`, `"<Enter>"`).
 #[derive(Debug, Clone, PartialEq, Deserialize)]
@@ -103,10 +143,11 @@ pub struct RawManifest {
     /// collections — apps living inside a host app instead of their own exe.
     #[serde(default)]
     pub host: Option<String>,
-    /// Quicuts extension: case-insensitive substring matched against the
+    /// Quicuts extension: case-insensitive substring(s) matched against the
     /// foreground window title to auto-detect the hosted app (experimental).
+    /// A single string or a list of strings.
     #[serde(default)]
-    pub title_match: Option<String>,
+    pub title_match: LaxStringList,
     /// Quicuts extension: image file next to the manifest for the rail icon.
     #[serde(default)]
     pub icon: Option<String>,

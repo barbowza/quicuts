@@ -126,13 +126,21 @@ fn next_selection(
 /// preserving the pre-ADR-0003 reset-to-pin behavior).
 fn apply_foreground(app: &AppHandle, fg: quicuts_proto::ForegroundInfo, reset: bool) {
     let state = app.state::<AppState>();
-    let (detection, extra) = {
+    let (detection, extra, bindings) = {
         let s = state.settings.lock().unwrap();
-        (s.title_detection, s.extra_browser_exes.clone())
+        (s.title_detection, s.extra_browser_exes.clone(), s.title_bindings.clone())
     };
+    let hc = quicuts_manifest::HostClasses::with_extensions(&extra);
+    // Remember the last browser window title for the settings capture flow
+    // (the browser loses foreground the moment settings opens). In-memory
+    // only; never persisted.
+    if let (Some(exe), Some(title)) = (fg.exe_name.as_deref(), fg.title.as_deref()) {
+        if hc.contains(quicuts_manifest::BROWSER_CLASS, exe) {
+            *state.last_browser_title.lock().unwrap() = Some(title.to_string());
+        }
+    }
     let new_match = if detection {
-        let hc = quicuts_manifest::HostClasses::with_extensions(&extra);
-        state.engine.lock().unwrap().title_match(&fg, &hc)
+        state.engine.lock().unwrap().title_match(&fg, &hc, &bindings)
     } else {
         None
     };

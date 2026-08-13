@@ -28,6 +28,10 @@ pub struct AppState {
     /// Hosted collection currently auto-detected via TitleMatch
     /// (experimental title detection); None when off or no match.
     pub title_matched: Mutex<Option<String>>,
+    /// Title of the most recent browser-class foreground window, kept for
+    /// the settings capture flow (the browser loses foreground when the
+    /// settings window opens). In-memory only; never persisted.
+    pub last_browser_title: Mutex<Option<String>>,
     /// Handle to the running sidecar, for writing commands.
     pub agent_child: Mutex<Option<CommandChild>>,
     pub last_taskbar: Mutex<Option<TaskbarSnapshot>>,

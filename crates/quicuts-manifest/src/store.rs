@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use crate::{normalize_exe, parse_manifest, split_filename, HostClasses, Manifest};
+use crate::{normalize_exe, parse_manifest, split_filename, HostClasses, Manifest, TitleBinding};
 
 /// Where a manifest came from. Later sources override earlier ones for the
 /// same `(PackageName, locale)` — whole-file override, no per-entry merging.
@@ -221,33 +221,62 @@ impl ManifestStore {
             .collect()
     }
 
-    /// Best hosted collection whose `TitleMatch` (case-insensitive
-    /// substring) hits `title`, restricted to collections whose host class
-    /// contains `foreground_exe`. Longest pattern wins (most specific),
-    /// ties broken by id. Used by experimental title detection only.
+    /// All hosted collections (manifests with `Host:` set) for a UI locale,
+    /// sorted by id. The settings UI offers these as binding targets.
+    pub fn hosted(&self, ui_locale: &str) -> Vec<&LoadedManifest> {
+        self.localized(ui_locale)
+            .into_iter()
+            .filter(|lm| lm.manifest.host.is_some())
+            .collect()
+    }
+
+    /// Best hosted collection for a foreground title, from two pattern
+    /// sources: the manifests' own `TitleMatch` patterns and the user's
+    /// signature bindings (both case-insensitive substrings). Precedence:
+    /// user bindings beat manifest patterns, then longest pattern wins
+    /// (most specific), ties broken by id. Both sources are restricted to
+    /// collections whose host class contains `foreground_exe` — a binding
+    /// naming a non-hosted or uninstalled manifest is inert. Used by
+    /// experimental title detection only.
     pub fn match_title(
         &self,
         foreground_exe: Option<&str>,
         title: Option<&str>,
         ui_locale: &str,
         host_classes: &HostClasses,
+        bindings: &[TitleBinding],
     ) -> Option<&LoadedManifest> {
         let fg = foreground_exe?;
         let title = title?.to_lowercase();
-        self.localized(ui_locale)
-            .into_iter()
-            .filter_map(|lm| {
-                let class = lm.manifest.host.as_deref()?;
-                let pattern = lm.manifest.title_match.as_deref()?.trim();
-                if pattern.is_empty() || !host_classes.contains(class, fg) {
-                    return None;
+        // (is_user_binding, pattern_len, manifest) per hit.
+        let mut candidates: Vec<(bool, usize, &LoadedManifest)> = Vec::new();
+        for lm in self.localized(ui_locale) {
+            let Some(class) = lm.manifest.host.as_deref() else { continue };
+            if !host_classes.contains(class, fg) {
+                continue;
+            }
+            let manifest_patterns =
+                lm.manifest.title_match.iter().map(|p| (false, p.as_str()));
+            let binding_patterns = bindings
+                .iter()
+                .filter(|b| b.manifest_id == lm.manifest.id)
+                .map(|b| (true, b.pattern.as_str()));
+            for (is_user, pattern) in manifest_patterns.chain(binding_patterns) {
+                let pattern = pattern.trim();
+                if !pattern.is_empty() && title.contains(&pattern.to_lowercase()) {
+                    candidates.push((is_user, pattern.len(), lm));
                 }
-                title.contains(&pattern.to_lowercase()).then_some((pattern.len(), lm))
+            }
+        }
+        candidates
+            .into_iter()
+            .max_by(|(a_user, a_len, a), (b_user, b_len, b)| {
+                a_user
+                    .cmp(b_user)
+                    .then(a_len.cmp(b_len))
+                    .then_with(|| b.manifest.id.cmp(&a.manifest.id))
             })
-            .max_by(|(a_len, a), (b_len, b)| {
-                a_len.cmp(b_len).then_with(|| b.manifest.id.cmp(&a.manifest.id))
-            })
-            .map(|(_, lm)| lm)
+            .map(|(_, _, lm)| lm)
     }
 }
 
@@ -411,25 +440,106 @@ mod tests {
             Some("Inbox (3) - a@b.com - GMAIL"),
             "en-US",
             &hc,
+            &[],
         );
         assert_eq!(hit.unwrap().manifest.id, "Google.Gmail");
 
         // Only the shorter pattern hits.
-        let hit = store.match_title(Some("firefox.exe"), Some("Fastmail: Inbox"), "en-US", &hc);
+        let hit =
+            store.match_title(Some("firefox.exe"), Some("Fastmail: Inbox"), "en-US", &hc, &[]);
         assert_eq!(hit.unwrap().manifest.id, "Acme.Mail");
 
         // Host-class gating: a non-browser window titled like Gmail never hits.
         assert!(store
-            .match_title(Some("notepad.exe"), Some("x - Gmail"), "en-US", &hc)
+            .match_title(Some("notepad.exe"), Some("x - Gmail"), "en-US", &hc, &[])
             .is_none());
 
         // Missing exe or title: no match.
-        assert!(store.match_title(None, Some("x - Gmail"), "en-US", &hc).is_none());
-        assert!(store.match_title(Some("chrome.exe"), None, "en-US", &hc).is_none());
+        assert!(store.match_title(None, Some("x - Gmail"), "en-US", &hc, &[]).is_none());
+        assert!(store.match_title(Some("chrome.exe"), None, "en-US", &hc, &[]).is_none());
 
         // Unmatched title: no match.
         assert!(store
-            .match_title(Some("chrome.exe"), Some("Example Domain"), "en-US", &hc)
+            .match_title(Some("chrome.exe"), Some("Example Domain"), "en-US", &hc, &[])
+            .is_none());
+        fs::remove_dir_all(&t).ok();
+    }
+
+    #[test]
+    fn multi_pattern_title_match() {
+        let t = std::env::temp_dir().join(format!("quicuts-multi-{}", std::process::id()));
+        fs::create_dir_all(&t).unwrap();
+        write(
+            &t,
+            "Acme.Docs.en-US.yml",
+            "PackageName: Acme.Docs\nHost: browser\nTitleMatch:\n  - \"- Acme Docs\"\n  - \"| Acme Docs\"\nShortcuts:\n  - SectionName: S\n    Properties:\n      - Name: E\n        Shortcut:\n        - Keys:\n            - A\n",
+        );
+        let mut store = ManifestStore::new();
+        store.load_dir(&t, SourceKind::Bundled);
+        let hc = HostClasses::builtin();
+
+        for title in ["Draft - Acme Docs", "Draft | Acme Docs"] {
+            let hit = store.match_title(Some("chrome.exe"), Some(title), "en-US", &hc, &[]);
+            assert_eq!(hit.unwrap().manifest.id, "Acme.Docs", "title {title:?}");
+        }
+        fs::remove_dir_all(&t).ok();
+    }
+
+    #[test]
+    fn binding_matching_and_precedence() {
+        let t = std::env::temp_dir().join(format!("quicuts-bind-{}", std::process::id()));
+        fs::create_dir_all(&t).unwrap();
+        write(&t, "Google.Gmail.en-US.yml", &mk_hosted("Google.Gmail", Some("- Gmail")));
+        write(&t, "Acme.Notion.en-US.yml", &mk_hosted("Acme.Notion", None));
+        write(&t, "Plain.App.en-US.yml", &mk("Plain.App", "plain.exe", false, ""));
+        let mut store = ManifestStore::new();
+        store.load_dir(&t, SourceKind::Bundled);
+        let hc = HostClasses::builtin();
+        let bind = |pattern: &str, id: &str| TitleBinding {
+            pattern: pattern.into(),
+            manifest_id: id.into(),
+        };
+
+        // A user binding matches where no manifest pattern does (the
+        // Workspace-Gmail case: per-org signature).
+        let ws_title = "Inbox (7) - m@carbonregister.co.uk - Carbon Register Mail";
+        let bindings = [bind("Carbon Register Mail", "Google.Gmail")];
+        let hit = store.match_title(Some("chrome.exe"), Some(ws_title), "en-US", &hc, &bindings);
+        assert_eq!(hit.unwrap().manifest.id, "Google.Gmail");
+
+        // A user binding beats a longer manifest pattern on the same title.
+        let bindings = [bind("Inbox", "Acme.Notion")];
+        let hit = store.match_title(
+            Some("chrome.exe"),
+            Some("Inbox - Gmail"),
+            "en-US",
+            &hc,
+            &bindings,
+        );
+        assert_eq!(hit.unwrap().manifest.id, "Acme.Notion");
+
+        // Among user bindings, the longest pattern wins.
+        let bindings = [bind("Mail", "Acme.Notion"), bind("Register Mail", "Google.Gmail")];
+        let hit = store.match_title(Some("chrome.exe"), Some(ws_title), "en-US", &hc, &bindings);
+        assert_eq!(hit.unwrap().manifest.id, "Google.Gmail");
+
+        // Bindings are host-gated like everything else.
+        let bindings = [bind("Gmail", "Google.Gmail")];
+        assert!(store
+            .match_title(Some("notepad.exe"), Some("x - Gmail"), "en-US", &hc, &bindings)
+            .is_none());
+
+        // Dangling binding (unknown id) and a binding to a non-hosted
+        // manifest are both inert.
+        let bindings = [bind("Inbox", "Gone.App"), bind("Inbox", "Plain.App")];
+        assert!(store
+            .match_title(Some("chrome.exe"), Some("Inbox of things"), "en-US", &hc, &bindings)
+            .is_none());
+
+        // Empty/whitespace binding patterns never match.
+        let bindings = [bind("  ", "Google.Gmail")];
+        assert!(store
+            .match_title(Some("chrome.exe"), Some("anything"), "en-US", &hc, &bindings)
             .is_none());
         fs::remove_dir_all(&t).ok();
     }

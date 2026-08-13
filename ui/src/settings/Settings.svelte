@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { invokeCmd, openSettings } from "../lib/ipc";
+  import { getLastBrowserTitle, invokeCmd, listHostedCollections, openSettings } from "../lib/ipc";
   import { applyTheme } from "../lib/theme";
-  import type { Theme } from "../lib/types";
+  import type { HostedCollection, Theme, TitleBinding } from "../lib/types";
   import HelpTip from "./HelpTip.svelte";
 
   interface Chord {
@@ -41,12 +41,24 @@
     comboDisplayMode: string;
     titleDetection: boolean;
     extraBrowserExes: string[];
+    titleBindings: TitleBinding[];
   }
 
   let s = $state<Settings | null>(null);
   let excludedText = $state("");
   let extraBrowserText = $state("");
   let capturing = $state<"chord" | "settingsChord" | null>(null);
+  let hosted = $state<HostedCollection[]>([]);
+  let lastTitle = $state<string | null>(null);
+  let newPattern = $state("");
+  let newTarget = $state("");
+
+  async function refreshCapture() {
+    lastTitle = (await getLastBrowserTitle()) ?? null;
+    hosted = (await listHostedCollections()) ?? [];
+    if (!newTarget && hosted.length > 0) newTarget = hosted[0].manifestId;
+    if (!newPattern && lastTitle) newPattern = suggestPattern(lastTitle);
+  }
 
   $effect(() => {
     invokeCmd<Settings>("get_settings").then((v) => {
@@ -57,7 +69,68 @@
         applyTheme(v.appearance.theme);
       }
     });
+    refreshCapture();
+    // The settings window is hidden and reused, not recreated, so refresh
+    // the captured title every time it regains focus.
+    const onFocus = () => refreshCapture();
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
   });
+
+  /** Suggest a signature from a browser window title: split on dash-like
+   * separators, drop the trailing browser name ("… - Google Chrome"), and
+   * take the last remaining segment — for Workspace Gmail that's the
+   * org-specific "<Company> Mail" part, never the user's email address. */
+  function suggestPattern(title: string): string {
+    const segments = title.split(/ [-—–] /);
+    if (segments.length >= 3) return segments[segments.length - 2].trim();
+    return segments[0].trim();
+  }
+
+  const matchesLastTitle = (pattern: string) =>
+    !!lastTitle && !!pattern.trim() && lastTitle.toLowerCase().includes(pattern.trim().toLowerCase());
+
+  /** Names of other targets whose existing patterns also hit the captured
+   * title — shown as a heads-up; the new user binding takes precedence. */
+  function collisions(): string[] {
+    if (!lastTitle || !s) return [];
+    const t = lastTitle.toLowerCase();
+    const names = new Set<string>();
+    for (const h of hosted) {
+      if (h.manifestId === newTarget) continue;
+      if (h.titleMatch.some((p) => p.trim() && t.includes(p.trim().toLowerCase())))
+        names.add(h.displayName);
+    }
+    for (const b of s.titleBindings) {
+      if (b.manifestId === newTarget) continue;
+      if (b.pattern.trim() && t.includes(b.pattern.trim().toLowerCase()))
+        names.add(targetName(b.manifestId));
+    }
+    return [...names];
+  }
+
+  const targetName = (id: string) => hosted.find((h) => h.manifestId === id)?.displayName ?? id;
+  const targetInstalled = (id: string) => hosted.some((h) => h.manifestId === id);
+
+  function addBinding() {
+    if (!s || !newPattern.trim() || !newTarget) return;
+    const pattern = newPattern.trim();
+    // Same pattern again: replace its target instead of duplicating.
+    s.titleBindings = s.titleBindings.filter(
+      (b) => b.pattern.toLowerCase() !== pattern.toLowerCase(),
+    );
+    s.titleBindings.push({ pattern, manifestId: newTarget });
+    newPattern = "";
+    save();
+  }
+
+  function removeBinding(b: TitleBinding) {
+    if (!s) return;
+    s.titleBindings = s.titleBindings.filter(
+      (x) => x.pattern !== b.pattern || x.manifestId !== b.manifestId,
+    );
+    save();
+  }
 
   async function save() {
     if (!s) return;
@@ -298,6 +371,76 @@
         </span>
         <textarea rows="2" bind:value={extraBrowserText} onblur={save}></textarea>
       </label>
+
+      {#if s.titleDetection}
+        <div class="signatures">
+          <h3>
+            Web app signatures
+            <HelpTip
+              text="Some web apps put a name in the window title that's unique to you — Google Workspace mail, for example, shows your organization's name instead of 'Gmail'. Capture that piece of the title here and bind it to a collection, and the panel will recognize the app from then on. Your signatures always win over the built-in ones."
+            />
+          </h3>
+
+          {#if s.titleBindings.length > 0}
+            <ul class="bindings">
+              {#each s.titleBindings as b (b.pattern + b.manifestId)}
+                <li>
+                  <code>{b.pattern}</code>
+                  <span class="arrow">→</span>
+                  <span>{targetName(b.manifestId)}</span>
+                  {#if !targetInstalled(b.manifestId)}
+                    <span class="warn" title="No installed collection has this id; the binding is inactive until it returns.">target not installed</span>
+                  {/if}
+                  <button class="del" onclick={() => removeBinding(b)}>Remove</button>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+
+          <div class="capture">
+            {#if lastTitle}
+              <p class="titlebar">
+                Last browser window title:
+                <code class="full-title">{lastTitle}</code>
+                <button onclick={refreshCapture}>Refresh</button>
+              </p>
+            {:else}
+              <p class="titlebar muted">
+                Switch to the web app's browser tab, then come back here.
+                <button onclick={refreshCapture}>Refresh</button>
+              </p>
+            {/if}
+            <div class="row">
+              <input
+                type="text"
+                placeholder="Part of the title, e.g. Carbon Register Mail"
+                bind:value={newPattern}
+              />
+              {#if newPattern.trim() && lastTitle}
+                <span class={matchesLastTitle(newPattern) ? "ok" : "warn"}>
+                  {matchesLastTitle(newPattern) ? "✓ matches" : "no match"}
+                </span>
+              {/if}
+            </div>
+            <div class="row">
+              <select bind:value={newTarget}>
+                {#each hosted as h (h.manifestId)}
+                  <option value={h.manifestId}>{h.displayName}</option>
+                {/each}
+              </select>
+              <button onclick={addBinding} disabled={!newPattern.trim() || !newTarget}>
+                Add signature
+              </button>
+            </div>
+            {#if collisions().length > 0}
+              <p class="hint">
+                This title also matches {collisions().join(", ")} — your signature will take
+                precedence.
+              </p>
+            {/if}
+          </div>
+        </div>
+      {/if}
     </section>
   {/if}
 </div>
@@ -364,5 +507,63 @@
   button {
     font-family: inherit;
     font-size: 13px;
+  }
+  .signatures h3 {
+    font-size: 13px;
+    margin: 14px 0 8px;
+  }
+  ul.bindings {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 10px;
+  }
+  ul.bindings li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .arrow {
+    color: var(--muted);
+  }
+  .warn {
+    color: #c47b1a;
+    font-size: 12px;
+  }
+  .ok {
+    color: #2c9a4b;
+    font-size: 12px;
+  }
+  .muted {
+    color: var(--muted);
+  }
+  button.del {
+    margin-left: auto;
+  }
+  .capture .row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .capture input[type="text"] {
+    flex: 1;
+    font-family: inherit;
+    font-size: 13px;
+  }
+  .titlebar {
+    font-size: 12px;
+    margin: 0 0 8px;
+  }
+  code.full-title {
+    display: inline-block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin: 0;
   }
 </style>

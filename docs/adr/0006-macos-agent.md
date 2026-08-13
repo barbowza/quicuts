@@ -87,6 +87,8 @@ Concretely:
   `crates/quicuts-manifest/src/host.rs` holds `chrome.exe`-style names and
   needs bundle ids; window titles on macOS additionally require the
   Accessibility API per-window work the slice avoided. No `title` cap.
+  ADR 0007 (signature bindings) widened what this gap blocks; the mac-side
+  worklist is `docs/mac-title-detection-handover.md`.
 - **Code signing & notarization** — everything runs ad-hoc from the
   terminal today; a distributable .app needs a stable identity (see TCC
   facts above), hardened runtime, and notarization.

@@ -1,7 +1,7 @@
 // Thin wrappers over Tauri's event/invoke bridge. Falls back to no-ops when
 // run in a plain browser (Vite dev without the Tauri host).
 
-import type { Appearance, KeyCombo, OverlayState } from "./types";
+import type { Appearance, HostedCollection, KeyCombo, OverlayState } from "./types";
 
 type Unlisten = () => void;
 
@@ -92,3 +92,6 @@ export const setComboDisplayMode = (mode: string) =>
   invokeCmd("set_combo_display_mode", { mode });
 export const adjustFontScale = (action: "increase" | "decrease" | "reset") =>
   invokeCmd("adjust_font_scale", { action });
+export const getLastBrowserTitle = () => invokeCmd<string | null>("get_last_browser_title");
+export const listHostedCollections = () =>
+  invokeCmd<HostedCollection[]>("list_hosted_collections");
