@@ -792,6 +792,22 @@ Shortcuts:
           Alt: false
           Keys:
             - M
+      - Name: Indent / forward
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Tab
+      - Name: Outdent / previous
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - Tab
       - Name: Strikethrough
         Shortcut:
         - Win: false
