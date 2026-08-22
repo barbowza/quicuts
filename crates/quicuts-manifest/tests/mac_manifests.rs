@@ -189,3 +189,73 @@ fn chrome_mac_manifest_shape() {
         .collect();
     assert_eq!(ids.first().map(String::as_str), Some("Google.Chrome"));
 }
+
+/// iTerm2's manifest is read from the app's own menu bar rather than a doc
+/// page, so this pins the parts that decoding could plausibly get wrong: the
+/// cmd bit is inverted in AXMenuItemCmdModifiers (0x8 means *no* command),
+/// and ctrl must stay distinct from cmd.
+#[test]
+fn iterm2_mac_manifest_shape() {
+    let s = store();
+    let lm = s
+        .get("Googlecode.iTerm2", "en-US")
+        .expect("iterm2 mac manifest");
+    assert_eq!(lm.manifest.window_filter, "com.googlecode.iterm2");
+    assert!(!lm.manifest.background_process);
+
+    let names: Vec<_> = lm
+        .manifest
+        .sections
+        .iter()
+        .map(|s| s.name.as_str())
+        .collect();
+    assert_eq!(
+        names,
+        vec![
+            "Shell",
+            "Tabs",
+            "Panes",
+            "Broadcast input",
+            "tmux",
+            "Edit",
+            "Find",
+            "Marks and annotations",
+            "View",
+            "Session",
+            "Window",
+            "Application"
+        ]
+    );
+
+    let entry = |n: &str| {
+        lm.manifest
+            .sections
+            .iter()
+            .flat_map(|s| s.entries.iter())
+            .find(|e| e.name == n)
+            .unwrap_or_else(|| panic!("entry {n} missing"))
+    };
+
+    // Plain cmd item: the inverted cmd bit decoded the right way round.
+    let new_tab = &entry("New Tab").combos[0];
+    assert!(new_tab.win);
+    assert!(!new_tab.ctrl && !new_tab.shift && !new_tab.alt);
+
+    // cmd+ctrl item: ⌃ must land on Ctrl, not be folded into Win.
+    let divider = &entry("Move Divider Up").combos[0];
+    assert!(divider.win && divider.ctrl);
+    assert!(!divider.shift && !divider.alt);
+
+    // fn has no PTSG flag, so it renders as its own leading keycap.
+    let fullscreen = &entry("Toggle Full Screen").combos[0];
+    assert!(!fullscreen.win && !fullscreen.ctrl && !fullscreen.shift && !fullscreen.alt);
+    assert_eq!(fullscreen.keys.len(), 2);
+
+    let hc = HostClasses::builtin();
+    let ids: Vec<String> = s
+        .match_foreground(Some("com.googlecode.iterm2"), "en-US", &hc, |_| false)
+        .iter()
+        .map(|m| m.lm.manifest.id.clone())
+        .collect();
+    assert_eq!(ids.first().map(String::as_str), Some("Googlecode.iTerm2"));
+}
