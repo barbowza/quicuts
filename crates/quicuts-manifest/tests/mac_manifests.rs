@@ -10,13 +10,81 @@ fn store() -> ManifestStore {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../manifests-mac");
     let (ok, failed) = s.load_dir(&dir, SourceKind::Bundled);
     assert_eq!(failed, 0, "some mac manifests failed to parse");
-    assert!(ok >= 4, "expected the 4 mac manifests, parsed {ok}");
+    assert!(ok >= 5, "expected the mac manifests, parsed {ok}");
     s
 }
 
 #[test]
 fn all_mac_manifests_parse() {
-    assert!(store().len() >= 4);
+    assert!(store().len() >= 5);
+}
+
+/// Evernote is the first Quicuts-maintained (non-Apple) mac manifest: it must
+/// parse, match on its bundle id, and keep its ⌘-as-Win modifier mapping.
+#[test]
+fn evernote_mac_manifest_shape() {
+    let s = store();
+    let lm = s
+        .get("Evernote.Evernote", "en-US")
+        .expect("evernote mac manifest");
+    assert_eq!(lm.manifest.window_filter, "com.evernote.Evernote");
+    assert!(!lm.manifest.background_process);
+
+    // The article's own section names, in its order.
+    let names: Vec<_> = lm
+        .manifest
+        .sections
+        .iter()
+        .map(|s| s.name.as_str())
+        .collect();
+    assert_eq!(
+        names,
+        vec![
+            "Global",
+            "General",
+            "Navigation",
+            "View",
+            "Note actions",
+            "Editing",
+            "Text formatting",
+            "AI Assistant",
+        ]
+    );
+
+    let section = |n: &str| {
+        lm.manifest
+            .sections
+            .iter()
+            .find(|s| s.name == n)
+            .unwrap_or_else(|| panic!("section {n} missing"))
+    };
+
+    // ⌘N (New note) maps to Win, not Ctrl — the mac modifier mapping.
+    let new_note = section("General")
+        .entries
+        .iter()
+        .find(|e| e.name == "New note")
+        .expect("New note");
+    let combo = &new_note.combos[0];
+    assert!(combo.win, "⌘ must map to Win on macOS");
+    assert!(!combo.ctrl && !combo.alt && !combo.shift);
+
+    // Mac-only rows the Windows manifest cannot have.
+    for n in ["Hide Evernote", "Quit Evernote"] {
+        assert!(
+            section("General").entries.iter().any(|e| e.name == n),
+            "{n} missing"
+        );
+    }
+
+    // Foreground matching resolves the bundle id to this manifest first.
+    let hc = HostClasses::builtin();
+    let ids: Vec<String> = s
+        .match_foreground(Some("com.evernote.Evernote"), "en-US", &hc, |_| false)
+        .iter()
+        .map(|m| m.lm.manifest.id.clone())
+        .collect();
+    assert_eq!(ids.first().map(String::as_str), Some("Evernote.Evernote"));
 }
 
 #[test]
