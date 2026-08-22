@@ -122,3 +122,63 @@ fn system_manifest_is_wildcard_background() {
     assert!(sys.manifest.background_process);
     assert_eq!(sys.manifest.display_name(), "macOS");
 }
+
+/// Chrome is the mac set's first browser with a Quicuts-maintained manifest.
+/// Its mac shortcuts genuinely differ from the Windows ones (⌥⌘I for
+/// DevTools, ⌥⌘→ for the next tab), so this guards the mapping, not just
+/// that the file parses.
+#[test]
+fn chrome_mac_manifest_shape() {
+    let s = store();
+    let lm = s
+        .get("Google.Chrome", "en-US")
+        .expect("chrome mac manifest");
+    assert_eq!(lm.manifest.window_filter, "com.google.Chrome");
+    assert!(!lm.manifest.background_process);
+
+    // Section names mirror the Windows Chrome manifest.
+    let names: Vec<_> = lm
+        .manifest
+        .sections
+        .iter()
+        .map(|s| s.name.as_str())
+        .collect();
+    assert_eq!(
+        names,
+        vec![
+            "Tabs and windows",
+            "Chrome features",
+            "Address bar",
+            "Web page"
+        ]
+    );
+
+    let entry = |n: &str| {
+        lm.manifest
+            .sections
+            .iter()
+            .flat_map(|s| s.entries.iter())
+            .find(|e| e.name == n)
+            .unwrap_or_else(|| panic!("entry {n} missing"))
+    };
+
+    // ⌥⌘I, not Ctrl+Shift+J: the mac binding, not a translated Windows one.
+    let devtools = &entry("Open Developer Tools").combos[0];
+    assert!(devtools.win && devtools.alt);
+    assert!(!devtools.ctrl && !devtools.shift);
+
+    // "or" rows keep both alternatives on one entry.
+    assert_eq!(
+        entry("Open the previous page in your history").combos.len(),
+        2
+    );
+
+    // Foreground matching resolves the bundle id to this manifest first.
+    let hc = HostClasses::builtin();
+    let ids: Vec<String> = s
+        .match_foreground(Some("com.google.Chrome"), "en-US", &hc, |_| false)
+        .iter()
+        .map(|m| m.lm.manifest.id.clone())
+        .collect();
+    assert_eq!(ids.first().map(String::as_str), Some("Google.Chrome"));
+}
