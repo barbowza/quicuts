@@ -1,0 +1,572 @@
+# Quicuts-maintained manifest (not from PowerToys — see NOTICE.txt).
+# Source of truth: https://support.google.com/chrome/answer/157179
+# Mac tab of that article; synced 2026-08-22.
+# Mac modifiers map to the PTSG flags as ⌘=Win, ⌃=Ctrl, ⌥=Alt, ⇧=Shift.
+PackageName: Google.Chrome
+Name: Google Chrome
+WindowFilter: "com.google.Chrome"
+BackgroundProcess: false
+Shortcuts:
+  - SectionName: Tabs and windows
+    Properties:
+      - Name: Open a new window
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - N
+      - Name: Open a new window in Incognito mode
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - N
+      - Name: Open a new tab, and jump to it
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - T
+      - Name: Reopen previously closed tabs
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - T
+      - Name: Jump to the next open tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Right>"
+      - Name: Jump to the previous open tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Left>"
+      - Name: Jump to a specific tab (1-8)
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<1>"
+      - Name: Jump to the last tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<9>"
+      - Name: Open the previous page in your history
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "["
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Left>"
+      - Name: Open the next page in your history
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "]"
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Right>"
+      - Name: Close the current tab or pop-up
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - W
+      - Name: Close the current window
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - W
+      - Name: Minimize the window
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - M
+      - Name: Hide Google Chrome
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - H
+      - Name: Quit Google Chrome
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Q
+      - Name: Move tabs right or left
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "<PageUp>"
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "<PageDown>"
+      - Name: Turn full-screen mode on or off
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Fn
+            - F
+  - SectionName: Chrome features
+    Properties:
+      - Name: Show or hide the Bookmarks Bar
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - B
+      - Name: Open the Bookmark Manager
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - B
+      - Name: Open the Settings page in a new tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - ","
+      - Name: Open the History page in a new tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Y
+      - Name: Open the Downloads page in a new tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - J
+      - Name: Open the Find Bar to search the page
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F
+      - Name: Jump to the next Find Bar match
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - G
+      - Name: Jump to the previous Find Bar match
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - G
+      - Name: Search for selected text (Find Bar open)
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - E
+      - Name: Open Developer Tools
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - I
+      - Name: Open the Delete Browsing Data options
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Delete>"
+      - Name: Switch user, browse as Guest, or open payment and password info
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - M
+      - Name: Jump to the main menu bar
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - F2
+      - Name: Cycle focus through dialogs and toolbars
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Up>"
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Down>"
+      - Name: Open a feedback form
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - I
+      - Name: Turn on caret browsing
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F7
+      - Name: Focus on inactive dialogs
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - A
+      - Name: Open split view in the active tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - N
+  - SectionName: Address bar
+    Properties:
+      - Name: Add www./.com to a typed site name and open it
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Enter>"
+      - Name: Add www./.com to a typed site name and open in a new window
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Enter>"
+      - Name: Open a typed web address in a new background tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Enter>"
+      - Name: Jump to the address bar
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - L
+      - Name: Remove a highlighted prediction
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - Fn
+            - "<Delete>"
+      - Name: Move cursor to the address bar
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - F5
+  - SectionName: Web page
+    Properties:
+      - Name: Email a link to the current page
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - I
+      - Name: Open options to print the current page
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - P
+      - Name: Open options to save the current page
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - S
+      - Name: Open the Page Setup dialog
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - P
+      # Not in Google's Mac tables, which list only the ignore-cache variant;
+      # cmd+R is real and is Chrome's most-used shortcut, so it is added
+      # deliberately rather than sourced. Named as in the Windows manifest.
+      - Name: Reload current page
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - R
+      - Name: Reload, ignoring cached content
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - R
+      - Name: Stop the page loading
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Escape>"
+      - Name: Browse clickable items moving forward
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Tab
+      - Name: Browse clickable items moving backward
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - Tab
+      - Name: Open a file from your computer
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - O
+      - Name: View the page source
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - U
+      - Name: Open the JavaScript Console
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - J
+      - Name: Save the current webpage as a bookmark
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - D
+      - Name: Save all open tabs as bookmarks in a folder
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - D
+      - Name: Make everything on the page bigger
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "+"
+      - Name: Make everything on the page smaller
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "-"
+      - Name: Return the page to the default size
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<0>"
+      - Name: Scroll down a screen at a time
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Space
+      - Name: Scroll up a screen at a time
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - Space
+      - Name: Search the web
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - F
+      - Name: Move the cursor to the previous word
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Left>"
+      - Name: Move the cursor to the next word
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Right>"
+      - Name: Delete the previous word in a text field
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Delete>"
+      - Name: Open your home page in the current tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - H
