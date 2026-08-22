@@ -173,6 +173,13 @@ fn chrome_mac_manifest_shape() {
         2
     );
 
+    // cmd+R is absent from Google's Mac tables and added deliberately; it
+    // must stay distinct from the ignore-cache variant (cmd+shift+R).
+    let reload = &entry("Reload current page").combos[0];
+    assert!(reload.win && !reload.shift && !reload.ctrl && !reload.alt);
+    let hard = &entry("Reload, ignoring cached content").combos[0];
+    assert!(hard.win && hard.shift);
+
     // Foreground matching resolves the bundle id to this manifest first.
     let hc = HostClasses::builtin();
     let ids: Vec<String> = s

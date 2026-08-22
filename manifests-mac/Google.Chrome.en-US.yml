@@ -406,6 +406,18 @@ Shortcuts:
           Alt: true
           Keys:
             - P
+      # Not in Google's Mac tables, which list only the ignore-cache variant;
+      # cmd+R is real and is Chrome's most-used shortcut, so it is added
+      # deliberately rather than sourced. Named as in the Windows manifest.
+      - Name: Reload current page
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - R
       - Name: Reload, ignoring cached content
         Shortcut:
         - Win: true
