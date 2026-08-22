@@ -135,3 +135,13 @@ mac-log:
 # DANGER: synthetic input goes to the FOCUSED app, not Quicuts — idle machine only.
 mac-input *ARGS:
     swift scripts/mac-synthetic-input.swift {{ARGS}}
+
+# The script decodes the two traps that silently corrupt a hand-read: the
+# AXMenuItemCmdModifiers command bit is INVERTED (0x8 = no cmd), and 0x10 is
+# fn/Globe, which also marks the macOS window-tiling items the system injects
+# into every app's Window menu. Those rows are tagged `system-fn`; menus also
+# contain user data (saved arrangements, profiles). Read its header first.
+# Read-only (Accessibility API) — unlike mac-input it posts no events.
+# Dump a RUNNING app's menu shortcuts as TSV: `just mac-menus iTerm`.
+mac-menus *ARGS:
+    swift scripts/mac-menu-shortcuts.swift {{ARGS}}
