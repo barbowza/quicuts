@@ -63,6 +63,7 @@ just mac-run     # agent + ui + `cargo tauri dev` (dev loop; TCC → terminal)
 just mac-build   # full .app bundle → target/release/bundle/macos/Quicuts.app
 just mac-log     # tail ~/Library/Logs/com.barbowza.quicuts/Quicuts.log
 just mac-input   # post synthetic activation input — read the warning below first
+just mac-menus   # dump a running app's menu shortcuts as TSV (manifest authoring)
 ```
 
 ## Gotchas
@@ -84,6 +85,14 @@ just mac-input   # post synthetic activation input — read the warning below fi
   `WindowFilter`s); `bundled_manifests_dir` prefers it on macOS. In dev it
   resolves through the workspace path, in bundles through
   `Contents/Resources/manifests-mac`.
+- **Adding a manifest needs a config touch, not just a rebuild.**
+  `cargo tauri dev` copies `manifests-mac/` into `target/debug/` keyed on the
+  *config's* mtime, not the directory's contents, so a new `.yml` is not staged
+  by editing Rust alone. `touch crates/quicuts-app/tauri.conf.json` to restage;
+  the log line `loaded N bundled manifests` is the check.
+- **Authoring a mac manifest:** if the app has no canonical shortcut article
+  (or its article lags the shipped build), read the app's own menus with
+  `just mac-menus <app>` — see *Reading an app's menus* below.
 - **pnpm build scripts:** `ui/pnpm-workspace.yaml` allows esbuild's
   postinstall (`allowBuilds`). pnpm ≥ 11 ignores the old
   `package.json#pnpm` field; without the yaml the vite build fails.
@@ -121,6 +130,42 @@ just mac-input   # post synthetic activation input — read the warning below fi
   overlay render path, the tray menu's **"Show shortcuts"** item
   (`tray.rs`) reaches `overlay::show` directly without posting a single
   event.
+
+## Reading an app's menus (manifest authoring)
+
+`just mac-menus <app-name-or-bundle-id>` dumps a **running** app's menu-bar
+shortcuts as TSV, already normalised to the PTSG `Keys` grammar. It is the
+source of truth for apps with no shortcut article, and for any app whose
+article lags the installed build — a menu bar cannot lag. It is read-only
+(Accessibility API), so unlike `mac-input` it posts no events and can never
+disturb the app or lose work. It needs the same one-time Accessibility grant.
+
+It emits TSV, not YAML, on purpose: which submenus deserve their own
+`SectionName`, what earns `Recommended`, and how to word a name are judgement
+calls. What the script guarantees is a correct *decode* — and there are two
+traps that silently corrupt a hand-read:
+
+- **The command bit is inverted.** `AXMenuItemCmdModifiers` has no "command"
+  bit; `0x08` means *no* command, so a mask of `0` is plain ⌘. Read the obvious
+  way round, every shortcut in the app comes out wrong while still looking
+  plausible — and on macOS ⌘ is what sets the PTSG `Win` flag.
+- **`0x10` is fn/Globe, and it also marks items that are not the app's.**
+  macOS injects the Sequoia window-tiling block (Fill, Center, Move & Resize ▸
+  …) into every app's Window menu, plus Dictation and Emoji & Symbols into
+  Edit. They carry the fn bit, belong in `Apple.System` if anywhere, and import
+  as nonsense like `⌃F` for "Fill". Such rows are tagged `system-fn`.
+
+Neither flag catches the third hazard: **menus contain user data.** Window ▸
+Arrangements lists arrangements saved on *this* Mac and Profiles lists the
+user's profiles, both indistinguishable from stock rows. Read the titles before
+committing.
+
+Worth re-running against the manifest after authoring — reconciling the two
+found three real iTerm2 shortcuts (`Dashboard`, `Select Matches`, `Maximize
+Active Pane`) that a first pass had dropped, because their command character is
+a literal carriage return that split the row in a line-based reader. The script
+normalises control characters to `<Enter>` before printing for exactly that
+reason.
 
 ## Autonomous mode
 

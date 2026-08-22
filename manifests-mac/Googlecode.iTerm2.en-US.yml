@@ -327,6 +327,14 @@ Shortcuts:
           Alt: false
           Keys:
             - P
+      - Name: Dashboard
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Enter>"
   - SectionName: Edit
     Properties:
       - Name: Undo Close Session
@@ -573,6 +581,14 @@ Shortcuts:
           Alt: false
           Keys:
             - F
+      - Name: Select Matches
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Enter>"
       - Name: Find URLs
         Shortcut:
         - Win: true
@@ -790,6 +806,14 @@ Shortcuts:
           Alt: false
           Keys:
             - O
+      - Name: Maximize Active Pane
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Enter>"
       - Name: Make Text Bigger
         Shortcut:
         - Win: true
