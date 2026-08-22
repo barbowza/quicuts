@@ -1,0 +1,1070 @@
+# Quicuts-maintained manifest (not from PowerToys — see NOTICE.txt).
+# Source of truth: iTerm2's own menu bar, read via the Accessibility API
+# (AXMenuItemCmdChar / CmdModifiers / CmdVirtualKey) from iTerm2 3.6.11.
+# Synced 2026-08-22. macOS-injected items (Sequoia window tiling, Dictation,
+# Emoji & Symbols) and user-specific saved arrangements are excluded.
+# Mac modifiers map to the PTSG flags as ⌘=Win, ⌃=Ctrl, ⌥=Alt, ⇧=Shift.
+PackageName: Googlecode.iTerm2
+Name: iTerm2
+WindowFilter: "com.googlecode.iterm2"
+BackgroundProcess: false
+Shortcuts:
+  - SectionName: Shell
+    Properties:
+      - Name: New Window
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - N
+      - Name: New Window with Current Profile
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - N
+      - Name: New Tab
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - T
+      - Name: New Tab with Current Profile
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - T
+      - Name: Split Horizontally with Current Profile
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - D
+      - Name: Split Vertically with Current Profile
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - D
+      - Name: Split Horizontally
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - H
+      - Name: Split Vertically
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - V
+      - Name: Save Selected Text
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - S
+      - Name: Close
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - W
+      - Name: Close Terminal Window
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - W
+      - Name: Close All Panes in Tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - W
+      - Name: Page Setup
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - P
+      - Name: Screen
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - P
+      - Name: Selection
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - P
+      - Name: Buffer
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - P
+  - SectionName: Tabs
+    Properties:
+      - Name: Select Next Tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "]"
+      - Name: Select Previous Tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "["
+      - Name: Move Tab Left
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - "["
+      - Name: Move Tab Right
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - "]"
+  - SectionName: Panes
+    Properties:
+      - Name: Select Pane Above
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Up>"
+      - Name: Select Pane Below
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Down>"
+      - Name: Select Pane Left
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Left>"
+      - Name: Select Pane Right
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Right>"
+      - Name: Next Pane
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "]"
+      - Name: Previous Pane
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "["
+      - Name: Move Divider Up
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Up>"
+      - Name: Move Divider Down
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Down>"
+      - Name: Move Divider Left
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Left>"
+      - Name: Move Divider Right
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Right>"
+  - SectionName: Broadcast input
+    Properties:
+      - Name: Send Input to Current Session Only
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - I
+      - Name: Broadcast Input to All Panes in All Tabs
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - I
+      - Name: Broadcast Input to All Panes in Current Tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - I
+      - Name: Toggle Broadcast Input to Current Session
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: true
+          Alt: true
+          Keys:
+            - I
+  - SectionName: tmux
+    Properties:
+      - Name: Detach
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - D
+      - Name: New Tmux Window
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - N
+      - Name: New Tmux Tab
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - T
+      - Name: Pause Pane
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - P
+  - SectionName: Edit
+    Properties:
+      - Name: Undo Close Session
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Z
+      - Name: Redo
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - Z
+      - Name: Cut
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - X
+      - Name: Copy
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - C
+      - Name: Copy with Styles
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - C
+      - Name: Copy Mode
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - C
+      - Name: Paste
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - V
+      - Name: Advanced Paste
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - V
+      - Name: Paste Selection
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - V
+      - Name: Render Selection Natively
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - E
+      - Name: Engage Artificial Intelligence
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Y
+      - Name: Explain Output with AI
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - Y
+      - Name: Open Selection
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - O
+      - Name: Jump to Selection
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - J
+      - Name: Select All
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - A
+      - Name: Selection Respects Soft Boundaries
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - A
+      - Name: Select Output of Last Command
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - A
+      - Name: Set Named Mark
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - M
+      - Name: Fold/Unfold
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - L
+      - Name: Clear Buffer
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - K
+      - Name: Clear Instant Replay
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - K
+      - Name: Clear Scrollback Buffer
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - K
+      - Name: Clear to Start of Selection
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - L
+      - Name: Clear to Last Mark
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - L
+  - SectionName: Find
+    Properties:
+      - Name: Find
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F
+      - Name: Find Next
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - G
+      - Name: Find Previous
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - G
+      - Name: Use Selection for Find
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - E
+      - Name: Clear Find
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - E
+      - Name: Find Globally
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - F
+      - Name: Find URLs
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - U
+      - Name: Find All Smart Selection Matches
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - U
+      - Name: Pick Result to Open
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - O
+      - Name: Filter
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - F
+  - SectionName: Marks and annotations
+    Properties:
+      - Name: Set Mark
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - M
+      - Name: Jump to Mark
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - J
+      - Name: Next Mark
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Down>"
+      - Name: Previous Mark
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Up>"
+      - Name: Add Annotation at Cursor
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - M
+      - Name: Next Annotation
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - "<Down>"
+      - Name: Previous Annotation
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - "<Up>"
+      - Name: Alert on Next Mark
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - A
+  - SectionName: View
+    Properties:
+      # Globe/fn + F. The fn bit (0x10) is not a PTSG modifier flag, so fn
+      # renders as its own keycap, as in the Chrome manifest.
+      - Name: Toggle Full Screen
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Fn
+            - F
+      - Name: Show Tabs in Fullscreen
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - T
+      - Name: Show Toolbelt
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - B
+      - Name: Use Transparency
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - U
+      - Name: Zoom In on Selection
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - Z
+      - Name: Zoom Out
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Escape>"
+      - Name: Find Cursor
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "/"
+      - Name: Show Cursor Guide
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - ";"
+      - Name: Show Timestamps
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - E
+      - Name: Show Annotations
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "\\"
+      - Name: Show Composer
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "."
+      - Name: Auto Command Completion
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - Y
+      - Name: Auto Composer
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - "."
+      - Name: Open Quickly
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - O
+      - Name: Make Text Bigger
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "+"
+      - Name: Make Text Normal Size
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<0>"
+      - Name: Restore Text and Session Size
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<0>"
+      - Name: Make Text Smaller
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "-"
+      - Name: Start Instant Replay
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - B
+  - SectionName: Session
+    Properties:
+      - Name: Edit Session
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - I
+      - Name: Run Coprocess
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - R
+      - Name: Stop Coprocess
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - R
+      - Name: Open Autocomplete
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - ";"
+      - Name: Open Command History
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - ";"
+      - Name: Open Recent Directories
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "/"
+      - Name: Open Paste History
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - H
+      - Name: Open AI Chat
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - Y
+      - Name: Reset
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - R
+      - Name: Bury Session
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - B
+      - Name: Console
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - J
+  - SectionName: Window
+    Properties:
+      - Name: Minimize
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - M
+      - Name: Zoom
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - M
+      - Name: Zoom All
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - M
+      - Name: Save Window Arrangement
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - S
+      - Name: Save Current Window as Arrangement
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - S
+      - Name: Password Manager
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - F
+      - Name: AI Chats
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - Y
+      - Name: Pin Hotkey Window
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "-"
+  - SectionName: Application
+    Properties:
+      - Name: Settings
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - ","
+      - Name: Hide iTerm2
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - H
+      - Name: Hide Others
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - H
+      - Name: Secure Keyboard Entry
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - S
+      - Name: Make iTerm2 Default Term
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "\\"
+      - Name: Make Terminal Default Term
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: true
+          Alt: true
+          Keys:
+            - "\\"
+      - Name: Quit iTerm2
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Q
+      - Name: Quit and Close All Windows
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - Q
+      - Name: Open Profiles
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - O
+      - Name: iTerm2 Help
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "?"
