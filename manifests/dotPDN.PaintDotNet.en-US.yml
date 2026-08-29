@@ -1,0 +1,1019 @@
+PackageName: dotPDN.PaintDotNet
+Name: Paint.NET
+WindowFilter: "paintdotnet.exe"
+BackgroundProcess: false
+Shortcuts:
+  - SectionName: Tools
+    Properties:
+      - Name: Rectangle Select
+        Description: Press S again to cycle Lasso, Ellipse and Magic Wand.
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - S
+      - Name: Lasso Select
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - S
+            - S
+      - Name: Ellipse Select
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - S
+            - S
+            - S
+      - Name: Magic Wand
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - S
+            - S
+            - S
+            - S
+      - Name: Move Selected Pixels
+        Description: Press M again for Move Selection.
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - M
+      - Name: Move Selection
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - M
+            - M
+      - Name: Zoom
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Z
+      - Name: Pan
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - H
+      - Name: Paint Bucket
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F
+      - Name: Gradient
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - G
+      - Name: Paintbrush
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - B
+      - Name: Pencil
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - P
+      - Name: Eraser
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - E
+      - Name: Color Picker
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - K
+      - Name: Clone Stamp
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - L
+      - Name: Recolor
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - R
+      - Name: Text
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - T
+      - Name: Line / Curve
+        Description: Press O again for the Shapes tool.
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - O
+      - Name: Shapes
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - O
+            - O
+      - Name: Open tool dropdown
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - T
+  - SectionName: File
+    Properties:
+      - Name: New image
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - N
+      - Name: Open image
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - O
+      - Name: Save
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - S
+      - Name: Save as
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - S
+      - Name: Save all images
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - S
+      - Name: Close image
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - W
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - F4
+      - Name: Print
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - P
+      - Name: Settings
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - X
+      - Name: Exit Paint.NET
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - F4
+  - SectionName: Edit
+    Properties:
+      - Name: Undo
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - Z
+      - Name: Redo
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - Y
+      - Name: Cut
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - X
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Delete>"
+      - Name: Copy
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - C
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Insert>"
+      - Name: Copy merged
+        Description: Copies all visible layers, not just the active one.
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - C
+      - Name: Paste
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - V
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Insert>"
+      - Name: Paste into new layer
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - V
+      - Name: Paste into new image
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - V
+      - Name: Copy selection
+        Description: Copies the selection outline itself, not the pixels.
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: true
+          Keys:
+            - C
+      - Name: Paste selection (replace)
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: true
+          Keys:
+            - V
+      - Name: Erase selection
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Delete>"
+      - Name: Fill selection
+        Description: Fills with the primary color.
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Backspace>"
+  - SectionName: Selection
+    Properties:
+      - Name: Select all
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - A
+      - Name: Deselect
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - D
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Enter>"
+      - Name: Invert selection
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - I
+      - Name: Commit text or tool drawing to layer
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Escape>"
+      - Name: Nudge by 1 pixel
+        Description: Moves the selection or the active tool's shape.
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Arrow>"
+      - Name: Nudge by 10 pixels
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Arrow>"
+  - SectionName: View
+    Properties:
+      - Name: Zoom in
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "+"
+      - Name: Zoom out
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "-"
+      - Name: Zoom to window
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - B
+      - Name: Zoom to selection
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - B
+      - Name: Actual size
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "0"
+      - Name: Center image
+        Description: Press Ctrl+B twice.
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - B
+            - B
+      - Name: Scroll up or down
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Page Up>"
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Page Down>"
+      - Name: Scroll left or right
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Page Up>"
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Page Down>"
+      - Name: Scroll to top left
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Home>"
+      - Name: Scroll to bottom right
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<End>"
+      - Name: Center top left of image
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Home>"
+      - Name: Center bottom right of image
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<End>"
+      - Name: Pan the canvas
+        Description: Hold Space and use the arrow keys; add Ctrl to pan 10x faster.
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Space
+            - "<Arrow>"
+      - Name: Next image
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - Tab
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Page Down>"
+      - Name: Previous image
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - Tab
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Page Up>"
+      - Name: Move image tab left or right
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Page Up>"
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Page Down>"
+      - Name: Switch to image by number
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<1-9>"
+  - SectionName: Image
+    Properties:
+      - Name: Crop to selection
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - X
+      - Name: Resize image
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - R
+      - Name: Canvas size
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - R
+      - Name: Rotate 90° clockwise
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - H
+      - Name: Rotate 90° counter-clockwise
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - G
+      - Name: Rotate 180°
+        Description: Press either rotate shortcut twice.
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - H
+            - H
+      - Name: Flatten
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - F
+  - SectionName: Layers
+    Properties:
+      - Name: Add new layer
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - N
+      - Name: Delete layer
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Delete>"
+      - Name: Duplicate layer
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - D
+      - Name: Merge layer down
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - M
+      - Name: Toggle layer visibility
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - ","
+      - Name: Rotate / Zoom layer
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - Z
+      - Name: Layer properties
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F4
+      - Name: Go to layer above
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Page Up>"
+      - Name: Go to layer below
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Page Down>"
+      - Name: Go to top layer
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Page Up>"
+      - Name: Go to bottom layer
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Page Down>"
+  - SectionName: Adjustments
+    Properties:
+      - Name: Auto-Level
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - L
+      - Name: Black and White
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - G
+      - Name: Brightness / Contrast
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - T
+      - Name: Curves
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - M
+      - Name: Hue / Saturation
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - U
+      - Name: Invert colors
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - I
+      - Name: Invert alpha
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - I
+      - Name: Levels
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - L
+      - Name: Posterize
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - P
+      - Name: Sepia
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - E
+  - SectionName: Effects
+    Properties:
+      - Name: Repeat last effect
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - F
+  - SectionName: Brush and shape controls
+    Properties:
+      - Name: Decrease brush width by 1
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "["
+      - Name: Increase brush width by 1
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "]"
+      - Name: Decrease brush width by 5
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "["
+      - Name: Increase brush width by 5
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "]"
+      - Name: Cycle shapes forward
+        Description: Shapes tool only.
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - A
+      - Name: Cycle shapes backward
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - A
+      - Name: Start cap style
+        Description: Line / Curve tool only.
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - ","
+      - Name: Line style
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "."
+      - Name: End cap style
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - /
+  - SectionName: Colors
+    Properties:
+      - Name: Swap primary and secondary colors
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - X
+      - Name: Switch active color
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - C
+  - SectionName: Windows
+    Properties:
+      - Name: Show or hide Tools
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F5
+      - Name: Show or hide History
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F6
+      - Name: Show or hide Layers
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F7
+      - Name: Show or hide Colors
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F8
+      - Name: Reset a window's position
+        Description: Add Ctrl+Shift to the window's own F-key.
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - F5
+      - Name: Show menu access keys
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Alt
+      - Name: Open a menu
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Underlined letter>"
+      - Name: Online documentation
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F1
