@@ -5,6 +5,7 @@ crates/quicuts-app/binaries/*.exe
 crates/quicuts-app/gen/
 .cache/
 *.log
-.claude/
+.claude/settings.local.json
+.claude/worktrees/
 *.code-workspace
 crates/quicuts-app/binaries/
