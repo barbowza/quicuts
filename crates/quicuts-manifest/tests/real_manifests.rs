@@ -14,14 +14,14 @@ fn store() -> ManifestStore {
     let mut s = ManifestStore::new();
     let (ok, failed) = s.load_dir(&manifests_dir(), SourceKind::Bundled);
     assert_eq!(failed, 0, "some bundled manifests failed to parse");
-    assert!(ok >= 35, "expected all 35 bundled manifests, parsed {ok}");
+    assert!(ok >= 36, "expected all 36 bundled manifests, parsed {ok}");
     s
 }
 
 #[test]
 fn all_bundled_manifests_parse() {
     let s = store();
-    assert!(s.len() >= 35);
+    assert!(s.len() >= 36);
 }
 
 #[test]
@@ -92,6 +92,49 @@ fn workspace_gmail_via_user_binding() {
     }];
     let hit = s.match_title(Some("chrome.exe"), Some(title), "en-US", &hc, &bindings);
     assert_eq!(hit.unwrap().manifest.id, "Google.Gmail");
+}
+
+#[test]
+fn yahoo_mail_hosted_collection() {
+    // Authored by us (ADR 0003), icon-less: the rail falls back to a letter
+    // tile, so no `Icon:` file has to ship alongside it.
+    let s = store();
+    let hc = HostClasses::builtin();
+    let yahoo = s.get("Yahoo.YahooMail", "en-US").expect("Yahoo Mail manifest");
+    let m = &yahoo.manifest;
+    assert_eq!(m.display_name(), "Yahoo Mail");
+    assert_eq!(m.host.as_deref(), Some("browser"));
+    assert_eq!(m.title_match, vec!["Yahoo Mail"]);
+    assert_eq!(m.icon, None);
+    assert_eq!(m.window_filter, "");
+    assert!(!m.background_process);
+    assert_eq!(m.sections.len(), 4);
+
+    // Joins any browser rail behind the host, never a non-browser's.
+    let ids = |exe: &str| -> Vec<String> {
+        s.match_foreground(Some(exe), "en-US", &hc, |_| false)
+            .iter()
+            .map(|m| m.lm.manifest.id.clone())
+            .collect()
+    };
+    let firefox = ids("firefox.exe");
+    let pos = |id: &str, v: &[String]| v.iter().position(|x| x == id);
+    assert!(pos("Mozilla.Firefox", &firefox).unwrap() < pos("Yahoo.YahooMail", &firefox).unwrap());
+    assert!(pos("Yahoo.YahooMail", &ids("chrome.exe")).is_some());
+    assert!(pos("Yahoo.YahooMail", &ids("Code.exe")).is_none());
+
+    // Title detection, and the guard against a non-browser faking the title.
+    let hit = s.match_title(
+        Some("firefox.exe"),
+        Some("Yahoo Mail \u{2014} Mozilla Firefox"),
+        "en-US",
+        &hc,
+        &[],
+    );
+    assert_eq!(hit.unwrap().manifest.id, "Yahoo.YahooMail");
+    assert!(s
+        .match_title(Some("notepad.exe"), Some("notes - Yahoo Mail"), "en-US", &hc, &[])
+        .is_none());
 }
 
 #[test]
