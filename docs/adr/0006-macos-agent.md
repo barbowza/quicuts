@@ -136,6 +136,22 @@ can skip polling whenever the frontmost app is not a browser — which costs
 nothing at activation time and would take the common case to zero. Not
 worth a protocol change for 0.1% of a core today.
 
+**Verified end-to-end on hardware, 2026-09-01** (the one claim no test
+suite here could close). With detection off, Firefox shows its own page and
+the hosted collections sit unselected in the rail; with it on, Chrome and
+Firefox both auto-select Gmail on a Gmail tab and revert to the browser on
+any other. Selecting a hosted collection by hand shows the Cmd-not-Ctrl
+bindings from `manifests-mac/`.
+
+The stronger result was unprompted: switching tabs repeatedly **while the
+panel is on screen** flips the page between Gmail and the browser live, in
+both browsers. That is ADR 0003 decision 3's "fully live" requirement, and
+it settles the open question about the 200ms poll — the debounce is fast
+enough to drive a visible panel, not just to pre-assemble a hidden one. It
+also exercises the poller's second `ForegroundChanged` reaching
+`overlay::push_state` while the overlay is visible, which is the path the
+rejected `SetOverlayVisible` gate would have severed.
+
 Two things learned on hardware that the design had guessed at:
 
 - **Safari appends no browser suffix** — its window title is exactly the
