@@ -1,0 +1,243 @@
+# macOS variant of the Windows hosted collection in `manifests/`. Same
+# PackageName, same TitleMatch (Safari appends no browser suffix, but
+# these are substring patterns, so they hit on every browser); the only
+# divergence is the send/link chord, which is Cmd on macOS where the web
+# app documents Ctrl on Windows. `Win: true` is PTSG's flag for Cmd.
+PackageName: Yahoo.YahooMail
+Name: Yahoo Mail
+Host: browser
+TitleMatch: "Yahoo Mail"
+Shortcuts:
+  - SectionName: Compose and send
+    Properties:
+      - Name: Start new email
+        Description: Requires Settings > More Settings > General > Keyboard shortcuts
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - N
+      - Name: Send message
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - <Enter>
+      - Name: Reply
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - R
+      - Name: Reply all
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - A
+      - Name: Forward
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F
+  - SectionName: Navigation
+    Properties:
+      - Name: Search
+        Description: Or press s
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "/"
+      - Name: Go to Inbox
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - M
+      - Name: Previous message
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - <Up>
+      - Name: Next message
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - <Down>
+      - Name: Previous tab
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "["
+      - Name: Next tab
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "]"
+      - Name: Next mailbox
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - A
+      - Name: Go to Settings
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - ";"
+  - SectionName: Actions
+    Properties:
+      - Name: Archive
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - E
+      - Name: Restore to Inbox
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - E
+      - Name: Delete
+        Description: Or Backspace
+        Recommended: true
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - <Delete>
+      - Name: Move to folder
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - D
+      - Name: Mark as read
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - K
+      - Name: Mark as unread
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - K
+      - Name: Star
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - L
+      - Name: Unstar
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - L
+      - Name: Print
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - P
+      - Name: Preview attachment
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - P
+      - Name: Open keyboard shortcut help
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "/"
+  - SectionName: Selection
+    Properties:
+      - Name: Select or unselect message
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Space
+      - Name: Select message above
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - <Up>
+      - Name: Select message below
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - <Down>

@@ -141,7 +141,7 @@ fn command_pump(rx: Receiver<AgentCommand>, sink: EventSink) {
                 chord_enabled,
                 chord,
                 excluded_exes,
-                ..
+                title_events_enabled,
             } => {
                 CONFIG.hold_enabled.store(hold_enabled, Relaxed);
                 CONFIG.hold_ms.store(hold_ms.clamp(150, 5000), Relaxed);
@@ -154,6 +154,11 @@ fn command_pump(rx: Receiver<AgentCommand>, sink: EventSink) {
                 if let Ok(mut list) = EXCLUDED.lock() {
                     *list = excluded_exes.iter().map(|e| state::normalize_identity(e)).collect();
                 }
+                // Experimental title detection (ADR 0003). Not an atomic in
+                // CONFIG: the tap callback never reads it, only the poll
+                // thread does, and it parks on a condvar rather than
+                // spinning on a flag.
+                foreground::set_title_watch(title_events_enabled);
             }
             AgentCommand::SetOverlayVisible { visible } => {
                 CONFIG.overlay_visible.store(visible, Relaxed);
@@ -411,7 +416,17 @@ pub fn run() -> anyhow::Result<()> {
 
     sink.send(AgentEvent::Ready {
         proto_version: PROTO_VERSION,
-        caps: vec![caps::HOLD.into(), caps::CHORD.into(), caps::FOREGROUND.into()],
+        caps: vec![
+            caps::HOLD.into(),
+            caps::CHORD.into(),
+            caps::FOREGROUND.into(),
+            // Reading another app's window title needs the Accessibility
+            // grant, which `AXIsProcessTrusted` above has already confirmed
+            // we hold — so if we got this far, titles work. `title` is a
+            // statement of capability, not of activation: the feature stays
+            // dark until `Configure.title_events_enabled` turns it on.
+            caps::TITLE.into(),
+        ],
     });
 
     CFRunLoop::run_current();

@@ -77,14 +77,36 @@
     return () => window.removeEventListener("focus", onFocus);
   });
 
+  /** Browser names as they appear inside a window title. Used only by
+   * `suggestPattern` — the authoritative host list lives in Rust
+   * (`host.rs`), keyed by exe/bundle id, which a title does not carry. */
+  const BROWSER_NAMES = [
+    "google chrome", "chrome", "chromium", "mozilla firefox", "firefox",
+    "firefox developer edition", "safari", "microsoft edge", "edge",
+    "brave", "opera", "vivaldi", "arc", "zen browser", "librewolf",
+    "waterfox", "orion",
+  ];
+
   /** Suggest a signature from a browser window title: split on dash-like
-   * separators, drop the trailing browser name ("… - Google Chrome"), and
-   * take the last remaining segment — for Workspace Gmail that's the
-   * org-specific "<Company> Mail" part, never the user's email address. */
+   * separators, cut the browser's own trailing decoration, and take the
+   * last remaining segment — for Workspace Gmail that's the org-specific
+   * "<Company> Mail" part, never the user's email address.
+   *
+   * "Drop the last segment" is wrong in both directions, which is why this
+   * searches for the browser name instead of counting from the end:
+   *   Safari  "Inbox (2) - me@acme.com - Acme Mail"
+   *           appends nothing at all, so the last segment IS the signature;
+   *   Chrome  "… - Acme Mail - Google Chrome – MichaelDigital"
+   *           appends the *profile* name after the browser name, so the
+   *           last segment is neither the signature nor the browser.
+   * Cutting at the browser name and taking what precedes it handles both,
+   * plus Firefox's "… — Mozilla Firefox". Falls back to the last segment
+   * when no browser name is present. */
   function suggestPattern(title: string): string {
-    const segments = title.split(/ [-—–] /);
-    if (segments.length >= 3) return segments[segments.length - 2].trim();
-    return segments[0].trim();
+    let segments = title.split(/ [-—–] /).map((x) => x.trim()).filter(Boolean);
+    const browser = segments.findIndex((x) => BROWSER_NAMES.includes(x.toLowerCase()));
+    if (browser > 0) segments = segments.slice(0, browser);
+    return segments[segments.length - 1] ?? title.trim();
   }
 
   const matchesLastTitle = (pattern: string) =>

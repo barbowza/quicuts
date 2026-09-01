@@ -8,6 +8,8 @@
 mod activation;
 
 #[cfg(target_os = "macos")]
+mod axtitle;
+#[cfg(target_os = "macos")]
 mod foreground;
 #[cfg(target_os = "macos")]
 mod ipc;
