@@ -83,8 +83,8 @@
   const BROWSER_NAMES = [
     "google chrome", "chrome", "chromium", "mozilla firefox", "firefox",
     "firefox developer edition", "safari", "microsoft edge", "edge",
-    "brave", "opera", "vivaldi", "arc", "zen browser", "librewolf",
-    "waterfox", "orion",
+    "brave", "opera", "opera gx", "vivaldi", "arc", "zen browser",
+    "librewolf", "waterfox", "orion",
   ];
 
   /** Suggest a signature from a browser window title: split on dash-like
@@ -101,7 +101,10 @@
    *           last segment is neither the signature nor the browser.
    * Cutting at the browser name and taking what precedes it handles both,
    * plus Firefox's "… — Mozilla Firefox". Falls back to the last segment
-   * when no browser name is present. */
+   * when no browser name is present — which also changes the two-segment
+   * case on a suffix-less browser: Safari's "Inbox - Acme Mail" used to
+   * suggest "Inbox" (the old `length >= 3` guard fell through to the
+   * *first* segment) and now suggests "Acme Mail", the org signature. */
   function suggestPattern(title: string): string {
     let segments = title.split(/ [-—–] /).map((x) => x.trim()).filter(Boolean);
     const browser = segments.findIndex((x) => BROWSER_NAMES.includes(x.toLowerCase()));

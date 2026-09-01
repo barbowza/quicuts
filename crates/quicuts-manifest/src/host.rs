@@ -11,6 +11,13 @@ pub const BROWSER_CLASS: &str = "browser";
 
 /// Built-in browser exes, pre-normalized (lowercase, no ".exe"). The
 /// identity a Windows agent reports.
+///
+/// **Adding a browser? Three lists, not one.** Add its exe stem here, its
+/// bundle id to `BUILTIN_BROWSER_BUNDLE_IDS` below, and its *human-readable
+/// window-title name* to `BROWSER_NAMES` in `ui/src/settings/Settings.svelte`
+/// — that last one is what strips the browser's own decoration off a
+/// captured title when suggesting a signature, and nothing here will fail
+/// if you forget it.
 pub const BUILTIN_BROWSER_EXES: &[&str] = &[
     "chrome", "msedge", "firefox", "brave", "opera", "opera_gx", "vivaldi",
     "chromium", "arc", "zen", "librewolf", "waterfox",

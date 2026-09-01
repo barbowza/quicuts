@@ -100,6 +100,42 @@ they could join a browser's rail but never follow the tab. Closed by:
 | Host class | `BUILTIN_BROWSER_BUNDLE_IDS` joins `BUILTIN_BROWSER_EXES` in the *same* class set, unconditionally on every platform. | Keeps `match_foreground` free of platform branches (CLAUDE.md); the namespaces cannot collide (bundle ids have dots, exe stems do not); and compiling them everywhere means the Linux-toolchain tests cover them. |
 | Manifests | `Google.Gmail` and `Yahoo.YahooMail` ported to `manifests-mac/`, identical but for Cmd-instead-of-Ctrl on Gmail's Send/Insert-link and Yahoo's Send. | Same ids and `TitleMatch` patterns, so the engine and the bindings UI behave identically across platforms. |
 
+### What the 5 Hz poll actually costs (measured)
+
+Polling is the one place where the mac cost model is *worse* than the
+Windows one rather than merely different: `EVENT_OBJECT_NAMECHANGE` costs
+nothing while nothing changes, whereas this wakes twice a second whether or
+not anything happened, and an AX read wakes the **polled app** too, not
+just the agent. So it was measured rather than assumed (M-series, on
+battery, `title_events_enabled` on, frontmost app holding a real window):
+
+| | Measured |
+|---|---|
+| One AX title read (2000 samples) | median **0.029 ms**, p90 0.036 ms, p99 0.095 ms, max 1.0 ms |
+| Agent process, 40s with the toggle **off** | below `ps` resolution (< 0.01 s) |
+| Agent process, 40s with the toggle **on** | below `ps` resolution (< 0.01 s) — predicted 0.0145% of one core |
+| **Polled app**, 40s idle, nobody reading | 0.00 s |
+| **Polled app**, 40s under the 5 Hz poll (197 reads) | 0.04 s → **~0.1% of one core**, ~0.2 ms per read |
+
+So the whole feature costs about **a thousandth of one core**, and almost
+all of it lands in the polled app rather than in Quicuts — against a
+browser that is typically drawing watts. It is noise. No further gating is
+warranted at 200ms.
+
+Recorded because the obvious optimisation is a trap: **gating the poll on
+`SetOverlayVisible` would be wrong**, and not only for the ~200-400ms of
+staleness. `agent.rs` deliberately pre-assembles the page on every
+`ForegroundChanged` *so that activation is instant*; a poll that only runs
+while the panel is up would show the host browser's collection and then
+visibly swap to Gmail a beat later, on every single show. It would also
+break the settings capture flow, which needs `last_browser_title` to have
+been captured **before** the browser lost foreground to the settings
+window. If the cost ever does need cutting, the right lever is the
+opposite one: have `Configure` carry the host-class identities so the agent
+can skip polling whenever the frontmost app is not a browser — which costs
+nothing at activation time and would take the common case to zero. Not
+worth a protocol change for 0.1% of a core today.
+
 Two things learned on hardware that the design had guessed at:
 
 - **Safari appends no browser suffix** — its window title is exactly the
