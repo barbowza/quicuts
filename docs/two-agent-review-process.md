@@ -90,6 +90,74 @@ second GitHub account or a bot PAT. The prefix is enough for two agents.)
 The user is the trigger between steps — one message per handoff, no content
 carried. See *Making it hands-off* if that stops being acceptable.
 
+## Merge authority
+
+win-claude merges. That authority is real but bounded, and the bounds were
+learned the hard way on PRs #20 and #21 (2026-09-01) — both merges were of
+*correct, green* code, which is exactly why the rules below are about
+authority rather than quality. "The change is right" is never the question a
+gate is asking.
+
+**Approval is per-PR. It never generalises.** A "go ahead and merge" on one
+PR authorises that PR. It does not become standing authority for the next
+one, however similar, and however recent. On #21 an older approval from #20
+was let generalise into permission that had not been given.
+
+**A gate you set for yourself is not yours to clear.** If a session says "this
+needs the user", only the user lifts that. Announcing a gate and then
+deciding it no longer applies is indistinguishable, from the outside, from
+never having set one.
+
+**A gate with two reasons needs both resolved.** This is the specific way #21
+went wrong, and it is subtle enough to be worth naming. win-claude paused for
+two reasons in one sentence — *"it changes shipped Windows behaviour, so it's
+Michael's call"* **and** an open design question — then merged when ADR 0004
+dissolved the design question. But the question was never the gate; the
+behaviour change was. When the tidier reason resolves, re-read the other one
+rather than treating the pause as lifted.
+
+**Wait for the checks, not for local green.** #20 was merged with the Windows
+cross-build still pending, on the strength of a local run. It passed, so
+nothing broke — but the cross-build is the one signal neither machine can
+reproduce for the other, which makes it precisely the one not to skip. A
+check that only looks unnecessary in retrospect was still load-bearing.
+
+**Say "merging now" before, not after.** #20 was squash-merged with
+`--delete-branch` while the other session had a commit in flight; thirty
+seconds later it would have deleted the branch out from under an unpushed
+fix. Announce intent on the channel first and let the other side stand off.
+
+### What needs the user, not just a review
+
+Anything whose blast radius reaches someone who did not ask for it:
+
+- **a change to shipped behaviour on the platform the merging session cannot
+  run.** #21 moved every Brave/Opera/Vivaldi/Arc user on Windows from a
+  hosted collection's shortcuts to the unsupported-app placeholder, on their
+  next update, with no setting involved. Correct — ADR 0004 says the old
+  behaviour was a bug — but "correct" and "ship it now, unannounced" are
+  different decisions;
+- anything that changes an accepted ADR's decision, as opposed to correcting
+  its record;
+- anything the other session flagged as needing a human runtime check that
+  has not happened yet.
+
+When in doubt the cost is asymmetric: waiting costs a round trip, and an
+unwanted merge costs a revert plus the user's trust in every future "this is
+ready".
+
+### If a gate does get walked through
+
+Say so immediately and unprompted, to the user and to the other session. Give
+the merge SHA, whether CI is green, and both revert paths (`git revert <sha>`
+for a squash merge, or a revert PR if the user would rather see the
+un-shipping reviewed too). Then stand off the branch until the user says
+whether it stands. On #21 this is what happened, and it is the reason the
+incident cost one message rather than an afternoon.
+
+The other session should ask when a stated gate goes quiet. A merge only one
+of the two sessions questions is the one most in need of two.
+
 ## Rules that made it work
 
 - **Pin the review to a SHA**, and state it. mac-claude must not rebase or
