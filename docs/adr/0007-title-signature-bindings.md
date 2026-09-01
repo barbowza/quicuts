@@ -72,7 +72,15 @@ New commands: `get_last_browser_title`, `list_hosted_collections`.
 - No protocol change: `ForegroundChanged` already carried titles, and the
   privacy invariant is untouched (titles, never keystrokes; the persisted
   pattern is user-edited text).
-- Windows-only for now: matching lives in the platform-free crates, so
-  macOS inherits the whole feature once the mac agent gains a `title`
-  capability and `BUILTIN_BROWSER_EXES` learns bundle ids — see
-  `docs/mac-title-detection-handover.md`.
+- **Cross-platform since 2026-09-01** (issue #19). Matching lived in the
+  platform-free crates all along, so macOS inherited the whole feature —
+  bindings, precedence, the signatures UI — by adding two things and
+  changing no shared logic: the mac agent gained a `title` capability, and
+  the browser host class learned bundle ids
+  (`BUILTIN_BROWSER_BUNDLE_IDS`). See ADR 0006 for the mac-side mechanics.
+  One shared fix fell out of it: `suggestPattern` assumed the *last*
+  dash-separated segment is the browser name, which is wrong on Safari
+  (which appends nothing) and wrong on Chrome (which appends the profile
+  name *after* the browser name — `"… - Gmail - Google Chrome – Work"`,
+  observed live). It now cuts at the browser name instead of counting from
+  the end, which fixes the Windows Chrome-with-profiles case too.

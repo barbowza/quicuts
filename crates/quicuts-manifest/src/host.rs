@@ -9,10 +9,51 @@ use crate::normalize_exe;
 /// The only host class today: web apps living inside a browser.
 pub const BROWSER_CLASS: &str = "browser";
 
-/// Built-in browser exes, pre-normalized (lowercase, no ".exe").
+/// Built-in browser exes, pre-normalized (lowercase, no ".exe"). The
+/// identity a Windows agent reports.
+///
+/// **Adding a browser? Three lists, not one.** Add its exe stem here, its
+/// bundle id to `BUILTIN_BROWSER_BUNDLE_IDS` below, and its *human-readable
+/// window-title name* to `BROWSER_NAMES` in `ui/src/settings/Settings.svelte`
+/// — that last one is what strips the browser's own decoration off a
+/// captured title when suggesting a signature, and nothing here will fail
+/// if you forget it.
 pub const BUILTIN_BROWSER_EXES: &[&str] = &[
     "chrome", "msedge", "firefox", "brave", "opera", "opera_gx", "vivaldi",
     "chromium", "arc", "zen", "librewolf", "waterfox",
+];
+
+/// Built-in browser **bundle identifiers**, pre-normalized (lowercase) —
+/// the identity a macOS agent reports for the same browsers.
+///
+/// These live in the *same* class set as the exe stems rather than a
+/// parallel per-platform map: `match_foreground` must stay free of platform
+/// branches (see CLAUDE.md), and the two namespaces cannot collide (a
+/// bundle id always contains dots, an exe stem never does). A cross-built
+/// Windows binary carrying a dozen extra strings costs nothing, and keeping
+/// them unconditional means `just test` on the Linux toolchain covers them.
+pub const BUILTIN_BROWSER_BUNDLE_IDS: &[&str] = &[
+    "com.apple.safari",
+    "com.apple.safaritechnologypreview",
+    "com.google.chrome",
+    "com.google.chrome.beta",
+    "com.google.chrome.canary",
+    "com.microsoft.edgemac",
+    "com.microsoft.edgemac.beta",
+    "org.mozilla.firefox",
+    "org.mozilla.firefoxdeveloperedition",
+    "org.mozilla.nightly",
+    "com.brave.browser",
+    "com.brave.browser.beta",
+    "com.operasoftware.opera",
+    "com.operasoftware.operagx",
+    "com.vivaldi.vivaldi",
+    "org.chromium.chromium",
+    "company.thebrowser.browser", // Arc
+    "app.zen-browser.zen",
+    "org.mozilla.librewolf",
+    "net.waterfox.waterfox",
+    "com.kagi.kagimacos", // Orion
 ];
 
 /// Host class name -> merged exe set (built-in plus user extensions).
@@ -29,8 +70,11 @@ impl HostClasses {
     /// Built-in classes extended with user-supplied browser exe names
     /// (any case, ".exe" optional, paths tolerated).
     pub fn with_extensions(extra_browser: &[String]) -> Self {
-        let mut browsers: HashSet<String> =
-            BUILTIN_BROWSER_EXES.iter().map(|e| e.to_string()).collect();
+        let mut browsers: HashSet<String> = BUILTIN_BROWSER_EXES
+            .iter()
+            .chain(BUILTIN_BROWSER_BUNDLE_IDS)
+            .map(|e| e.to_string())
+            .collect();
         browsers.extend(
             extra_browser
                 .iter()
@@ -70,6 +114,35 @@ mod tests {
         assert!(hc.contains("browser", "firefox"));
         assert!(!hc.contains("browser", "notepad.exe"));
         assert!(!hc.contains("terminal", "chrome"));
+    }
+
+    /// The macOS agent reports bundle ids, so the browser class has to
+    /// recognize them as well as Windows exe stems.
+    #[test]
+    fn builtin_browser_bundle_ids() {
+        let hc = HostClasses::builtin();
+        assert!(hc.contains("browser", "com.apple.Safari"));
+        assert!(hc.contains("browser", "com.google.Chrome"));
+        assert!(hc.contains("browser", "org.mozilla.firefox"));
+        // Firefox Developer Edition is a distinct id, not a suffix of the
+        // release one — substring matching would be wrong here, so assert
+        // the exact id is listed in its own right.
+        assert!(hc.contains("browser", "org.mozilla.firefoxdeveloperedition"));
+        assert!(hc.contains("browser", "com.microsoft.edgemac"));
+        // Bundle ids are matched whole: a mail client is not a browser just
+        // because it shares a vendor prefix with one.
+        assert!(!hc.contains("browser", "com.apple.mail"));
+        assert!(!hc.contains("browser", "com.google"));
+        assert!(!hc.contains("browser", "com.googlecode.iterm2"));
+    }
+
+    /// `normalize_exe` lowercases and strips one trailing ".exe"; neither
+    /// must mangle the dots in a bundle id.
+    #[test]
+    fn bundle_ids_survive_normalization() {
+        assert_eq!(normalize_exe("com.google.Chrome"), "com.google.chrome");
+        let hc = HostClasses::builtin();
+        assert!(hc.contains("BROWSER", "COM.GOOGLE.CHROME"));
     }
 
     #[test]
