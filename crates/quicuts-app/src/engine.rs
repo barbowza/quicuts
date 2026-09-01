@@ -235,7 +235,7 @@ impl Engine {
             .map(|m| {
                 let lm = m.lm;
                 // A background app's icon comes from its live process.
-                let filter = lm.manifest.window_filter.trim();
+                let filter = lm.manifest.primary_filter();
                 let exe_hint = if lm.manifest.background_process && filter != "*" {
                     running
                         .get(&quicuts_manifest::normalize_exe(filter))
@@ -324,7 +324,7 @@ impl Engine {
                 let info = self.store.get(pin, &self.locale).map(|lm| {
                     (
                         lm.manifest.display_name().to_string(),
-                        lm.manifest.window_filter.trim().to_string(),
+                        lm.manifest.primary_filter().to_string(),
                         manifest_icon_path(lm),
                         assemble(&lm.manifest, &pins.get(pin), &customs.get(pin)).sections,
                     )

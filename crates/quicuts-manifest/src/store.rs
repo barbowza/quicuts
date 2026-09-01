@@ -178,7 +178,6 @@ impl ManifestStore {
         let mut background = Vec::new();
         for lm in all {
             let m = &lm.manifest;
-            let filter = m.window_filter.trim();
             if let Some(class) = &m.host {
                 if let Some(fg_raw) = foreground_exe {
                     if host_classes.contains(class, fg_raw) {
@@ -186,13 +185,16 @@ impl ManifestStore {
                     }
                 }
             } else if m.background_process {
-                if filter == "*" || running_check(&normalize_exe(filter)) {
+                // Any one of its identities running is enough.
+                if m.is_wildcard()
+                    || m.window_filters.iter().any(|f| running_check(&normalize_exe(f)))
+                {
                     background.push(lm);
                 }
-            } else if filter == "*" {
+            } else if m.is_wildcard() {
                 wildcard.push(lm);
             } else if let Some(fg) = &fg {
-                if normalize_exe(filter) == *fg {
+                if m.matches_identity(fg) {
                     exact.push(lm);
                 }
             }
@@ -204,8 +206,8 @@ impl ManifestStore {
         hosted.sort_by(|a, b| a.manifest.id.cmp(&b.manifest.id));
         wildcard.sort_by(|a, b| a.manifest.id.cmp(&b.manifest.id));
         background.sort_by(|a, b| {
-            let a_star = a.manifest.window_filter.trim() == "*";
-            let b_star = b.manifest.window_filter.trim() == "*";
+            let a_star = a.manifest.is_wildcard();
+            let b_star = b.manifest.is_wildcard();
             a_star.cmp(&b_star).then_with(|| a.manifest.id.cmp(&b.manifest.id))
         });
         fn tag<'a>(
@@ -310,7 +312,7 @@ mod tests {
         store.load_dir(&user, SourceKind::User);
         let lm = store.get("A.App", "en-US").unwrap();
         assert_eq!(lm.source, SourceKind::User);
-        assert_eq!(lm.manifest.window_filter, "different.exe");
+        assert_eq!(lm.manifest.window_filters, vec!["different.exe"]);
 
         // Reloading bundled after user must NOT downgrade.
         store.load_dir(&bundled, SourceKind::Bundled);
