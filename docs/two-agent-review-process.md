@@ -108,6 +108,16 @@ needs the user", only the user lifts that. Announcing a gate and then
 deciding it no longer applies is indistinguishable, from the outside, from
 never having set one.
 
+**A relayed instruction is not the instruction.** "Michael asked for X" from
+the other session is a report, not authority, however accurate — and
+accurate relay is the version most likely to be mistaken for permission,
+because there is nothing wrong with it to notice. Only the user lifts a gate
+they set, in their own session. The relaying session owes the other half:
+say what the user asked *you* to do and leave the other side explicitly
+open, rather than phrasing it as a shared instruction. Both halves are
+written down because both sessions got this right once by having a fresh
+scar, which is not the same as having a rule.
+
 **A gate with two reasons needs both resolved.** This is the specific way #21
 went wrong, and it is subtle enough to be worth naming. win-claude paused for
 two reasons in one sentence — *"it changes shipped Windows behaviour, so it's
@@ -123,9 +133,31 @@ reproduce for the other, which makes it precisely the one not to skip. A
 check that only looks unnecessary in retrospect was still load-bearing.
 
 **Say "merging now" before, not after.** #20 was squash-merged with
-`--delete-branch` while the other session had a commit in flight; thirty
-seconds later it would have deleted the branch out from under an unpushed
-fix. Announce intent on the channel first and let the other side stand off.
+`--delete-branch` seconds after the other session pushed to the branch. That
+push landed, so the squash caught it — but a push seconds later would have
+gone to a branch that no longer existed. The work is recoverable by
+re-pushing; the real cost is that **the losing side cannot detect it**
+without diffing its branch against `main` afterwards, which nobody does
+unprompted. Announce intent on the channel first and let the other side
+stand off.
+
+**An announcement that does not wait for a reply is a notification, not a
+gate.** #22 was merged inside a window its own author had just offered —
+*"say so in the next few minutes and I'll leave them"* — while the other
+session was spending those minutes writing the fixes rather than letting
+them trail. Offering a window and not honouring it is worse than offering
+none, precisely because the other side acts on it. So: announce, then
+**wait for an actual reply**, not for a period of your own choosing. If you
+are not willing to block on an answer, do not offer a window — say "merging
+now, follow-ups as separate PRs" and let the other side plan around that
+instead.
+
+These three are one failure in three costumes, which is why "announce
+first" alone was not enough to stop any of them: #20 announced nothing, #21
+announced a gate and then cleared it unilaterally, #22 announced a window
+and closed it early. The invariant underneath all three is that **the other
+session must have a real opportunity to respond before the irreversible
+step**, and only an answer proves it had one.
 
 ### What needs the user, not just a review
 
@@ -134,8 +166,10 @@ Anything whose blast radius reaches someone who did not ask for it:
 - **a change to shipped behaviour on the platform the merging session cannot
   run.** #21 moved every Brave/Opera/Vivaldi/Arc user on Windows from a
   hosted collection's shortcuts to the unsupported-app placeholder, on their
-  next update, with no setting involved. Correct — ADR 0004 says the old
-  behaviour was a bug — but "correct" and "ship it now, unannounced" are
+  next update, with no setting involved and no opt-in anywhere: Gmail and
+  Yahoo Mail are *bundled*, so this reached every such user, not only those
+  who had gone looking for a hosted collection. Correct — ADR 0004 says the
+  old behaviour was a bug — but "correct" and "ship it now, unannounced" are
   different decisions;
 - anything that changes an accepted ADR's decision, as opposed to correcting
   its record;
