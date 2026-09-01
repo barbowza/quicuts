@@ -138,11 +138,17 @@ manifests that happen to ship, and a user manifest with `"*"` and no
 The consequence is real for a browser Quicuts ships no manifest for
 (Brave, Opera, Vivaldi, Arc on Windows): that user now gets the
 unsupported-app placeholder, where before this fix they got Gmail. Better,
-but not obviously *right* — the system-wide page is sitting in their rail,
-excluded from the default only because `BackgroundProcess: true` outranks
-`"*"` in the grouping. Whether a `"*"` background manifest should be
-eligible as the default (after exact, still never hosted) is a separate
-behaviour change and is deliberately **not** decided here.
+and already decided: ADR 0004 exists *because* silently falling back to the
+`"*"` "Windows" page made the panel read as if shell shortcuts were the
+app's own, and "keeping the Windows page selected" is listed there as an
+explicitly rejected alternative. An unsupported browser is not a special
+case of unsupported app, so making a `"*"` background manifest eligible as
+the default would re-introduce the bug ADR 0004 was written to fix.
+
+The root cause was in ADR 0004 itself: as accepted, its rule suppressed the
+placeholder on a *Hosted* match, which is only safe when the host has its
+own manifest. `engine::build_state` implemented that faithfully — the
+defect was in the decision, not the code. That ADR is amended accordingly.
 
 ## Deferred / to verify on host
 
