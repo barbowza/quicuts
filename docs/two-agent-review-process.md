@@ -38,10 +38,15 @@ to themselves indefinitely. So:
 
 Cheap, and it makes the PR readable to a human later. (The clean fix is a
 second machine account per session, which would also make required-review
-protection possible. Deferred 2026-09-01: it would not have prevented any
-failure seen so far, and it converts "merged too early" into "blocked until the
-other session wakes up" — worse, given win-claude works solo about half the
-time. Revisit if a PR is ever merged without real review.)
+protection possible. **Deferred 2026-09-01**, and the reason matters: not that
+it would have prevented nothing so far — that is true and nearly irrelevant,
+since the question is always the *next* failure — but that mac-claude is absent
+**by design**. Required approval would convert its intended absence into a hard
+block on win-claude's default mode: a permanent cost against an intermittent
+benefit. The "flag unreviewed merges in the PR body" rule below buys most of
+the same value at none of the blocking cost, which is why that rule is
+load-bearing rather than a courtesy. Revisit if a PR is ever merged without
+real review, or if mac-claude stops being on-demand.)
 
 ## Round shape
 
@@ -181,6 +186,12 @@ of the two sessions questions is the one most in need of two.
   `quicuts-app`, which neither the Linux toolchain nor CI builds, so its tests
   ran on exactly one machine. Moving it to `quicuts-manifest` put it in CI and
   in both sessions' loops. Ask of any new test: *where can this actually run?*
+- **Push back — and verify before you do.** The duty to contest the lead's
+  design is real; on 2026-09-01 mac-claude was right about the macOS title poll
+  and win-claude was wrong. But the same day it was also wrong *twice while
+  correcting*, on `git revert -m 1` and on a negative grep. A reviewer's
+  failure mode is confident noise, not silence: the instinct to check is
+  cheap, the assertion that follows it is not.
 - **Verify the other session's claims, not just its code.** Twice on
   2026-09-01 a confidently-stated claim was wrong — "`manifests-mac/` has no
   test coverage" (it had six tests) and a negative `grep -c` across a

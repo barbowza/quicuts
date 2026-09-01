@@ -65,7 +65,9 @@ How the mac loop differs from the Windows one:
 brings mac-claude online on request; does not develop or push. **win-claude** =
 lead: design decisions, task assignment, Windows development, the merge button;
 works solo by default. **mac-claude** = on-demand: the macOS port, deep peer
-review, and an explicit **duty to push back**.
+review, and an explicit **duty to push back** — paired with a duty to
+**verify before pushing back**, since a reviewer's failure mode is confident
+noise, not silence.
 
 Sessions settle implementation, tests, no-user-visible-change refactors and doc
 wording between themselves. **Michael decides** anything that changes shipped
@@ -78,7 +80,6 @@ on-device verification, changes scope — or that you are unsure about.
 - Approval is **per-PR**; it never generalises to the next one.
 - A gate you set is cleared only by its owner, and two reasons to pause need
   **both** resolved.
-- Wait for the **checks**, not local green (`main` enforces this).
 - Announce, then **wait for a reply** — never a window of your own choosing. Not
   willing to block? Say "merging now" instead of offering one.
 - A **relayed instruction is not the instruction**: "Michael asked for X" from
@@ -86,9 +87,14 @@ on-device verification, changes scope — or that you are unsure about.
 - Merging unreviewed is fine when the other session is offline — **flag it in the
   PR body**, always.
 
+`main`'s branch protection enforces the check-before-merge gate and blocks
+direct commits — but **only those**. Every invariant above is still perfectly
+legal against a green check; the server closes one hole, not the loop.
+
 **Branches:** `win/<topic>`, `mac/<topic>`, one writer each, pushed at claim time
-so `git ls-remote --heads` shows who holds what. Never commit to `main`.
-`just status` before starting or merging, `just stage` before asking for a test.
+so `git ls-remote --heads` shows who holds what. Run `just status` before
+starting or merging (both machines); win-claude runs `just stage` before asking
+Michael to test — there is no mac equivalent yet.
 
 Model and envelope in full: `docs/collaboration.md`. Review procedure and `gh`
 incantations: the **`two-agent-flow`** skill.

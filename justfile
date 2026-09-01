@@ -165,6 +165,11 @@ status:
         "$(git rev-list --count HEAD..origin/main 2>/dev/null || echo ?)"
     @echo "== claim board (remote branches) =="
     @git ls-remote --heads origin | sed 's/.*refs\/heads\//  /'
+    @echo "== github =="
+    @printf '  gh account: %s\n' "$(gh api user --jq .login 2>/dev/null || echo 'NOT AUTHENTICATED')"
+    @echo "  (expect 'barbowza'. gh resolves per-machine and just recipes do not source"
+    @echo "   your shell rc, so a machine that routes accounts by hook will pick the wrong"
+    @echo "   one silently — set GH_CONFIG_DIR in the environment just inherits if so.)"
     @echo "== open PRs =="
     @gh pr list --state open 2>/dev/null | sed 's/^/  /' || echo "  (gh unavailable)"
     @echo "== CI on main =="

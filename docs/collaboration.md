@@ -16,7 +16,7 @@ always have in context is in `CLAUDE.md`.
 |---|---|---|
 | **Michael** | the Windows box | Scope, priorities, on-device testing, bringing mac-claude online. Product delivery management — **not** development. |
 | **win-claude** | WSL2 on that box | Lead. Design decisions, task assignment, Windows development, merges. The default worker. |
-| **mac-claude** | the Mac | On-demand. The macOS port, deep peer review, and a duty to push back. |
+| **mac-claude** | the Mac | On-demand. The macOS port, deep peer review, and a duty to push back — having verified first. |
 
 **Michael does not push.** He stepped out of development on 2026-09-01, and the
 sessions do their own branch management. He remains available to both, but
@@ -30,7 +30,9 @@ favour to be rationed — a change that deserves a second pair of eyes is worth
 the round trip.
 
 **Lead means owning decisions, not the keyboard.** mac-claude's duty to push
-back is load-bearing, not decorative. On 2026-09-01 it was right and win-claude
+back is load-bearing, not decorative — and is paired with a duty to **verify
+before pushing back**, because an eager reviewer's failure mode is confident
+noise rather than silence. On 2026-09-01 it was right and win-claude
 was wrong about gating the macOS title poll on `SetOverlayVisible`; a weaker
 role would have made that pushback less likely and the feature would have
 shipped broken. A lead who is never contradicted is being told what they want
@@ -101,8 +103,14 @@ even empty, before doing the work. Branches are `win/<topic>` and `mac/<topic>`,
 own.
 
 Run `just status` before starting work and before merging: it fetches, prunes,
-and shows open PRs, remote branches and in-flight CI. It is the same view for
-all three actors, so Michael can run it too.
+and shows the resolved `gh` account, open PRs, remote branches and in-flight
+CI. It is the same view for all three actors, so Michael can run it too.
+
+It prints the `gh` account deliberately. `gh` resolves per-machine, and `just`
+recipes do not source your shell rc — so a machine that routes between GitHub
+accounts by shell hook will silently pick the wrong one, and still succeed,
+because the repo is readable either way. Seeing the login is what makes that
+loud.
 
 Never commit to `main`. Branch protection enforces this (PR required, zero
 approvals — see `docs/two-agent-review-process.md` for why zero — the Windows
@@ -113,10 +121,13 @@ cross-build must pass, and admins are not exempt).
 He is the only one who can run the app on real hardware, and he has asked not to
 have to remember what needs testing. So:
 
-1. **Stage first.** Run `just stage` before asking: it builds, terminates his
-   running instance, deploys, relaunches, and reports. On 2026-09-01 he spent an
-   afternoon on an 08:31 build while four merges landed, including a fix for a
-   bug he could have reproduced.
+1. **Stage first.** `just stage` builds, terminates his running instance,
+   deploys, relaunches and reports. On 2026-09-01 he spent an afternoon on an
+   08:31 build while four merges landed, including a fix for a bug he could
+   have reproduced. **win-claude only** — there is no mac equivalent yet, and
+   the Mac loop is a different shape (`mac-run` holds the terminal on
+   `cargo tauri dev` rather than deploying and detaching), so `mac-stage`
+   should be written once its right shape is known rather than guessed at.
 2. **Give a numbered plan.** One line per step, each with its **expected
    result**, so "it did something else" is reportable without knowing what the
    code was meant to do.
