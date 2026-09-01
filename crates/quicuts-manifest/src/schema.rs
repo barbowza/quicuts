@@ -135,8 +135,13 @@ pub struct RawManifest {
     pub package_name: Option<String>,
     #[serde(default)]
     pub name: Option<String>,
+    /// One identity, or several: `WindowFilter: chrome.exe` and
+    /// `WindowFilter: [org.mozilla.firefox, org.mozilla.firefoxdeveloperedition]`
+    /// both parse. Several is how one manifest covers an app whose editions
+    /// ship under different identities (Firefox release vs Developer
+    /// Edition, Chrome vs Beta/Canary) without duplicating its content.
     #[serde(default)]
-    pub window_filter: Option<String>,
+    pub window_filter: LaxStringList,
     #[serde(default)]
     pub background_process: LaxBool,
     /// Quicuts extension (ADR 0003): host class ("browser") for hosted

@@ -99,6 +99,57 @@ generated letter tile from the collection name. No network fetches, ever.
 - The privacy invariant is untouched: titles already crossed the wire;
   key identities still never do.
 
+## Correction (2026-09-01): "the host page stays selected by default"
+
+Decision 2 says the host page stays selected by default. The implementation
+read that as *the first non-background match*, which is only the same thing
+when the host browser has a manifest of its own. `match_foreground` orders
+groups exact → hosted → wildcard → background, so for a browser Quicuts
+ships no manifest for, the first non-background match **is** a hosted
+collection — and Gmail's shortcuts presented as the foreground app on a
+blank new-tab page, with nothing in the panel to say nothing had matched.
+
+Found on a real Mac with Firefox Developer Edition (`manifests-mac/` ships
+Safari and Chrome, not Firefox). It was never mac-specific: on Windows,
+Brave, Opera, Vivaldi and Arc are all in the browser class with no
+manifest, and behaved the same way. Chrome, Firefox and Edge having
+manifests is the only reason it went unseen.
+
+The default now falls through to the first **exact or wildcard** match,
+skipping hosted collections; when there is no such match the panel shows
+the unsupported-app placeholder. A hosted collection becomes the foreground
+entry only when title detection actually matched it — which is the
+behaviour decision 3 describes. Hosted collections still appear in the rail
+and stay selectable and pinnable by hand either way.
+`quicuts_manifest::foreground_entry`, unit-tested in the manifest crate so
+the rule runs on every CI push (`quicuts-app` does not cross-compile on the
+Linux host, so its own tests never run in CI).
+
+**What "or wildcard" is worth today: nothing.** Both bundled `"*"`
+manifests — `+WindowsNT.Shell` and `Apple.System` — are also
+`BackgroundProcess: true`, and `match_foreground` tests `background_process`
+*before* the wildcard branch, so they land in `Background` and the
+`Wildcard` group is empty on both platforms. In the shipped app the rule
+therefore reads "first exact match, else the placeholder". The wildcard arm
+is kept because the rule is defined over `MatchKind`, not over the
+manifests that happen to ship, and a user manifest with `"*"` and no
+`BackgroundProcess` produces one today.
+
+The consequence is real for a browser Quicuts ships no manifest for
+(Brave, Opera, Vivaldi, Arc on Windows): that user now gets the
+unsupported-app placeholder, where before this fix they got Gmail. Better,
+and already decided: ADR 0004 exists *because* silently falling back to the
+`"*"` "Windows" page made the panel read as if shell shortcuts were the
+app's own, and "keeping the Windows page selected" is listed there as an
+explicitly rejected alternative. An unsupported browser is not a special
+case of unsupported app, so making a `"*"` background manifest eligible as
+the default would re-introduce the bug ADR 0004 was written to fix.
+
+The root cause was in ADR 0004 itself: as accepted, its rule suppressed the
+placeholder on a *Hosted* match, which is only safe when the host has its
+own manifest. `engine::build_state` implemented that faithfully — the
+defect was in the decision, not the code. That ADR is amended accordingly.
+
 ## Deferred / to verify on host
 
 - Exact built-in browser exe list (and how settings extends it).

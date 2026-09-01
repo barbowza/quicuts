@@ -15,7 +15,7 @@ pub use custom::{AppCustomizations, CustomBinding, EntryCustomization};
 pub use host::{HostClasses, BROWSER_CLASS};
 pub use keys::{GlyphToken, Key};
 pub use parse::{parse_manifest, split_filename, ParseError};
-pub use store::{LoadedManifest, ManifestStore, MatchKind, Matched, SourceKind};
+pub use store::{LoadedManifest, ManifestStore, MatchKind, Matched, SourceKind, foreground_entry};
 
 use serde::{Deserialize, Serialize};
 
@@ -54,9 +54,12 @@ pub struct Manifest {
     /// Display name; PTSG special-cases a missing Name on the Shell manifest
     /// to "Windows" — the caller decides the fallback label.
     pub name: Option<String>,
-    /// Exe name to match ("Notepad.exe", case-insensitive, ".exe" optional)
-    /// or "*" for all windows. Ignored when `host` is set.
-    pub window_filter: String,
+    /// Identities to match: exe names on Windows ("Notepad.exe",
+    /// case-insensitive, ".exe" optional), bundle ids on macOS, or the
+    /// single entry "*" for all windows. Usually one; more than one covers
+    /// an app whose editions ship under different identities. Empty when
+    /// `host` is set (a hosted collection matches only via its class).
+    pub window_filters: Vec<String>,
     /// true: show whenever the process runs (with "*": always shown).
     pub background_process: bool,
     /// Host class for a hosted collection ("browser"), lowercased. A hosted
@@ -72,6 +75,26 @@ pub struct Manifest {
 }
 
 impl Manifest {
+    /// The identity to show and to look a live process up by, when exactly
+    /// one is needed (rail icons, `BackgroundProcess` hints). Empty string
+    /// for a hosted collection, which has no identity of its own.
+    pub fn primary_filter(&self) -> &str {
+        self.window_filters.first().map(String::as_str).unwrap_or("")
+    }
+
+    /// The "*" filter: matches every window.
+    pub fn is_wildcard(&self) -> bool {
+        self.window_filters.iter().any(|f| f == "*")
+    }
+
+    /// Does this manifest claim `identity`? Both sides go through
+    /// `normalize_exe`, so an exe name and a bundle id are compared by the
+    /// same rule and the caller may pass either form.
+    pub fn matches_identity(&self, identity: &str) -> bool {
+        let want = normalize_exe(identity);
+        self.window_filters.iter().any(|f| normalize_exe(f) == want)
+    }
+
     pub fn display_name(&self) -> &str {
         match &self.name {
             Some(n) => n,
@@ -312,7 +335,7 @@ mod tests {
         let m = Manifest {
             id: "Test.App".into(),
             name: Some("Test".into()),
-            window_filter: "test.exe".into(),
+            window_filters: vec!["test.exe".into()],
             background_process: false,
             host: None,
             title_match: Vec::new(),

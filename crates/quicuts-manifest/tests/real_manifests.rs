@@ -1,8 +1,6 @@
 //! Compatibility suite: every real PTSG manifest bundled in /manifests must
-//! parse, and known structural facts about specific files must hold. The
-//! macOS set in /manifests-mac gets the same treatment at the bottom of the
-//! file — it is plain data, so it is covered on the Linux toolchain too and
-//! a WSL session catches a broken mac manifest without a Mac.
+//! parse, and known structural facts about specific files must hold.
+//! The macOS set has its own suite in `mac_manifests.rs`.
 
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -11,10 +9,6 @@ use quicuts_manifest::{assemble, HostClasses, Key, ManifestStore, SourceKind};
 
 fn manifests_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../manifests")
-}
-
-fn mac_manifests_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../manifests-mac")
 }
 
 fn store() -> ManifestStore {
@@ -40,7 +34,7 @@ fn gmail_manifest_shape() {
     assert_eq!(m.host.as_deref(), Some("browser"));
     assert_eq!(m.title_match, vec!["- Gmail"]);
     assert_eq!(m.icon.as_deref(), Some("Google.Gmail.png"));
-    assert_eq!(m.window_filter, "");
+    assert!(m.window_filters.is_empty());
     assert!(!m.background_process);
     assert!(m.sections.len() >= 4);
     // The declared icon file ships next to the manifest.
@@ -113,7 +107,7 @@ fn yahoo_mail_hosted_collection() {
     assert_eq!(m.host.as_deref(), Some("browser"));
     assert_eq!(m.title_match, vec!["Yahoo Mail"]);
     assert_eq!(m.icon, None);
-    assert_eq!(m.window_filter, "");
+    assert!(m.window_filters.is_empty());
     assert!(!m.background_process);
     assert_eq!(m.sections.len(), 4);
 
@@ -166,7 +160,7 @@ fn shell_manifest_specialcases() {
     let s = store();
     let shell = s.get("+WindowsNT.Shell", "en-US").expect("Shell manifest");
     let m = &shell.manifest;
-    assert_eq!(m.window_filter, "*");
+    assert!(m.is_wildcard());
     assert!(m.background_process);
     // Shell omits Name; display falls back to "Windows" like PTSG.
     assert_eq!(m.display_name(), "Windows");
@@ -179,7 +173,7 @@ fn chrome_manifest_shape() {
     let chrome = s.get("Google.Chrome", "en-US").expect("Chrome manifest");
     let m = &chrome.manifest;
     assert_eq!(m.display_name(), "Google Chrome");
-    assert_eq!(m.window_filter, "chrome.exe");
+    assert_eq!(m.window_filters, vec!["chrome.exe"]);
     assert!(!m.background_process);
     assert!(!m.sections.is_empty());
     let first = &m.sections[0];
@@ -244,128 +238,4 @@ fn angle_tokens_all_recognized_or_literal() {
     }
     assert!(glyphs > 0, "expected glyph tokens in Shell manifest");
     let _ = vks;
-}
-
-// --- macOS manifest set (/manifests-mac) ---------------------------------
-
-fn mac_store() -> ManifestStore {
-    let mut s = ManifestStore::new();
-    let (ok, failed) = s.load_dir(&mac_manifests_dir(), SourceKind::Bundled);
-    assert_eq!(failed, 0, "some mac manifests failed to parse");
-    assert!(ok >= 9, "expected all 9 mac manifests, parsed {ok}");
-    s
-}
-
-#[test]
-fn all_mac_manifests_parse() {
-    let s = mac_store();
-    assert!(s.len() >= 9);
-    // The mac set is keyed by bundle id, not exe name — a `.exe` filter in
-    // here would be a copy/paste escape from the Windows set. Linted over
-    // the files themselves; the store does not expose its whole contents.
-    for f in std::fs::read_dir(mac_manifests_dir()).unwrap() {
-        let path = f.unwrap().path();
-        if path.extension().and_then(|e| e.to_str()) != Some("yml") {
-            continue;
-        }
-        let text = std::fs::read_to_string(&path).unwrap();
-        for line in text.lines().filter(|l| l.trim_start().starts_with("WindowFilter:")) {
-            assert!(
-                !line.trim_end().trim_matches('"').to_ascii_lowercase().ends_with(".exe"),
-                "{}: Windows-style {}",
-                path.display(),
-                line.trim()
-            );
-        }
-    }
-}
-
-/// The port of the two hosted collections (issue #19). Same ids and
-/// `TitleMatch` patterns as the Windows files, so the engine, the settings
-/// bindings UI, and every existing test above behave identically; only the
-/// send chord differs.
-#[test]
-fn mac_hosted_collections_use_cmd_to_send() {
-    let s = mac_store();
-    let send = |id: &str, entry: &str| {
-        let lm = s.get(id, "en-US").unwrap_or_else(|| panic!("{id} missing from manifests-mac"));
-        lm.manifest
-            .sections
-            .iter()
-            .flat_map(|sec| &sec.entries)
-            .find(|e| e.name == entry)
-            .unwrap_or_else(|| panic!("{id}: no entry {entry:?}"))
-            .combos[0]
-            .clone()
-    };
-    // Cmd+Enter, not Ctrl+Enter. `Win` is PTSG's flag for Cmd on macOS.
-    for (id, entry) in [("Google.Gmail", "Send"), ("Yahoo.YahooMail", "Send message")] {
-        let c = send(id, entry);
-        assert!(c.win, "{id}/{entry} should be Cmd-modified on macOS");
-        assert!(!c.ctrl, "{id}/{entry} should not be Ctrl-modified on macOS");
-    }
-    // Gmail's other Ctrl binding moved too.
-    let link = send("Google.Gmail", "Insert link");
-    assert!(link.win && !link.ctrl);
-
-    let gmail = s.get("Google.Gmail", "en-US").unwrap();
-    assert_eq!(gmail.manifest.host.as_deref(), Some("browser"));
-    assert_eq!(gmail.manifest.title_match, vec!["- Gmail"]);
-    let icon = gmail.path.parent().unwrap().join(gmail.manifest.icon.as_deref().unwrap());
-    assert!(icon.is_file(), "missing bundled icon {}", icon.display());
-    assert_eq!(
-        s.get("Yahoo.YahooMail", "en-US").unwrap().manifest.title_match,
-        vec!["Yahoo Mail"]
-    );
-}
-
-/// End-to-end for the whole issue: a macOS agent reports a *bundle id*, so
-/// the browser host class has to admit it before a hosted collection can
-/// ever reach the rail or a title match.
-#[test]
-fn mac_bundle_ids_drive_hosted_matching() {
-    let s = mac_store();
-    let hc = HostClasses::builtin();
-    let ids = |bundle: &str| -> Vec<String> {
-        s.match_foreground(Some(bundle), "en-US", &hc, |_| false)
-            .iter()
-            .map(|m| m.lm.manifest.id.clone())
-            .collect()
-    };
-    let pos = |id: &str, v: &[String]| v.iter().position(|x| x == id);
-
-    // Safari: the host's own collection first, then both hosted ones.
-    let safari = ids("com.apple.Safari");
-    assert!(pos("Apple.Safari", &safari).unwrap() < pos("Google.Gmail", &safari).unwrap());
-    assert!(pos("Yahoo.YahooMail", &safari).is_some());
-    // Chrome and Firefox Developer Edition are browsers too...
-    assert!(pos("Google.Gmail", &ids("com.google.Chrome")).is_some());
-    assert!(pos("Google.Gmail", &ids("org.mozilla.firefoxdeveloperedition")).is_some());
-    // ...iTerm is not, and shares a vendor prefix with nothing browser-like.
-    assert!(pos("Google.Gmail", &ids("com.googlecode.iterm2")).is_none());
-
-    // Title detection through a bundle id. Safari appends no browser suffix
-    // to the window title (verified on real hardware), which the substring
-    // patterns handle without a Safari-specific case.
-    let hit = s.match_title(
-        Some("com.apple.Safari"),
-        Some("Inbox (3) - a@b.com - Gmail"),
-        "en-US",
-        &hc,
-        &[],
-    );
-    assert_eq!(hit.unwrap().manifest.id, "Google.Gmail");
-    // Chrome puts the profile name *after* the browser name; still a match.
-    let hit = s.match_title(
-        Some("com.google.Chrome"),
-        Some("Yahoo Mail - Google Chrome \u{2013} Work"),
-        "en-US",
-        &hc,
-        &[],
-    );
-    assert_eq!(hit.unwrap().manifest.id, "Yahoo.YahooMail");
-    // A non-browser bundle id can never trigger a hosted collection.
-    assert!(s
-        .match_title(Some("com.apple.TextEdit"), Some("notes - Gmail"), "en-US", &hc, &[])
-        .is_none());
 }

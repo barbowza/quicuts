@@ -189,16 +189,19 @@ impl Engine {
             icon_file: Option<PathBuf>,
             exe_hint: Option<String>,
         }
-        let mut matched: Vec<Snap> = self
-            .store
-            .match_foreground(fg_exe, &self.locale, host_classes, |exe| {
-                running.contains_key(exe)
-            })
+        let raw = self.store.match_foreground(fg_exe, &self.locale, host_classes, |exe| {
+            running.contains_key(exe)
+        });
+        // Decided on the real match list, in the manifest crate, so the rule
+        // is unit-tested where the tests actually run (this crate does not
+        // cross-compile on Linux, so CI never runs its tests).
+        let fg_index = quicuts_manifest::foreground_entry(&raw, title_matched);
+        let mut matched: Vec<Snap> = raw
             .into_iter()
             .map(|m| {
                 let lm = m.lm;
                 // A background app's icon comes from its live process.
-                let filter = lm.manifest.window_filter.trim();
+                let filter = lm.manifest.primary_filter();
                 let exe_hint = if lm.manifest.background_process && filter != "*" {
                     running
                         .get(&quicuts_manifest::normalize_exe(filter))
@@ -217,19 +220,6 @@ impl Engine {
             })
             .collect();
 
-        // The foreground rail entry: the title-matched hosted collection
-        // when detection has one, else the first non-background match.
-        let fg_index = title_matched
-            .and_then(|t| {
-                matched
-                    .iter()
-                    .position(|s| s.kind == quicuts_manifest::MatchKind::Hosted && s.id == t)
-            })
-            .or_else(|| {
-                matched
-                    .iter()
-                    .position(|s| s.kind != quicuts_manifest::MatchKind::Background)
-            });
         if let Some(i) = fg_index {
             matched[i].is_fg = true;
         }
@@ -296,7 +286,7 @@ impl Engine {
                 let info = self.store.get(pin, &self.locale).map(|lm| {
                     (
                         lm.manifest.display_name().to_string(),
-                        lm.manifest.window_filter.trim().to_string(),
+                        lm.manifest.primary_filter().to_string(),
                         manifest_icon_path(lm),
                         assemble(&lm.manifest, &pins.get(pin), &customs.get(pin)).sections,
                     )

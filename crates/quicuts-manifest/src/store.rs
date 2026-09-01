@@ -178,7 +178,6 @@ impl ManifestStore {
         let mut background = Vec::new();
         for lm in all {
             let m = &lm.manifest;
-            let filter = m.window_filter.trim();
             if let Some(class) = &m.host {
                 if let Some(fg_raw) = foreground_exe {
                     if host_classes.contains(class, fg_raw) {
@@ -186,13 +185,16 @@ impl ManifestStore {
                     }
                 }
             } else if m.background_process {
-                if filter == "*" || running_check(&normalize_exe(filter)) {
+                // Any one of its identities running is enough.
+                if m.is_wildcard()
+                    || m.window_filters.iter().any(|f| running_check(&normalize_exe(f)))
+                {
                     background.push(lm);
                 }
-            } else if filter == "*" {
+            } else if m.is_wildcard() {
                 wildcard.push(lm);
             } else if let Some(fg) = &fg {
-                if normalize_exe(filter) == *fg {
+                if m.matches_identity(fg) {
                     exact.push(lm);
                 }
             }
@@ -204,8 +206,8 @@ impl ManifestStore {
         hosted.sort_by(|a, b| a.manifest.id.cmp(&b.manifest.id));
         wildcard.sort_by(|a, b| a.manifest.id.cmp(&b.manifest.id));
         background.sort_by(|a, b| {
-            let a_star = a.manifest.window_filter.trim() == "*";
-            let b_star = b.manifest.window_filter.trim() == "*";
+            let a_star = a.manifest.is_wildcard();
+            let b_star = b.manifest.is_wildcard();
             a_star.cmp(&b_star).then_with(|| a.manifest.id.cmp(&b.manifest.id))
         });
         fn tag<'a>(
@@ -280,6 +282,47 @@ impl ManifestStore {
     }
 }
 
+/// Which entry of a `match_foreground` result presents as "the foreground
+/// app" — the one whose page is shown by default and whose name labels the
+/// panel. `None` means nothing matched, and the caller shows its
+/// unsupported-app placeholder.
+///
+/// 1. The title-matched hosted collection, when detection has one. That is
+///    the point of ADR 0003: while you are in the Gmail tab, Gmail *is* the
+///    app you are in.
+/// 2. Otherwise the first **exact or wildcard** match — never a hosted one.
+///
+/// Rule 2's exclusion is the load-bearing half. Groups are ordered exact →
+/// hosted → wildcard → background, so "first non-background" — which this
+/// used to be — picks a hosted collection whenever the foreground app has
+/// no manifest of its own but *is* a host. The symptom was Gmail's
+/// shortcuts presenting as the foreground app on a blank Firefox new-tab
+/// page, at every URL, with nothing in the panel to say nothing matched.
+///
+/// **Note on the wildcard arm:** no bundled manifest currently reaches
+/// `MatchKind::Wildcard`. Both `"*"` manifests (`+WindowsNT.Shell`,
+/// `Apple.System`) are also `BackgroundProcess: true`, and `match_foreground`
+/// tests `background_process` first, so they land in `Background`. In
+/// practice today rule 2 therefore resolves to "the first exact match, else
+/// the placeholder". The arm is kept because this function specifies a rule
+/// over `MatchKind`, not over the manifests that happen to ship — a user
+/// manifest with `"*"` and no `BackgroundProcess` produces one right now.
+/// Whether a `"*"` *background* manifest should also be eligible here is a
+/// separate behaviour question, deliberately not decided by this function.
+pub fn foreground_entry(matched: &[Matched<'_>], title_matched: Option<&str>) -> Option<usize> {
+    title_matched
+        .and_then(|t| {
+            matched
+                .iter()
+                .position(|m| m.kind == MatchKind::Hosted && m.lm.manifest.id == t)
+        })
+        .or_else(|| {
+            matched
+                .iter()
+                .position(|m| matches!(m.kind, MatchKind::Exact | MatchKind::Wildcard))
+        })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -310,7 +353,7 @@ mod tests {
         store.load_dir(&user, SourceKind::User);
         let lm = store.get("A.App", "en-US").unwrap();
         assert_eq!(lm.source, SourceKind::User);
-        assert_eq!(lm.manifest.window_filter, "different.exe");
+        assert_eq!(lm.manifest.window_filters, vec!["different.exe"]);
 
         // Reloading bundled after user must NOT downgrade.
         store.load_dir(&bundled, SourceKind::Bundled);
@@ -542,5 +585,85 @@ mod tests {
             .match_title(Some("chrome.exe"), Some("anything"), "en-US", &hc, &bindings)
             .is_none());
         fs::remove_dir_all(&t).ok();
+    }
+
+    /// A store with an exact match, a hosted collection, a *non*-background
+    /// wildcard, and a background wildcard.
+    fn fg_store(t: &Path) -> ManifestStore {
+        fs::create_dir_all(t).unwrap();
+        write(t, "Acme.App.en-US.yml", &mk("Acme.App", "app.exe", false, ""));
+        write(t, "Acme.Star.en-US.yml", &mk("Acme.Star", "*", false, ""));
+        write(t, "Acme.Bg.en-US.yml", &mk("Acme.Bg", "*", true, ""));
+        write(t, "Acme.Web.en-US.yml", &mk_hosted("Acme.Web", Some("- Web")));
+        let mut s = ManifestStore::new();
+        s.load_dir(t, SourceKind::Bundled);
+        s
+    }
+
+    fn fg_id(m: &[Matched<'_>], i: Option<usize>) -> Option<String> {
+        i.map(|i| m[i].lm.manifest.id.clone())
+    }
+
+    /// An exact match leads; a hosted collection in the same rail must not
+    /// steal the default, and a wildcard is the fallback when one exists.
+    #[test]
+    fn foreground_entry_prefers_exact_then_wildcard() {
+        let t = std::env::temp_dir().join(format!("quicuts-fg1-{}", std::process::id()));
+        let s = fg_store(&t);
+        let hc = HostClasses::builtin();
+
+        let m = s.match_foreground(Some("app.exe"), "en-US", &hc, |_| false);
+        assert_eq!(fg_id(&m, foreground_entry(&m, None)).as_deref(), Some("Acme.App"));
+
+        // A browser with no manifest of its own: the hosted collection is
+        // present and ranked first, but the wildcard is the default.
+        let m = s.match_foreground(Some("chrome.exe"), "en-US", &hc, |_| false);
+        assert_eq!(m[0].kind, MatchKind::Hosted);
+        assert_eq!(fg_id(&m, foreground_entry(&m, None)).as_deref(), Some("Acme.Star"));
+        let _ = fs::remove_dir_all(&t);
+    }
+
+    /// Detection wins when it has a match; a stale one falls back to the
+    /// rule rather than selecting nothing.
+    #[test]
+    fn foreground_entry_follows_title_detection() {
+        let t = std::env::temp_dir().join(format!("quicuts-fg2-{}", std::process::id()));
+        let s = fg_store(&t);
+        let hc = HostClasses::builtin();
+        let m = s.match_foreground(Some("chrome.exe"), "en-US", &hc, |_| false);
+        assert_eq!(fg_id(&m, foreground_entry(&m, Some("Acme.Web"))).as_deref(), Some("Acme.Web"));
+        assert_eq!(fg_id(&m, foreground_entry(&m, Some("Nope"))).as_deref(), Some("Acme.Star"));
+        let _ = fs::remove_dir_all(&t);
+    }
+
+    /// **The regression guard, in the shape production actually produces.**
+    ///
+    /// Every bundled `"*"` manifest is also `BackgroundProcess: true`
+    /// (`+WindowsNT.Shell`, `Apple.System`), and `match_foreground` tests
+    /// background before wildcard — so in the real app the Wildcard group is
+    /// empty and a browser with no manifest yields `[Hosted.., Background..]`.
+    /// The old "first non-background" rule handed that user the hosted
+    /// collection on every page. The answer must be `None` — the caller's
+    /// unsupported-app placeholder.
+    #[test]
+    fn foreground_entry_never_defaults_to_a_hosted_collection() {
+        let t = std::env::temp_dir().join(format!("quicuts-fg3-{}", std::process::id()));
+        fs::create_dir_all(&t).unwrap();
+        write(&t, "Acme.Shell.en-US.yml", &mk("Acme.Shell", "*", true, ""));
+        write(&t, "Acme.Web.en-US.yml", &mk_hosted("Acme.Web", Some("- Web")));
+        let mut s = ManifestStore::new();
+        s.load_dir(&t, SourceKind::Bundled);
+        let hc = HostClasses::builtin();
+
+        let m = s.match_foreground(Some("firefox.exe"), "en-US", &hc, |_| true);
+        assert_eq!(m[0].kind, MatchKind::Hosted);
+        assert!(
+            !m.iter().any(|x| x.kind == MatchKind::Wildcard),
+            "production has no Wildcard-kind entry; the fixture must not invent one"
+        );
+        assert_eq!(foreground_entry(&m, None), None);
+        // Detection still selects it when it genuinely matched.
+        assert_eq!(fg_id(&m, foreground_entry(&m, Some("Acme.Web"))).as_deref(), Some("Acme.Web"));
+        let _ = fs::remove_dir_all(&t);
     }
 }

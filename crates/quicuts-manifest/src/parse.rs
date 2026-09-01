@@ -98,7 +98,13 @@ fn normalize(raw: RawManifest, fallback_package_name: &str) -> Manifest {
             .filter(|p| !p.is_empty())
             .unwrap_or_else(|| fallback_package_name.to_string()),
         name: raw.name.map(|n| n.trim().to_string()).filter(|n| !n.is_empty()),
-        window_filter: raw.window_filter.unwrap_or_default().trim().to_string(),
+        window_filters: raw
+            .window_filter
+            .0
+            .into_iter()
+            .map(|f| f.trim().to_string())
+            .filter(|f| !f.is_empty())
+            .collect(),
         background_process: raw.background_process.0,
         host: raw
             .host
@@ -203,7 +209,7 @@ mod tests {
         assert_eq!(m.host.as_deref(), Some("browser")); // lowercased
         assert_eq!(m.title_match, vec!["- Gmail"]); // trimmed
         assert_eq!(m.icon.as_deref(), Some("Google.Gmail.png"));
-        assert_eq!(m.window_filter, ""); // Host manifests need no WindowFilter
+        assert!(m.window_filters.is_empty()); // Host manifests need no WindowFilter
     }
 
     #[test]
@@ -243,5 +249,42 @@ mod tests {
         assert!(m.background_process);
         assert_eq!(m.sections.len(), 1);
         assert!(m.sections[0].entries.is_empty());
+    }
+
+    /// `WindowFilter` accepts one identity or several. The scalar form is
+    /// what all 36 bundled PowerToys manifests use and must keep parsing
+    /// byte-identically; the list form is how one manifest covers an app
+    /// whose editions ship under different identities.
+    #[test]
+    fn window_filter_takes_a_string_or_a_list() {
+        let scalar = parse_manifest(
+            "PackageName: A\nWindowFilter: Notepad.exe\nShortcuts: []\n",
+            "A.en-US.yml",
+        )
+        .unwrap();
+        assert_eq!(scalar.window_filters, vec!["Notepad.exe"]);
+        assert_eq!(scalar.primary_filter(), "Notepad.exe");
+        assert!(scalar.matches_identity("notepad"));
+        assert!(!scalar.is_wildcard());
+
+        let list = parse_manifest(
+            "PackageName: B\nWindowFilter:\n  - org.mozilla.firefox\n  - org.mozilla.firefoxdeveloperedition\nShortcuts: []\n",
+            "B.en-US.yml",
+        )
+        .unwrap();
+        assert_eq!(list.window_filters.len(), 2);
+        // Either edition matches; the first is the one shown.
+        assert!(list.matches_identity("org.mozilla.firefox"));
+        assert!(list.matches_identity("org.mozilla.firefoxdeveloperedition"));
+        assert!(list.matches_identity("ORG.MOZILLA.FIREFOX"));
+        assert!(!list.matches_identity("org.mozilla.thunderbird"));
+        assert_eq!(list.primary_filter(), "org.mozilla.firefox");
+
+        // Wildcard still works, and empty/missing stays empty.
+        let star = parse_manifest("PackageName: C\nWindowFilter: \"*\"\nShortcuts: []\n", "C.en-US.yml").unwrap();
+        assert!(star.is_wildcard());
+        let none = parse_manifest("PackageName: D\nShortcuts: []\n", "D.en-US.yml").unwrap();
+        assert!(none.window_filters.is_empty());
+        assert_eq!(none.primary_filter(), "");
     }
 }
