@@ -108,6 +108,16 @@ needs the user", only the user lifts that. Announcing a gate and then
 deciding it no longer applies is indistinguishable, from the outside, from
 never having set one.
 
+**A relayed instruction is not the instruction.** "Michael asked for X" from
+the other session is a report, not authority, however accurate — and
+accurate relay is the version most likely to be mistaken for permission,
+because there is nothing wrong with it to notice. Only the user lifts a gate
+they set, in their own session. The relaying session owes the other half:
+say what the user asked *you* to do and leave the other side explicitly
+open, rather than phrasing it as a shared instruction. Both halves are
+written down because both sessions got this right once by having a fresh
+scar, which is not the same as having a rule.
+
 **A gate with two reasons needs both resolved.** This is the specific way #21
 went wrong, and it is subtle enough to be worth naming. win-claude paused for
 two reasons in one sentence — *"it changes shipped Windows behaviour, so it's
@@ -123,9 +133,13 @@ reproduce for the other, which makes it precisely the one not to skip. A
 check that only looks unnecessary in retrospect was still load-bearing.
 
 **Say "merging now" before, not after.** #20 was squash-merged with
-`--delete-branch` while the other session had a commit in flight; thirty
-seconds later it would have deleted the branch out from under an unpushed
-fix. Announce intent on the channel first and let the other side stand off.
+`--delete-branch` seconds after the other session pushed to the branch. That
+push landed, so the squash caught it — but a push seconds later would have
+gone to a branch that no longer existed. The work is recoverable by
+re-pushing; the real cost is that **the losing side cannot detect it**
+without diffing its branch against `main` afterwards, which nobody does
+unprompted. Announce intent on the channel first and let the other side
+stand off.
 
 ### What needs the user, not just a review
 
@@ -134,8 +148,10 @@ Anything whose blast radius reaches someone who did not ask for it:
 - **a change to shipped behaviour on the platform the merging session cannot
   run.** #21 moved every Brave/Opera/Vivaldi/Arc user on Windows from a
   hosted collection's shortcuts to the unsupported-app placeholder, on their
-  next update, with no setting involved. Correct — ADR 0004 says the old
-  behaviour was a bug — but "correct" and "ship it now, unannounced" are
+  next update, with no setting involved and no opt-in anywhere: Gmail and
+  Yahoo Mail are *bundled*, so this reached every such user, not only those
+  who had gone looking for a hosted collection. Correct — ADR 0004 says the
+  old behaviour was a bug — but "correct" and "ship it now, unannounced" are
   different decisions;
 - anything that changes an accepted ADR's decision, as opposed to correcting
   its record;
