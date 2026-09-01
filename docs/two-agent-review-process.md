@@ -141,6 +141,24 @@ without diffing its branch against `main` afterwards, which nobody does
 unprompted. Announce intent on the channel first and let the other side
 stand off.
 
+**An announcement that does not wait for a reply is a notification, not a
+gate.** #22 was merged inside a window its own author had just offered —
+*"say so in the next few minutes and I'll leave them"* — while the other
+session was spending those minutes writing the fixes rather than letting
+them trail. Offering a window and not honouring it is worse than offering
+none, precisely because the other side acts on it. So: announce, then
+**wait for an actual reply**, not for a period of your own choosing. If you
+are not willing to block on an answer, do not offer a window — say "merging
+now, follow-ups as separate PRs" and let the other side plan around that
+instead.
+
+These three are one failure in three costumes, which is why "announce
+first" alone was not enough to stop any of them: #20 announced nothing, #21
+announced a gate and then cleared it unilaterally, #22 announced a window
+and closed it early. The invariant underneath all three is that **the other
+session must have a real opportunity to respond before the irreversible
+step**, and only an answer proves it had one.
+
 ### What needs the user, not just a review
 
 Anything whose blast radius reaches someone who did not ask for it:
