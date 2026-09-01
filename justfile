@@ -148,3 +148,45 @@ mac-input *ARGS:
 # Dump a RUNNING app's menu shortcuts as TSV: `just mac-menus iTerm`.
 mac-menus *ARGS:
     swift scripts/mac-menu-shortcuts.swift {{ARGS}}
+
+# --- Collaboration (docs/collaboration.md, two-agent-flow skill) -------------
+
+# The remote is the claim board and it moves; read this before starting work
+# and again before merging.
+# Who holds which branch, what is open, what CI is doing.
+status:
+    @git fetch --prune --quiet origin
+    @echo "== local =="
+    @printf '  branch: %s\n' "$(git rev-parse --abbrev-ref HEAD)"
+    @printf '  identity: %s <%s>\n' "$(git config user.name || echo UNSET)" "$(git config user.email || echo UNSET)"
+    @git status --short | head -20 | sed 's/^/  /' || true
+    @printf '  vs origin/main: %s ahead, %s behind\n' \
+        "$(git rev-list --count origin/main..HEAD 2>/dev/null || echo ?)" \
+        "$(git rev-list --count HEAD..origin/main 2>/dev/null || echo ?)"
+    @echo "== claim board (remote branches) =="
+    @git ls-remote --heads origin | sed 's/.*refs\/heads\//  /'
+    @echo "== github =="
+    @printf '  gh account: %s\n' "$(gh api user --jq .login 2>/dev/null || echo 'NOT AUTHENTICATED')"
+    @echo "  (expect 'barbowza'. gh resolves per-machine and just recipes do not source"
+    @echo "   your shell rc, so a machine that routes accounts by hook will pick the wrong"
+    @echo "   one silently — set GH_CONFIG_DIR in the environment just inherits if so.)"
+    @echo "== open PRs =="
+    @gh pr list --state open 2>/dev/null | sed 's/^/  /' || echo "  (gh unavailable)"
+    @echo "== CI on main =="
+    @gh run list --branch main --limit 3 2>/dev/null | sed 's/^/  /' || true
+
+# Terminates the running app, deploys, relaunches, reports what he now has, so
+# he never tests a stale build.
+# Put a fresh instance in front of Michael before asking him to test.
+stage: build
+    @just kill
+    @mkdir -p "{{deploy_dir}}" "{{deploy_dir}}/manifests"
+    @cp target/{{target}}/{{profile}}/quicuts.exe "{{deploy_dir}}/"
+    @cp crates/quicuts-app/binaries/quicuts-agent-{{triple}}.exe "{{deploy_dir}}/quicuts-agent.exe"
+    @cp manifests/*.yml "{{deploy_dir}}/manifests/"
+    @-cp manifests/*.png "{{deploy_dir}}/manifests/" 2>/dev/null || true
+    @cmd.exe /c start "" "C:\\Users\\{{winuser}}\\AppData\\Local\\QuicutsDev\\quicuts.exe"
+    @echo "staged and relaunched:"
+    @printf '  commit:  %s\n' "$(git log --format='%h %s' -1 | cut -c1-64)"
+    @printf '  branch:  %s\n' "$(git rev-parse --abbrev-ref HEAD)"
+    @echo "  now give Michael a numbered plan with an expected result per step."
