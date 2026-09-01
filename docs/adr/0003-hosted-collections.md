@@ -120,8 +120,29 @@ skipping hosted collections; when there is no such match the panel shows
 the unsupported-app placeholder. A hosted collection becomes the foreground
 entry only when title detection actually matched it — which is the
 behaviour decision 3 describes. Hosted collections still appear in the rail
-and stay selectable and pinnable by hand either way. `engine::foreground_entry`,
-unit-tested.
+and stay selectable and pinnable by hand either way.
+`quicuts_manifest::foreground_entry`, unit-tested in the manifest crate so
+the rule runs on every CI push (`quicuts-app` does not cross-compile on the
+Linux host, so its own tests never run in CI).
+
+**What "or wildcard" is worth today: nothing.** Both bundled `"*"`
+manifests — `+WindowsNT.Shell` and `Apple.System` — are also
+`BackgroundProcess: true`, and `match_foreground` tests `background_process`
+*before* the wildcard branch, so they land in `Background` and the
+`Wildcard` group is empty on both platforms. In the shipped app the rule
+therefore reads "first exact match, else the placeholder". The wildcard arm
+is kept because the rule is defined over `MatchKind`, not over the
+manifests that happen to ship, and a user manifest with `"*"` and no
+`BackgroundProcess` produces one today.
+
+The consequence is real for a browser Quicuts ships no manifest for
+(Brave, Opera, Vivaldi, Arc on Windows): that user now gets the
+unsupported-app placeholder, where before this fix they got Gmail. Better,
+but not obviously *right* — the system-wide page is sitting in their rail,
+excluded from the default only because `BackgroundProcess: true` outranks
+`"*"` in the grouping. Whether a `"*"` background manifest should be
+eligible as the default (after exact, still never hosted) is a separate
+behaviour change and is deliberately **not** decided here.
 
 ## Deferred / to verify on host
 

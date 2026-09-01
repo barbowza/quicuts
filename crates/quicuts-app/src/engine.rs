@@ -59,43 +59,6 @@ pub struct Engine {
 
 const PLATFORM: &str = if cfg!(target_os = "macos") { "macos" } else { "windows" };
 
-/// Which rail entry presents as "the foreground app" — the one whose page
-/// is shown by default and whose name labels the panel.
-///
-/// 1. The title-matched hosted collection, when detection has one. That is
-///    the whole point of ADR 0003: while you are in the Gmail tab, Gmail
-///    *is* the app you are in.
-/// 2. Otherwise the first **exact or wildcard** match — never a hosted one.
-///
-/// Rule 2's exclusion is the subtle half. `match_foreground` orders groups
-/// exact → hosted → wildcard → background, so "first non-background" picks
-/// a hosted collection whenever the host browser has no manifest of its
-/// own. On macOS that is the common case (`manifests-mac/` ships Safari and
-/// Chrome but not Firefox), and the symptom is Gmail's shortcuts presenting
-/// as the foreground app on a Firefox new-tab page, with no way to tell
-/// from the panel that nothing matched. ADR 0003 says the *host* page stays
-/// selected by default; when the host has no page, the honest answer is the
-/// system-wide wildcard — or the unsupported-app placeholder — not a web
-/// app the user may not even have open.
-///
-/// The hosted collections still appear in the rail and stay selectable by
-/// hand; this only decides what is selected *for* the user.
-fn foreground_entry(
-    entries: &[(quicuts_manifest::MatchKind, &str)],
-    title_matched: Option<&str>,
-) -> Option<usize> {
-    use quicuts_manifest::MatchKind;
-    title_matched
-        .and_then(|t| {
-            entries.iter().position(|(k, id)| *k == MatchKind::Hosted && *id == t)
-        })
-        .or_else(|| {
-            entries
-                .iter()
-                .position(|(k, _)| matches!(k, MatchKind::Exact | MatchKind::Wildcard))
-        })
-}
-
 impl Engine {
     pub fn new(bundled_dir: PathBuf, user_dir: PathBuf) -> Self {
         let mut e = Engine {
@@ -226,11 +189,14 @@ impl Engine {
             icon_file: Option<PathBuf>,
             exe_hint: Option<String>,
         }
-        let mut matched: Vec<Snap> = self
-            .store
-            .match_foreground(fg_exe, &self.locale, host_classes, |exe| {
-                running.contains_key(exe)
-            })
+        let raw = self.store.match_foreground(fg_exe, &self.locale, host_classes, |exe| {
+            running.contains_key(exe)
+        });
+        // Decided on the real match list, in the manifest crate, so the rule
+        // is unit-tested where the tests actually run (this crate does not
+        // cross-compile on Linux, so CI never runs its tests).
+        let fg_index = quicuts_manifest::foreground_entry(&raw, title_matched);
+        let mut matched: Vec<Snap> = raw
             .into_iter()
             .map(|m| {
                 let lm = m.lm;
@@ -254,10 +220,6 @@ impl Engine {
             })
             .collect();
 
-        let fg_index = foreground_entry(
-            &matched.iter().map(|s| (s.kind, s.id.as_str())).collect::<Vec<_>>(),
-            title_matched,
-        );
         if let Some(i) = fg_index {
             matched[i].is_fg = true;
         }
@@ -406,53 +368,4 @@ fn ptsg_runtime_dir() -> Option<PathBuf> {
 #[cfg(not(windows))]
 fn ptsg_runtime_dir() -> Option<PathBuf> {
     None
-}
-
-#[cfg(test)]
-mod tests {
-    use super::foreground_entry;
-    use quicuts_manifest::MatchKind::{Background, Exact, Hosted, Wildcard};
-
-    /// A browser Quicuts has a manifest for: the host stays selected, and a
-    /// hosted collection in the rail must not steal the default.
-    #[test]
-    fn host_with_a_manifest_keeps_the_default() {
-        let e = [(Exact, "Google.Chrome"), (Hosted, "Google.Gmail"), (Wildcard, "Apple.System")];
-        assert_eq!(foreground_entry(&e, None), Some(0));
-    }
-
-    /// Regression (reported on a real Mac): Firefox has no entry in
-    /// `manifests-mac/`, so the first non-background match is Gmail — which
-    /// presented Gmail's shortcuts on a new-tab page, at every URL. The
-    /// default must fall through to the wildcard instead.
-    #[test]
-    fn host_without_a_manifest_does_not_default_to_a_hosted_collection() {
-        let e = [(Hosted, "Google.Gmail"), (Hosted, "Yahoo.YahooMail"), (Wildcard, "Apple.System")];
-        assert_eq!(foreground_entry(&e, None), Some(2));
-    }
-
-    /// ...but detection still wins when it has a match, manifest or not.
-    #[test]
-    fn title_match_selects_the_hosted_collection() {
-        let e = [(Hosted, "Google.Gmail"), (Hosted, "Yahoo.YahooMail"), (Wildcard, "Apple.System")];
-        assert_eq!(foreground_entry(&e, Some("Yahoo.YahooMail")), Some(1));
-        let with_host = [(Exact, "Google.Chrome"), (Hosted, "Google.Gmail")];
-        assert_eq!(foreground_entry(&with_host, Some("Google.Gmail")), Some(1));
-    }
-
-    /// A stale or uninstalled title match falls back to the same rule
-    /// rather than selecting nothing.
-    #[test]
-    fn unknown_title_match_falls_back() {
-        let e = [(Exact, "Google.Chrome"), (Hosted, "Google.Gmail")];
-        assert_eq!(foreground_entry(&e, Some("Acme.Nope")), Some(0));
-    }
-
-    /// Nothing but hosted/background: no foreground entry, so the panel
-    /// shows the unsupported-app placeholder instead of a web app.
-    #[test]
-    fn no_exact_or_wildcard_means_no_foreground_entry() {
-        let e = [(Hosted, "Google.Gmail"), (Background, "+WindowsNT.Shell")];
-        assert_eq!(foreground_entry(&e, None), None);
-    }
 }

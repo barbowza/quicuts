@@ -85,7 +85,7 @@ Overlay/badges/settings windows are **pre-created hidden** and reused. On close 
 
 `WindowFilter` accepts **one identity or a list** (tolerant serde, so every PowerToys manifest's scalar form parses unchanged). A list is how one manifest covers an app whose editions ship under different identities — `manifests-mac/Mozilla.Firefox.en-US.yml` covers release, Developer Edition and Nightly. Use `Manifest::matches_identity` / `is_wildcard` / `primary_filter` rather than reaching for `window_filters` directly.
 
-The rail's **foreground entry** (the page shown by default) is the title-matched hosted collection when detection has one, else the first *exact or wildcard* match — never a hosted collection. See `engine::foreground_entry`; ADR 0003 carries the correction and why.
+The rail's **foreground entry** (the page shown by default) is the title-matched hosted collection when detection has one, else the first *exact or wildcard* match — never a hosted collection. Note that no bundled manifest currently reaches `MatchKind::Wildcard` (both `"*"` manifests are also `BackgroundProcess: true`, and background is tested first), so in practice this is "first exact match, else the unsupported-app placeholder". `quicuts_manifest::foreground_entry`; ADR 0003 carries the correction and the open question.
 
 Match foreground app by that identity, then exact-match ∪ `"*"` wildcard manifests ∪ all `BackgroundProcess: true` manifests. Section render order: Pinned → Recommended → categories in file order → Taskbar. Ignore PowerToys' own `index.yml` — Quicuts builds its own in-memory index. Bundled manifests are MIT-licensed from PowerToys (`manifests/POWERTOYS-LICENSE`, `NOTICE.txt`).
 

@@ -15,7 +15,7 @@ pub use custom::{AppCustomizations, CustomBinding, EntryCustomization};
 pub use host::{HostClasses, BROWSER_CLASS};
 pub use keys::{GlyphToken, Key};
 pub use parse::{parse_manifest, split_filename, ParseError};
-pub use store::{LoadedManifest, ManifestStore, MatchKind, Matched, SourceKind};
+pub use store::{LoadedManifest, ManifestStore, MatchKind, Matched, SourceKind, foreground_entry};
 
 use serde::{Deserialize, Serialize};
 
