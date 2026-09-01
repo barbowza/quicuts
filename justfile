@@ -82,9 +82,12 @@ log:
 # Computed inside the recipes so a machine without rustc can still parse this
 # justfile and run the Windows recipes.
 
-# Rust/manifest/state-machine tests on the native toolchain.
+# Rust/manifest/state-machine tests on the native toolchain. Includes
+# quicuts-app, which the Windows `just test` cannot run (it does not
+# cross-compile on the Linux host) — so the engine's rail-selection tests
+# only ever execute here.
 mac-test:
-    cargo test -p quicuts-proto -p quicuts-manifest -p quicuts-agent-mac
+    cargo test -p quicuts-proto -p quicuts-manifest -p quicuts-agent-mac -p quicuts-app
 
 # Build the agent sidecar and stage it where tauri-build expects it.
 # (tauri-build re-copies the staged file over target/debug/quicuts-agent on

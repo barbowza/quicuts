@@ -99,6 +99,30 @@ generated letter tile from the collection name. No network fetches, ever.
 - The privacy invariant is untouched: titles already crossed the wire;
   key identities still never do.
 
+## Correction (2026-09-01): "the host page stays selected by default"
+
+Decision 2 says the host page stays selected by default. The implementation
+read that as *the first non-background match*, which is only the same thing
+when the host browser has a manifest of its own. `match_foreground` orders
+groups exact → hosted → wildcard → background, so for a browser Quicuts
+ships no manifest for, the first non-background match **is** a hosted
+collection — and Gmail's shortcuts presented as the foreground app on a
+blank new-tab page, with nothing in the panel to say nothing had matched.
+
+Found on a real Mac with Firefox Developer Edition (`manifests-mac/` ships
+Safari and Chrome, not Firefox). It was never mac-specific: on Windows,
+Brave, Opera, Vivaldi and Arc are all in the browser class with no
+manifest, and behaved the same way. Chrome, Firefox and Edge having
+manifests is the only reason it went unseen.
+
+The default now falls through to the first **exact or wildcard** match,
+skipping hosted collections; when there is no such match the panel shows
+the unsupported-app placeholder. A hosted collection becomes the foreground
+entry only when title detection actually matched it — which is the
+behaviour decision 3 describes. Hosted collections still appear in the rail
+and stay selectable and pinnable by hand either way. `engine::foreground_entry`,
+unit-tested.
+
 ## Deferred / to verify on host
 
 - Exact built-in browser exe list (and how settings extends it).
