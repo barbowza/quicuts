@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { getLastBrowserTitle, invokeCmd, listHostedCollections, openSettings } from "../lib/ipc";
+  import {
+    getLastBrowserTitle,
+    invokeCmd,
+    listHostedCollections,
+    onAppearance,
+    openSettings,
+  } from "../lib/ipc";
   import { applyTheme } from "../lib/theme";
   import type { HostedCollection, Theme, TitleBinding } from "../lib/types";
   import HelpTip from "./HelpTip.svelte";
@@ -74,7 +80,16 @@
     // the captured title every time it regains focus.
     const onFocus = () => refreshCapture();
     window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    // The overlay's Ctrl+=/-/0 change the font scale host-side (ADR 0005 §6).
+    // Follow it, or the slider shows a stale value and the next save from
+    // this window would write that stale value back over the user's zoom.
+    const unlistenAppearance = onAppearance((a) => {
+      if (s) s.appearance.fontScale = a.fontScale;
+    });
+    return () => {
+      unlistenAppearance.then((f) => f());
+      window.removeEventListener("focus", onFocus);
+    };
   });
 
   /** Browser names as they appear inside a window title. Used only by
