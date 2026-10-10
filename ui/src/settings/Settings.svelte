@@ -60,6 +60,9 @@
   let newPattern = $state("");
   let newTarget = $state("");
 
+  // True between a font-slider input and its release (not reactive state).
+  let draggingFont = false;
+
   async function refreshCapture() {
     lastTitle = (await getLastBrowserTitle()) ?? null;
     hosted = (await listHostedCollections()) ?? [];
@@ -85,7 +88,9 @@
     // Follow it, or the slider shows a stale value and the next save from
     // this window would write that stale value back over the user's zoom.
     const unlistenAppearance = onAppearance((a) => {
-      if (s) s.appearance.fontScale = a.fontScale;
+      // Mid-drag the event is our own preview's echo, possibly a step behind
+      // the slider; taking it could save one step short on release.
+      if (s && !draggingFont) s.appearance.fontScale = a.fontScale;
     });
     return () => {
       unlistenAppearance.then((f) => f());
@@ -363,10 +368,14 @@
           value={Math.round(s.appearance.fontScale * 100)}
           oninput={(e) => {
             if (!s) return;
+            draggingFont = true;
             s.appearance.fontScale = e.currentTarget.valueAsNumber / 100;
             previewAppearance(s.appearance.fontScale, s.appearance.panelOpacity);
           }}
-          onchange={save}
+          onchange={() => {
+            draggingFont = false;
+            save();
+          }}
         />
       </label>
       <label class="check">
