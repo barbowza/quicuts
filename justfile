@@ -4,6 +4,12 @@
 
 set shell := ["bash", "-uc"]
 
+# Account routing for gh: the Mac selects the GitHub account with a zsh chpwd
+# hook, which non-interactive recipes never source — so gh silently falls back
+# to the *work* account on a personal repo. Pin it where the personal config
+# exists; elsewhere (WSL) this passes through whatever the environment has.
+export GH_CONFIG_DIR := if path_exists(home_directory() / ".config/gh-personal") == "true" { home_directory() / ".config/gh-personal" } else { env("GH_CONFIG_DIR", "") }
+
 target := "x86_64-pc-windows-msvc"
 triple := "x86_64-pc-windows-msvc"
 profile := "debug"
@@ -167,9 +173,8 @@ status:
     @git ls-remote --heads origin | sed 's/.*refs\/heads\//  /'
     @echo "== github =="
     @printf '  gh account: %s\n' "$(gh api user --jq .login 2>/dev/null || echo 'NOT AUTHENTICATED')"
-    @echo "  (expect 'barbowza'. gh resolves per-machine and just recipes do not source"
-    @echo "   your shell rc, so a machine that routes accounts by hook will pick the wrong"
-    @echo "   one silently — set GH_CONFIG_DIR in the environment just inherits if so.)"
+    @echo "  (expect 'barbowza'. Recipes do not source your shell rc; GH_CONFIG_DIR is"
+    @echo "   pinned at the top of this file where ~/.config/gh-personal exists.)"
     @echo "== open PRs =="
     @gh pr list --state open 2>/dev/null | sed 's/^/  /' || echo "  (gh unavailable)"
     @echo "== CI on main =="
