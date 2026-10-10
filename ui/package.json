@@ -18,10 +18,5 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.2.0"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   }
 }
