@@ -92,6 +92,8 @@ export const setComboDisplayMode = (mode: string) =>
   invokeCmd("set_combo_display_mode", { mode });
 export const adjustFontScale = (action: "increase" | "decrease" | "reset") =>
   invokeCmd("adjust_font_scale", { action });
+export const previewAppearance = (fontScale: number, panelOpacity: number) =>
+  invokeCmd("preview_appearance", { fontScale, panelOpacity });
 export const getLastBrowserTitle = () => invokeCmd<string | null>("get_last_browser_title");
 export const listHostedCollections = () =>
   invokeCmd<HostedCollection[]>("list_hosted_collections");

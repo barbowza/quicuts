@@ -5,6 +5,7 @@
     listHostedCollections,
     onAppearance,
     openSettings,
+    previewAppearance,
   } from "../lib/ipc";
   import { applyTheme } from "../lib/theme";
   import type { HostedCollection, Theme, TitleBinding } from "../lib/types";
@@ -345,7 +346,9 @@
           step="5"
           value={Math.round(s.appearance.panelOpacity * 100)}
           oninput={(e) => {
-            if (s) s.appearance.panelOpacity = e.currentTarget.valueAsNumber / 100;
+            if (!s) return;
+            s.appearance.panelOpacity = e.currentTarget.valueAsNumber / 100;
+            previewAppearance(s.appearance.fontScale, s.appearance.panelOpacity);
           }}
           onchange={save}
         />
@@ -359,7 +362,9 @@
           step="5"
           value={Math.round(s.appearance.fontScale * 100)}
           oninput={(e) => {
-            if (s) s.appearance.fontScale = e.currentTarget.valueAsNumber / 100;
+            if (!s) return;
+            s.appearance.fontScale = e.currentTarget.valueAsNumber / 100;
+            previewAppearance(s.appearance.fontScale, s.appearance.panelOpacity);
           }}
           onchange={save}
         />

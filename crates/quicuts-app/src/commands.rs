@@ -182,6 +182,21 @@ pub fn adjust_font_scale(app: AppHandle, action: String) {
     overlay::reposition(&app);
 }
 
+/// Live preview while a settings appearance slider is dragged: applies the
+/// value in memory and rebroadcasts, without saving. Release goes through
+/// `set_settings`, which persists — so disk is written once per drag.
+#[tauri::command]
+pub fn preview_appearance(app: AppHandle, font_scale: f64, panel_opacity: f64) {
+    {
+        let state = app.state::<AppState>();
+        let mut s = state.settings.lock().unwrap();
+        s.appearance.font_scale = crate::settings::clamp_font_scale(font_scale);
+        s.appearance.panel_opacity = panel_opacity.clamp(0.0, 1.0);
+    }
+    agent::emit_appearance(&app);
+    overlay::reposition(&app);
+}
+
 /// Title of the most recent browser-class foreground window, for the
 /// signature-capture flow in settings (the browser is no longer foreground
 /// once the settings window has focus).
@@ -218,9 +233,14 @@ pub fn list_hosted_collections(state: State<AppState>) -> Vec<HostedCollection> 
 #[tauri::command]
 pub fn set_settings(app: AppHandle, mut settings: Settings) -> Result<(), String> {
     let state = app.state::<AppState>();
-    // panel_width is only ever set by dragging the panel edge (host-side);
-    // keep the live value over the settings UI's round-tripped copy.
-    settings.appearance.panel_width = state.settings.lock().unwrap().appearance.panel_width;
+    // panel_width (dragging the panel edge) and combo_display_mode (the
+    // footer switch) are only ever set host-side; keep the live values over
+    // the settings UI's round-tripped copy.
+    {
+        let live = state.settings.lock().unwrap();
+        settings.appearance.panel_width = live.appearance.panel_width;
+        settings.combo_display_mode = live.combo_display_mode.clone();
+    }
     settings.save(&state.config_dir).map_err(|e| e.to_string())?;
     let cmd = settings.to_configure();
     if !settings.title_detection {
