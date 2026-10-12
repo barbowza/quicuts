@@ -203,8 +203,15 @@ fn handle_event(app: &AppHandle, ev: AgentEvent) {
                 .as_ref()
                 .map(|w| w.is_focused().unwrap_or(false))
                 .unwrap_or(false);
-            if visible && focused {
-                overlay::hide(app);
+            // Settings opened from a sticky panel is part of that session:
+            // the chord pressed from it closes both, not just refocuses.
+            let attached_settings_focused = *state.settings_attached.lock().unwrap()
+                && app
+                    .get_webview_window("settings")
+                    .map(|w| w.is_focused().unwrap_or(false))
+                    .unwrap_or(false);
+            if visible && (focused || attached_settings_focused) {
+                overlay::hide_deliberate(app);
                 send(app, &AgentCommand::SetOverlayVisible { visible: false });
             } else if visible {
                 if let Some(w) = window {
