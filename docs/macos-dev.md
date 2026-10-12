@@ -236,9 +236,8 @@ bundled .app builds, whose ad-hoc CDHash changes per rebuild).
 - clicking the TCC toggle itself — no command can grant it;
 - judging what was actually *painted* — whether the panel looks right, not
   merely where it is (see below: geometry is checkable, rendering is not);
-- anything involving a bundled .app's own grant (fresh grant per ad-hoc
-  rebuild, or set up a stable Apple Development signing identity once to
-  make bundle grants durable too).
+- a bundled .app's own grant: once per signing identity with the local
+  identity (§ Signing), or once per rebuild for an ad-hoc bundle.
 
 ### Checking the panel without a human, and without screenshots
 

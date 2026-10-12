@@ -181,14 +181,23 @@ Two things learned on hardware that the design had guessed at:
   both carry `flags=adhoc,runtime`) using, in order, `APPLE_SIGNING_IDENTITY`,
   the local "Quicuts Local Signing" identity, or ad-hoc. The local identity
   fixes the per-rebuild TCC staleness described in the TCC facts above;
-  `docs/macos-dev.md` § Signing has the mechanics. **Still open:**
+  `docs/macos-dev.md` § Signing has the mechanics. **Verified on device
+  2026-10-12:** Michael installed a bundle signed with the local identity,
+  then a rebuild with a different CDHash (`151d4fd4…` → `f963ad0e…`, same
+  designated requirement `identifier "com.barbowza.quicuts" and certificate
+  leaf = H"383328d5…"`), and the agent reached `Ready` on attempt 0 with no
+  fresh grant. Agent and webview both work under hardened runtime.
+  **Still open:**
   notarization. tauri already does it when a Developer ID and Apple
   credentials are in the environment, so it is an account question, not a
   code one.
-- **Launch-at-login** — `tauri-plugin-autostart` (LaunchAgent) records the
-  running binary's path, so `just mac-install` now puts the bundle in
-  `/Applications` to enable it from. On-device verification pending (issue
-  #32).
+- ~~**Launch-at-login**~~ — closed 2026-10-12 (issue #32).
+  `tauri-plugin-autostart` (LaunchAgent) records the running binary's path,
+  so `just mac-install` puts the bundle in `/Applications` to enable it from.
+  Verified on device: the setting wrote `~/Library/LaunchAgents/Quicuts.plist`
+  pointing at `/Applications/Quicuts.app/Contents/MacOS/quicuts`, and after a
+  logout/login Quicuts was in the menu bar with ⌘-hold working, so the
+  bundle's Accessibility grant applies to a launchd start too.
 - **Settings-window chord capture on macOS** — `Settings.svelte` captures
   `e.keyCode`, which matches Windows VKs for the keys tested, but the full
   macOS WebKit keyCode surface hasn't been audited.
