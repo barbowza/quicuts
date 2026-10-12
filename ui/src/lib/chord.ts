@@ -60,6 +60,13 @@ export function matchesChord(e: KeyboardEvent, c: ChordSpec): boolean {
   );
 }
 
+/** True when two chords are the same key with the same modifiers. */
+export function sameChord(a: ChordSpec, b: ChordSpec): boolean {
+  return (
+    a.vk === b.vk && a.ctrl === b.ctrl && a.shift === b.shift && a.alt === b.alt && a.win === b.win
+  );
+}
+
 /** Keycap label for a Windows VK, when known. On macOS letters, digits and
  * punctuation name the US-layout key in that *position*: what the agent
  * matches. */

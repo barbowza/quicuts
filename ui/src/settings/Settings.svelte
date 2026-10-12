@@ -7,7 +7,7 @@
     openSettings,
     previewAppearance,
   } from "../lib/ipc";
-  import { chordLabel, chordVk, matchesChord, type ChordSpec } from "../lib/chord";
+  import { chordLabel, chordVk, matchesChord, sameChord, type ChordSpec } from "../lib/chord";
   import { applyTheme } from "../lib/theme";
   import type { HostedCollection, Theme, TitleBinding } from "../lib/types";
   import HelpTip from "./HelpTip.svelte";
@@ -208,14 +208,17 @@
         captureError = `${e.code || e.key} can't be part of a hotkey on this Mac; try another key.`;
         return;
       }
+      const next = { win: e.metaKey, ctrl: e.ctrlKey, shift: e.shiftKey, alt: e.altKey, vk };
+      // Both hotkeys on one chord would leave the agent's chord shadowing the
+      // panel's settings chord, so refuse and keep capturing.
+      const other = capturing === "chord" ? s.activation.settingsChord : s.activation.chord;
+      if (sameChord(next, other)) {
+        const otherName = capturing === "chord" ? "Open / close settings" : "Show with a hotkey";
+        captureError = `${chordLabel(next)} is already the "${otherName}" hotkey; try another.`;
+        return;
+      }
       captureError = null;
-      s.activation[capturing] = {
-        win: e.metaKey,
-        ctrl: e.ctrlKey,
-        shift: e.shiftKey,
-        alt: e.altKey,
-        vk,
-      };
+      s.activation[capturing] = next;
       capturing = null;
       save();
       return;
@@ -275,10 +278,13 @@
       </label>
       <div class="chord">
         <code>{chordLabel(s.activation.chord)}</code>
-        <button onclick={() => (capturing = "chord")} disabled={!s.activation.chordEnabled}>
+        <button onclick={() => ((capturing = "chord"), (captureError = null))} disabled={!s.activation.chordEnabled}>
           {capturing === "chord" ? "Press keys…" : "Change"}
         </button>
       </div>
+      {#if capturing === "chord" && captureError}
+        <p class="warn">{captureError}</p>
+      {/if}
       <label class="check">
         <input type="checkbox" bind:checked={s.activation.settingsChordEnabled} onchange={save} />
         Open / close settings with a hotkey (while the panel is focused)
@@ -286,13 +292,13 @@
       <div class="chord">
         <code>{chordLabel(s.activation.settingsChord)}</code>
         <button
-          onclick={() => (capturing = "settingsChord")}
+          onclick={() => ((capturing = "settingsChord"), (captureError = null))}
           disabled={!s.activation.settingsChordEnabled}
         >
           {capturing === "settingsChord" ? "Press keys…" : "Change"}
         </button>
       </div>
-      {#if capturing && captureError}
+      {#if capturing === "settingsChord" && captureError}
         <p class="warn">{captureError}</p>
       {/if}
     </section>
