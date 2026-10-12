@@ -167,11 +167,20 @@ Two things learned on hardware that the design had guessed at:
 - **Non-activating panel** — showing the overlay activates Quicuts (menu
   bar switches). Needs `NSPanel` + `nonactivatingPanel`, not exposed by
   Tauri v2.
-- **App icons in the rail** — `icons.rs` is a `cfg(not(windows))` stub; the
-  rail falls back to a glyph. macOS impl would read the bundle's `.icns`.
-- **Running-apps detection** — `procs.rs` stub: named `BackgroundProcess`
-  manifests are never shown "because running". Needs
-  `NSWorkspace.runningApplications`.
+- ~~**App icons in the rail**~~ — closed 2026-10-12 (issue #32). `icons.rs` asks
+  `NSWorkspace.iconForFile` for the `.app` bundle the agent reports and
+  renders it to a 64px PNG, rather than reading the bundle's `.icns`: plenty
+  of apps ship only an asset catalog (`CFBundleIconName`, no `.icns`), and
+  NSWorkspace covers those plus the system's own icon treatment. The path is
+  canonicalized first, because a symlinked bundle (`/Applications/Safari.app`
+  points into a cryptex) otherwise gets the alias-arrow badge.
+- ~~**Running-apps detection**~~ — closed 2026-10-12 (issue #32). `procs.rs` reads
+  `NSWorkspace.runningApplications`, keyed by normalized bundle ID — the
+  same identity `WindowFilter` matches — so a named `BackgroundProcess`
+  manifest joins the rail while its app runs, with the running app's icon.
+  No bundled mac manifest uses that today (`Apple.System` is `"*"`), so it is
+  a mechanism waiting for a manifest, exactly as on Windows before
+  PowerToys/Telegram.
 - **Dock badges** — permanently out: macOS has no ⌘1–9 Dock switching, so
   there is nothing to badge. The agent simply never advertises `taskbar`.
 - **Code signing & notarization** — everything runs ad-hoc from the
