@@ -92,5 +92,8 @@ tab in Chrome. All of these passed: the settings window showed the last
 browser title; the suggested pattern was the org mail name, not "Google
 Chrome" and not the email address; binding it to Gmail made the panel open on
 Gmail for that tab; switching to another tab fell back to Chrome's own page.
-macOS had already been verified end to end for hosted collections
-(2026-09-01, ADR 0006).
+On macOS, only bundled `TitleMatch` auto-selection has been verified end to
+end (2026-09-01, ADR 0006). The binding flow itself (title capture, pattern
+suggestion, a user binding taking effect) has not yet been checked on macOS,
+and `suggestPattern`'s Safari case (no browser suffix) is covered by
+reasoning only.

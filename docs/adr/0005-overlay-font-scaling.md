@@ -114,13 +114,16 @@ within the 586 px to half-display limits, the Font size slider, auto-width
 mode, and 150% font scale on top of the 120% text scaling with taskbar
 badges still aligned.
 
-That test found one defect against decision 6. The settings window never
-listened for the appearance event, so the hotkeys left its slider stale. Its
-reused copy of the settings then saved the old font scale back over the zoom
-on the next unrelated change. The same stale round trip also reverted
-`comboDisplayMode`. A follow-up made the sliders preview live while dragging,
-as decision 7 intended; before that they applied only on release. All of this
-was fixed in #30 (`preview_appearance`, which previews without saving).
-`set_settings` now also keeps the live `comboDisplayMode`, alongside
-`panelWidth`. Michael re-checked #30 on Windows and macOS, and all six steps
-passed on both.
+Testing on the device found two defects. Against decision 6, the settings
+window never listened for the appearance event, so the hotkeys left its
+slider stale, and its reused copy of the settings then saved the old font
+scale back over the zoom on the next unrelated change. Against decision 7,
+the Font size slider applied only on release, not live (the opacity slider
+had the same pattern and was fixed with it). Review of the fix found two
+more: the same stale round trip reverting
+`combo_display_mode`, and a race in which a fast flick could settle one step
+short. All four were fixed in #30. `preview_appearance` previews without
+saving, `set_settings` keeps the live `combo_display_mode` alongside
+`panel_width`, and the settings listener ignores preview echoes mid-drag.
+Michael re-checked #30 by hand on Windows and macOS, and all six steps passed
+on both.
