@@ -52,6 +52,44 @@ bundles are ad-hoc signed with a per-build CDHash — **goes stale on every
 rebuild** (checkbox still ON, permission dead; re-toggle it off/on, or
 `tccutil reset Accessibility com.barbowza.quicuts`). Use the terminal loop
 for iteration; bundle builds are for permission-realistic testing only.
+The local signing identity below fixes the staleness.
+
+## Signing
+
+`just mac-build` signs with hardened runtime, choosing the identity in this
+order:
+
+1. **`APPLE_SIGNING_IDENTITY`**, if set. With a **Developer ID
+   Application** identity plus notarization credentials in the environment
+   (`APPLE_ID`, `APPLE_PASSWORD` (an app-specific password), and
+   `APPLE_TEAM_ID`; or `APPLE_API_KEY`, `APPLE_API_ISSUER` and
+   `APPLE_API_KEY_PATH`), tauri signs **and notarizes**. That is the only
+   path to a .app other Macs will open without a Gatekeeper override. It
+   needs a paid Apple Developer account, which the project does not have
+   yet.
+2. **"Quicuts Local Signing"**, a self-signed identity, if
+   `just mac-signing-identity` has been run on this Mac. Its designated
+   requirement pins the bundle identifier and the certificate's hash,
+   neither of which changes between rebuilds, so **the Accessibility grant
+   survives rebuilds**. It is not distributable: Gatekeeper rejects it on
+   any other Mac.
+3. Otherwise **ad-hoc** (`cdhash`-only), with the per-rebuild staleness
+   described above.
+
+`just mac-signing-identity` is one-time and unattended. The identity lives
+in its own keychain (`~/Library/Keychains/quicuts-signing.keychain-db`,
+added to the user search list), not the login keychain. A login-keychain key
+only works with codesign after `security set-key-partition-list`, which
+needs your login password; without that, codesign fails with
+`errSecInternalComponent`. The dedicated keychain's password is random and
+kept in a 0600 file beside it, so `mac-build` can unlock it after a logout.
+The script header has the removal commands.
+
+**Launch at login** (Settings) registers a LaunchAgent pointing at the
+*running* binary, so turn it on from an installed copy: `just mac-build`,
+`just mac-install` (copies to `/Applications`), then launch
+`/Applications/Quicuts.app` and enable it there. Turning it on from
+`just mac-run` would point login at `target/debug`.
 
 ## Recipes
 
@@ -60,7 +98,9 @@ just mac-test    # proto + manifest + agent state-machine tests
 just mac-agent   # build sidecar, stage into crates/quicuts-app/binaries/
 just mac-ui      # pnpm build the frontend
 just mac-run     # agent + ui + `cargo tauri dev` (dev loop; TCC → terminal)
-just mac-build   # full .app bundle → target/release/bundle/macos/Quicuts.app
+just mac-build   # full .app bundle → target/release/bundle/macos/Quicuts.app (signed: § Signing)
+just mac-signing-identity  # one-time: the self-signed local signing identity
+just mac-install # copy the built bundle to /Applications (for launch at login)
 just mac-log     # tail ~/Library/Logs/com.barbowza.quicuts/Quicuts.log
 just mac-input   # post synthetic activation input — read the warning below first
 just mac-menus   # dump a running app's menu shortcuts as TSV (manifest authoring)

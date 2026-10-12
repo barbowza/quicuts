@@ -121,8 +121,35 @@ mac-ui:
     cd ui && pnpm install --prefer-offline && pnpm build
 
 # Full .app bundle build (permission-realistic; TCC attributes to the app).
+# Signing, in order of preference:
+#   APPLE_SIGNING_IDENTITY set  -> that identity. A Developer ID plus
+#                                  APPLE_ID/APPLE_PASSWORD/APPLE_TEAM_ID (or
+#                                  the APPLE_API_KEY trio) also notarizes;
+#                                  tauri does both. docs/macos-dev.md § Signing.
+#   local identity exists       -> "Quicuts Local Signing" (self-signed; a
+#                                  stable TCC identity, not distributable).
+#   neither                     -> ad-hoc: the Accessibility grant is lost on
+#                                  every rebuild. `just mac-signing-identity`.
 mac-build: mac-agent-release mac-ui
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -z "${APPLE_SIGNING_IDENTITY:-}" && -f "$HOME/Library/Keychains/quicuts-signing.keychain-db" ]]; then
+        ./scripts/mac-signing-identity.sh   # unlocks it after a logout
+        export APPLE_SIGNING_IDENTITY="Quicuts Local Signing"
+    fi
+    echo "signing identity: ${APPLE_SIGNING_IDENTITY:-(none: ad-hoc)}"
     cd crates/quicuts-app && cargo tauri build --config conf/macos.json
+
+# One-time: create the self-signed local signing identity (its own keychain;
+# the login keychain is untouched). Read the script header first.
+mac-signing-identity:
+    ./scripts/mac-signing-identity.sh
+
+# Copy the built bundle to /Applications. Launch-at-login records the
+# running binary's path, so it is only meaningful for an installed copy.
+mac-install:
+    ditto target/release/bundle/macos/Quicuts.app /Applications/Quicuts.app
+    @echo "installed /Applications/Quicuts.app"
 
 # Dev run from the terminal (TCC attributes to the terminal app).
 mac-run: mac-agent mac-ui

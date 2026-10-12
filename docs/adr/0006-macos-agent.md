@@ -174,12 +174,21 @@ Two things learned on hardware that the design had guessed at:
   `NSWorkspace.runningApplications`.
 - **Dock badges** — permanently out: macOS has no ⌘1–9 Dock switching, so
   there is nothing to badge. The agent simply never advertises `taskbar`.
-- **Code signing & notarization** — everything runs ad-hoc from the
-  terminal today; a distributable .app needs a stable identity (see TCC
-  facts above), hardened runtime, and notarization.
-- **Launch-at-login** — `tauri-plugin-autostart` (LaunchAgent) is wired but
-  unverified on macOS; the plist records the launching binary's path, so
-  it's only meaningful for an installed .app.
+- **Code signing & notarization** — partly closed 2026-10-12 (issue #32).
+  Michael chose a **self-signed local identity now, notarization later**:
+  there is no Developer ID yet. `just mac-build` signs with hardened runtime
+  (tauri signs the agent sidecar and the app; checked with an ad-hoc build:
+  both carry `flags=adhoc,runtime`) using, in order, `APPLE_SIGNING_IDENTITY`,
+  the local "Quicuts Local Signing" identity, or ad-hoc. The local identity
+  fixes the per-rebuild TCC staleness described in the TCC facts above;
+  `docs/macos-dev.md` § Signing has the mechanics. **Still open:**
+  notarization. tauri already does it when a Developer ID and Apple
+  credentials are in the environment, so it is an account question, not a
+  code one.
+- **Launch-at-login** — `tauri-plugin-autostart` (LaunchAgent) records the
+  running binary's path, so `just mac-install` now puts the bundle in
+  `/Applications` to enable it from. On-device verification pending (issue
+  #32).
 - **Settings-window chord capture on macOS** — `Settings.svelte` captures
   `e.keyCode`, which matches Windows VKs for the keys tested, but the full
   macOS WebKit keyCode surface hasn't been audited.
