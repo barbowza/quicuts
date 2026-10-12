@@ -180,6 +180,21 @@ Two things learned on hardware that the design had guessed at:
 - **Launch-at-login** — `tauri-plugin-autostart` (LaunchAgent) is wired but
   unverified on macOS; the plist records the launching binary's path, so
   it's only meaningful for an installed .app.
-- **Settings-window chord capture on macOS** — `Settings.svelte` captures
-  `e.keyCode`, which matches Windows VKs for the keys tested, but the full
-  macOS WebKit keyCode surface hasn't been audited.
+- ~~**Settings-window chord capture on macOS**~~ — audited and closed
+  2026-10-12 (issue #32). WebKit's `keyCode` (`KeyEventMac.mm`) is
+  **character-derived** for letters and US punctuation
+  (`windowsKeyCodeForCharCode`, tried with and without modifiers) and
+  position-derived otherwise; the agent's `vk_for_keycode` is purely
+  **positional** (US-ANSI). They agree on a US layout only. On QWERTZ, AZERTY
+  or Dvorak a captured letter or punctuation chord named a different key from
+  the one the agent reports, so it never fired. WebKit also reports keys the
+  agent never sees (keypad, F13–F20, Help/Insert, the ISO section key), each a
+  chord that silently never fires. Fix, UI-only: on macOS settings captures and
+  matches by `KeyboardEvent.code` through `MAC_CODE_VK`
+  (`ui/src/lib/chord.ts`), a mirror of the agent table (cross-checked: 73
+  keys, identical), and refuses keys outside it. Windows keeps `keyCode`,
+  which there *is* the VK the hook sees. Chord labels use ⌃⌥⇧⌘ on macOS.
+  Trade-off: on a non-US layout the label names the US key in that position
+  (it is what the agent matches); a layout-aware agent would need
+  `UCKeyTranslate` in the tap callback, the riskiest code in the agent, for
+  a cosmetic gain.

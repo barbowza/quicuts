@@ -18,6 +18,7 @@
     openSettings,
     adjustFontScale,
   } from "../lib/ipc";
+  import { matchesChord } from "../lib/chord";
   import { applyAppearance } from "../lib/theme";
   import { comboToCaps, sequenceEntryKeys } from "./keys";
 
@@ -172,15 +173,7 @@
     const onKey = (e: KeyboardEvent) => {
       // Settings chord (default Ctrl+,): only while the panel has focus —
       // keydown never reaches this webview otherwise. The host toggles.
-      const c = view.settingsChord;
-      if (
-        view.settingsChordEnabled &&
-        e.keyCode === c.vk &&
-        e.ctrlKey === c.ctrl &&
-        e.shiftKey === c.shift &&
-        e.altKey === c.alt &&
-        e.metaKey === c.win
-      ) {
+      if (view.settingsChordEnabled && matchesChord(e, view.settingsChord)) {
         e.preventDefault();
         openSettings();
         return;
