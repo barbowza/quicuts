@@ -84,3 +84,13 @@ New commands: `get_last_browser_title`, `list_hosted_collections`.
   name *after* the browser name — `"… - Gmail - Google Chrome – Work"`,
   observed live). It now cuts at the browser name instead of counting from
   the end, which fixes the Windows Chrome-with-profiles case too.
+
+## Verification (on device, 2026-10-10)
+
+Michael checked this by hand on the Windows host with a Google Workspace mail
+tab in Chrome. All of these passed: the settings window showed the last
+browser title; the suggested pattern was the org mail name, not "Google
+Chrome" and not the email address; binding it to Gmail made the panel open on
+Gmail for that tab; switching to another tab fell back to Chrome's own page.
+macOS had already been verified end to end for hosted collections
+(2026-09-01, ADR 0006).
