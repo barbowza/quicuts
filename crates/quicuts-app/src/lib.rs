@@ -72,6 +72,7 @@ pub fn run() {
             commands::get_settings,
             commands::set_settings,
             commands::adjust_font_scale,
+            commands::preview_appearance,
             commands::get_last_browser_title,
             commands::list_hosted_collections,
         ])

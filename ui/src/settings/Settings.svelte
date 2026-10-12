@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { getLastBrowserTitle, invokeCmd, listHostedCollections, openSettings } from "../lib/ipc";
+  import {
+    getLastBrowserTitle,
+    invokeCmd,
+    listHostedCollections,
+    onAppearance,
+    openSettings,
+    previewAppearance,
+  } from "../lib/ipc";
   import { applyTheme } from "../lib/theme";
   import type { HostedCollection, Theme, TitleBinding } from "../lib/types";
   import HelpTip from "./HelpTip.svelte";
@@ -53,6 +60,9 @@
   let newPattern = $state("");
   let newTarget = $state("");
 
+  // True between a font-slider input and its release (not reactive state).
+  let draggingFont = false;
+
   async function refreshCapture() {
     lastTitle = (await getLastBrowserTitle()) ?? null;
     hosted = (await listHostedCollections()) ?? [];
@@ -74,7 +84,18 @@
     // the captured title every time it regains focus.
     const onFocus = () => refreshCapture();
     window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
+    // The overlay's Ctrl+=/-/0 change the font scale host-side (ADR 0005 §6).
+    // Follow it, or the slider shows a stale value and the next save from
+    // this window would write that stale value back over the user's zoom.
+    const unlistenAppearance = onAppearance((a) => {
+      // Mid-drag the event is our own preview's echo, possibly a step behind
+      // the slider; taking it could save one step short on release.
+      if (s && !draggingFont) s.appearance.fontScale = a.fontScale;
+    });
+    return () => {
+      unlistenAppearance.then((f) => f());
+      window.removeEventListener("focus", onFocus);
+    };
   });
 
   /** Browser names as they appear inside a window title. Used only by
@@ -330,7 +351,9 @@
           step="5"
           value={Math.round(s.appearance.panelOpacity * 100)}
           oninput={(e) => {
-            if (s) s.appearance.panelOpacity = e.currentTarget.valueAsNumber / 100;
+            if (!s) return;
+            s.appearance.panelOpacity = e.currentTarget.valueAsNumber / 100;
+            previewAppearance(s.appearance.fontScale, s.appearance.panelOpacity);
           }}
           onchange={save}
         />
@@ -344,9 +367,15 @@
           step="5"
           value={Math.round(s.appearance.fontScale * 100)}
           oninput={(e) => {
-            if (s) s.appearance.fontScale = e.currentTarget.valueAsNumber / 100;
+            if (!s) return;
+            draggingFont = true;
+            s.appearance.fontScale = e.currentTarget.valueAsNumber / 100;
+            previewAppearance(s.appearance.fontScale, s.appearance.panelOpacity);
           }}
-          onchange={save}
+          onchange={() => {
+            draggingFont = false;
+            save();
+          }}
         />
       </label>
       <label class="check">
