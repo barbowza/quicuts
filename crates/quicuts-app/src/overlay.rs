@@ -86,6 +86,11 @@ pub fn show(app: &AppHandle) {
     // missed close event must not leave a freshly shown panel non-topmost.
     let _ = window.set_always_on_top(true);
     let _ = window.show();
+    // On macOS `show` is makeKeyAndOrderFront, which on the non-activating
+    // panel (macpanel.rs) already takes keys. `set_focus` would add
+    // `activateIgnoringOtherApps`, activating Quicuts: the very thing the
+    // panel exists to avoid.
+    #[cfg(not(target_os = "macos"))]
     let _ = window.set_focus();
 }
 
