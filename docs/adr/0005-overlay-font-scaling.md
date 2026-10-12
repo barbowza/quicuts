@@ -104,3 +104,26 @@ Codebase facts the design leans on:
   them.
 - Windows text scaling multiplies with the font scale (120% × 150% =
   180% effective) — acceptable; both are user intent.
+
+## Verification (on device, 2026-10-10 and 2026-10-12)
+
+Michael checked this by hand on the Windows host, where text scaling is set to
+120%. All of these passed: Ctrl+=/-/0 stepping and resetting (focused-only,
+ignored while another app has focus), the drag-resized width persisting
+within the 586 px to half-display limits, the Font size slider, auto-width
+mode, and 150% font scale on top of the 120% text scaling with taskbar
+badges still aligned.
+
+Testing on the device found two defects. Against decision 6, the settings
+window never listened for the appearance event, so the hotkeys left its
+slider stale, and its reused copy of the settings then saved the old font
+scale back over the zoom on the next unrelated change. Against decision 7,
+the Font size slider applied only on release, not live (the opacity slider
+had the same pattern and was fixed with it). Review of the fix found two
+more: the same stale round trip reverting
+`combo_display_mode`, and a race in which a fast flick could settle one step
+short. All four were fixed in #30. `preview_appearance` previews without
+saving, `set_settings` keeps the live `combo_display_mode` alongside
+`panel_width`, and the settings listener ignores preview echoes mid-drag.
+Michael re-checked #30 by hand on Windows and macOS, and all six steps passed
+on both.
