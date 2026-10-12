@@ -33,6 +33,7 @@
     chord: { win: true, ctrl: false, shift: true, alt: false, vk: 0xbf },
     settingsChordEnabled: false,
     settingsChord: { win: false, ctrl: true, shift: false, alt: false, vk: 0xbc },
+    held: false,
   });
 
   const sections = $derived(view.selected ? (view.pages[view.selected] ?? []) : []);
@@ -133,6 +134,8 @@
   // A stale filter from the previous app would silently hide shortcuts.
   let prevSelected: string | null = null;
   $effect(() => {
+    // A held panel has no filter box, so no filter may hide shortcuts.
+    if (view.held) filter = "";
     if (view.selected !== prevSelected) {
       prevSelected = view.selected;
       filter = "";
@@ -268,14 +271,18 @@
     {:else if unsupported}
       <div class="unsupported">No shortcuts for {selectedApp?.displayName}.</div>
     {:else}
-      <input
-        class="filter"
-        type="text"
-        placeholder="Filter shortcuts (Ctrl+F)"
-        spellcheck="false"
-        bind:value={filter}
-        bind:this={filterInput}
-      />
+      <!-- Held panel: every key is a modifier combo, so typing can't reach
+           a filter box; it only takes space from the shortcuts. -->
+      {#if !view.held}
+        <input
+          class="filter"
+          type="text"
+          placeholder="Filter shortcuts (Ctrl+F)"
+          spellcheck="false"
+          bind:value={filter}
+          bind:this={filterInput}
+        />
+      {/if}
       {#if filteredSections.length === 0}
         <div class="placeholder">
           {filter.trim()
