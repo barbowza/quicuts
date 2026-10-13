@@ -49,7 +49,7 @@ Set `WINUSER` to your Windows username. `deploy` must target a Windows-local pat
 
 ## Windows target — built natively from PowerShell
 
-pro-win-quicuts's clone, `C:\Users\pcpro\Projects\quicuts\quicuts`, builds on the host itself: `cargo build` with the MSVC host toolchain, no cross-compile and no tauri-cli. Decisions and consequences: `docs/adr/0008-native-windows-build.md`.
+pro-win-quicuts's clone, `C:\Users\pcpro\projects\quicuts\quicuts`, builds on the host itself: `cargo build` with the MSVC host toolchain, no cross-compile and no tauri-cli. Decisions and consequences: `docs/adr/0008-native-windows-build.md`.
 
 Toolchain: rustup (default host `x86_64-pc-windows-msvc`), VS 2022 Build Tools (Desktop C++ + a Windows SDK), Git for Windows (the recipes run in its bash via `windows-shell`), Node + pnpm 10, `just`. Clone with `-c core.autocrlf=false`; `.gitattributes` also forces LF.
 
@@ -126,7 +126,7 @@ until #43 moved the role to pro-win-quicuts the same day.
 On each machine the clone sits in a root folder as `quicuts/` next to
 `quicuts-journal/` (`barbowza/quicuts-journal` on GitHub): the root is
 `~/learnings/tools/quicuts/` on the Mac, `/home/dev/projects/quicuts/` in
-WSL on Prometheus and `C:\Users\pcpro\Projects\quicuts\` natively on
+WSL on Prometheus and `C:\Users\pcpro\projects\quicuts\` natively on
 Prometheus. Both Prometheus clones use machine `pro` and write `diary/pro/`.
 `just start` in the journal
 launches the day (sync, today's entry, VS Code, Claude), its steps switched in

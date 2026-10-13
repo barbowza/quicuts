@@ -8,7 +8,7 @@ of two supported Windows build paths, not the only one.
 Until now the Windows build existed only as a WSL2 cross-compile (`cargo xwin`,
 ADR 0002), and every Windows recipe assumed bash, `/mnt/c` and `cmd.exe`.
 Michael wanted a second path, built natively on the Windows host by a new
-session, pro-win-quicuts, in `C:\Users\pcpro\Projects\quicuts\quicuts` (issue
+session, pro-win-quicuts, in `C:\Users\pcpro\projects\quicuts\quicuts` (issue
 #43). He decided four things up front: pro-win-quicuts becomes the lead; both
 Prometheus clones share the `pro` journal; **both builds deploy to the same
 `%LOCALAPPDATA%\QuicutsDev`**, so only one Quicuts (one keyboard hook) ever
