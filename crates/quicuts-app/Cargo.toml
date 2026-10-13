@@ -34,8 +34,8 @@ plist = "1"
 # Neither is input access, so — like procs.rs on Windows — they live here,
 # not in the agent.
 objc2 = "0.6"
-objc2-foundation = { version = "0.3", features = ["NSArray", "NSData", "NSDictionary", "NSGeometry", "NSString", "NSURL"] }
-objc2-app-kit = { version = "0.3", features = ["NSBitmapImageRep", "NSGraphics", "NSGraphicsContext", "NSImage", "NSImageRep", "NSRunningApplication", "NSWorkspace"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSArray", "NSData", "NSDictionary", "NSGeometry", "NSString", "NSURL"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSBitmapImageRep", "NSGraphics", "NSGraphicsContext", "NSImage", "NSImageRep", "NSRunningApplication", "NSWorkspace", "libc"] }
 
 [target.'cfg(windows)'.dependencies]
 png = "0.18"
