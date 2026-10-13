@@ -58,6 +58,13 @@ pub fn install(window: &tauri::WebviewWindow) {
             log::warn!("panel: {} -> QuicutsPanel unsafe ({why}); leaving the overlay activating", current.name().to_string_lossy());
             return;
         }
+        if current.name() != c"TaoWindow" {
+            log::info!(
+                "panel: replacing {} (observed keys: {})",
+                current.name().to_string_lossy(),
+                observed_keys(obj)
+            );
+        }
         object_setClass(obj, panel);
 
         let win: &NSWindow = &*(obj as *const NSWindow);
@@ -110,14 +117,24 @@ fn panel_class() -> Option<&'static AnyClass> {
     })
 }
 
-/// Exactly tao's class, the same instance size, and `focusable` at the same
-/// offset. Without the last two, `object_setClass` would let one class's
-/// methods read the other's bytes. The name check refuses anything that has
-/// already re-classed the window, such as a KVO `NSKVONotifying_TaoWindow`:
-/// swapping that isa would silently drop the observer's class.
+/// tao's class (or AppKit's KVO subclass of it), the same instance size, and
+/// `focusable` at the same offset. Without the last two, `object_setClass`
+/// would let one class's methods read the other's bytes.
+///
+/// The overlay is already key-value observed by the time `setup` runs (seen
+/// on device: `NSKVONotifying_TaoWindow`; not by tao or wry, which use
+/// notifications). Swapping that isa drops only KVO's auto-notifying setter
+/// overrides; observation info lives in a side table, so manual
+/// will/didChange notifications still reach observers. The first version of
+/// this file had no class-name check and passed every on-device check,
+/// presumably swapping this same class. Any other re-classing (a different
+/// dynamic subclass) is refused.
 fn compatible(current: &AnyClass, panel: &AnyClass) -> Result<(), String> {
-    if current.name() != c"TaoWindow" {
-        return Err("not a plain TaoWindow".into());
+    let tao = current.name() == c"TaoWindow";
+    let kvo_of_tao = current.name() == c"NSKVONotifying_TaoWindow"
+        && current.superclass().map(|c| c.name()) == Some(c"TaoWindow");
+    if !(tao || kvo_of_tao) {
+        return Err("neither TaoWindow nor its KVO subclass".into());
     }
     if current.instance_size() != panel.instance_size() {
         return Err(format!(
@@ -131,4 +148,23 @@ fn compatible(current: &AnyClass, panel: &AnyClass) -> Result<(), String> {
         (None, _) => Err("no `focusable` ivar on the current class".into()),
         _ => Err("`focusable` ivar at a different offset".into()),
     }
+}
+
+/// `observationInfo`'s description, for the log: which keys something
+/// observes on the window whose KVO class the swap replaces.
+unsafe fn observed_keys(obj: *mut AnyObject) -> String {
+    use objc2::msg_send;
+    let info: *mut AnyObject = msg_send![obj, observationInfo];
+    if info.is_null() {
+        return "none".into();
+    }
+    let desc: *mut AnyObject = msg_send![info, description];
+    if desc.is_null() {
+        return "?".into();
+    }
+    let utf8: *const std::ffi::c_char = msg_send![desc, UTF8String];
+    if utf8.is_null() {
+        return "?".into();
+    }
+    std::ffi::CStr::from_ptr(utf8).to_string_lossy().split_whitespace().collect::<Vec<_>>().join(" ")
 }
