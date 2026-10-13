@@ -284,38 +284,6 @@ Shortcuts:
           Alt: false
           Keys:
             - C
-      - Name: Align left
-        Shortcut:
-        - Win: true
-          Ctrl: false
-          Shift: false
-          Alt: false
-          Keys:
-            - "{"
-      - Name: Center
-        Shortcut:
-        - Win: true
-          Ctrl: false
-          Shift: false
-          Alt: false
-          Keys:
-            - "|"
-      - Name: Align right
-        Shortcut:
-        - Win: true
-          Ctrl: false
-          Shift: false
-          Alt: false
-          Keys:
-            - "}"
-      - Name: Justify
-        Shortcut:
-        - Win: true
-          Ctrl: false
-          Shift: false
-          Alt: true
-          Keys:
-            - "|"
       - Name: Increase indent
         Shortcut:
         - Win: true
