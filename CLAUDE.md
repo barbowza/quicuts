@@ -62,9 +62,9 @@ How the mac loop differs from the Windows one:
 ## Who does what, and what needs Michael
 
 **Michael** = product delivery management: scope, priorities, on-device testing;
-brings mac-claude online on request; does not develop or push. **win-claude** =
+brings mac-quicuts online on request; does not develop or push. **pro-wsl-quicuts** =
 lead: design decisions, task assignment, Windows development, the merge button;
-works solo by default. **mac-claude** = on-demand: the macOS port, deep peer
+works solo by default. **mac-quicuts** = on-demand: the macOS port, deep peer
 review, and an explicit **duty to push back** — paired with a duty to
 **verify before pushing back**, since a reviewer's failure mode is confident
 noise, not silence.
@@ -93,11 +93,42 @@ legal against a green check; the server closes one hole, not the loop.
 
 **Branches:** `win/<topic>`, `mac/<topic>`, one writer each, pushed at claim time
 so `git ls-remote --heads` shows who holds what. Run `just status` before
-starting or merging (both machines); win-claude runs `just stage` before asking
+starting or merging (both machines); pro-wsl-quicuts runs `just stage` before asking
 Michael to test — there is no mac equivalent yet.
 
 Model and envelope in full: `docs/collaboration.md`. Review procedure and `gh`
 incantations: the **`two-agent-flow`** skill.
+
+**Session names** are `<machine>-<env>-<project>`: `mac-quicuts` on the Mac,
+`pro-wsl-quicuts` on Prometheus (`pro-win-quicuts` once the Windows build moves
+out of WSL). Before 2026-10-13 they were `mac-claude` and `win-claude`, the
+names older PRs, issues and comment tags carry.
+
+## The journal
+
+On the Mac the clone sits in a root folder, `~/learnings/tools/quicuts/`, as
+`quicuts/` next to `quicuts-journal/` (`barbowza/quicuts-journal` on GitHub).
+Prometheus isn't in that layout yet: its journal is
+`/home/dev/projects/_docs/quicuts-journal` in WSL. `just start` in the journal
+launches the day (sync, today's entry, VS Code, Claude), its steps switched in
+`machines/<machine>.env`.
+
+**The journal is Michael's.** Read it freely for context. Write only your
+**handoff**:
+
+- at the end of a session, or when asked, **append** to
+  `diary/<machine>/YYYY/MM-Mon/YYYY-MM-DD-claude.md` under a heading
+  `## HH:MM <session name>` (what shipped, what's running, what's next),
+  since several sessions may write the same day's file;
+- `<machine>` is the word in the journal's `.machine` file (`mac` or `pro`),
+  never a guess;
+- publish it with `just sync-file <that path>` in the journal, which commits
+  and pushes that one file, never Michael's half-written entries. If the push
+  fails the commit stays local: say so, and never force-push or rewrite the
+  journal's history.
+
+Never edit Michael's own entries, `TODO.md` or `ideas.md`, and never another
+machine's folder.
 
 ## Architecture: the crates + UI
 

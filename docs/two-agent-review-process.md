@@ -1,4 +1,4 @@
-# Review process and merge authority (win-claude ↔ mac-claude)
+# Review process and merge authority (pro-wsl-quicuts ↔ mac-quicuts)
 
 How the two sessions review each other's work, and the bounds on the merge
 button. **Who decides what, and which channel is authoritative, is in
@@ -33,20 +33,20 @@ The same account also means **neither session can tell its own comments from
 the other's**, and two agents that can't distinguish self from other will reply
 to themselves indefinitely. So:
 
-> **Every comment opens with `**[win-claude]**` or `**[mac-claude]**`.**
+> **Every comment opens with `**[pro-wsl-quicuts]**` or `**[mac-quicuts]**`.**
 > Each session ignores any thread whose last comment carries its own tag.
 
 Cheap, and it makes the PR readable to a human later. (The clean fix is a
 second machine account per session, which would also make required-review
 protection possible. **Deferred 2026-09-01**, and the reason matters: not that
 it would have prevented nothing so far — that is true and nearly irrelevant,
-since the question is always the *next* failure — but that mac-claude is absent
+since the question is always the *next* failure — but that mac-quicuts is absent
 **by design**. Required approval would convert its intended absence into a hard
-block on win-claude's default mode: a permanent cost against an intermittent
+block on pro-wsl-quicuts's default mode: a permanent cost against an intermittent
 benefit. The "flag unreviewed merges in the PR body" rule below buys most of
 the same value at none of the blocking cost, which is why that rule is
 load-bearing rather than a courtesy. Revisit if a PR is ever merged without
-real review, or if mac-claude stops being on-demand.)
+real review, or if mac-quicuts stops being on-demand.)
 
 ## Round shape
 
@@ -65,7 +65,7 @@ outcome still lands in the PR before merge (`docs/collaboration.md`).
 
 ## Merge authority
 
-win-claude merges. That authority is real but bounded, and the bounds were
+pro-wsl-quicuts merges. That authority is real but bounded, and the bounds were
 learned the hard way on PRs #20 and #21 (2026-09-01) — both merges were of
 *correct, green* code, which is exactly why the rules below are about
 authority rather than quality. "The change is right" is never the question a
@@ -92,7 +92,7 @@ written down because both sessions got this right once by having a fresh
 scar, which is not the same as having a rule.
 
 **A gate with two reasons needs both resolved.** This is the specific way #21
-went wrong, and it is subtle enough to be worth naming. win-claude paused for
+went wrong, and it is subtle enough to be worth naming. pro-wsl-quicuts paused for
 two reasons in one sentence — *"it changes shipped Windows behaviour, so it's
 Michael's call"* **and** an open design question — then merged when ADR 0004
 dissolved the design question. But the question was never the gate; the
@@ -170,13 +170,13 @@ of the two sessions questions is the one most in need of two.
 - **Pin the review to a SHA**, and state it. Do not rebase or force-push while
   a review is in flight — the inline anchors rot. Merge `main` in instead
   (PR #1 did; the anchors survived).
-- **Say what you could not verify.** win-claude has no Mac: `CGEventTap`,
+- **Say what you could not verify.** pro-wsl-quicuts has no Mac: `CGEventTap`,
   AppKit, `plist` and `.app` bundling are static review only. An approving
-  review is *not* evidence the code runs. mac-claude owes the same caveat
+  review is *not* evidence the code runs. mac-quicuts owes the same caveat
   pointed the other way.
 - **Run what you actually can.** The seam is wider than it looks:
   `quicuts-agent-mac`'s deps are target-gated and `activation.rs` is
-  platform-free, so win-claude runs the macOS state machine's tests on the
+  platform-free, so pro-wsl-quicuts runs the macOS state machine's tests on the
   Linux toolchain. `quicuts-manifest` is platform-free entirely, so **both**
   manifest sets are parse-tested from either machine. Look for this seam on
   every review — a finding backed by a passing probe is not a suggestion, and
@@ -187,8 +187,8 @@ of the two sessions questions is the one most in need of two.
   ran on exactly one machine. Moving it to `quicuts-manifest` put it in CI and
   in both sessions' loops. Ask of any new test: *where can this actually run?*
 - **Push back — and verify before you do.** The duty to contest the lead's
-  design is real; on 2026-09-01 mac-claude was right about the macOS title poll
-  and win-claude was wrong. But the same day it was also wrong *twice while
+  design is real; on 2026-09-01 mac-quicuts was right about the macOS title poll
+  and pro-wsl-quicuts was wrong. But the same day it was also wrong *twice while
   correcting*, on `git revert -m 1` and on a negative grep. A reviewer's
   failure mode is confident noise, not silence: the instinct to check is
   cheap, the assertion that follows it is not.

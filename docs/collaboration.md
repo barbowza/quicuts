@@ -1,4 +1,4 @@
-# Collaboration model (Michael ↔ win-claude ↔ mac-claude)
+# Collaboration model (Michael ↔ pro-wsl-quicuts ↔ mac-quicuts)
 
 How three actors — one human and two Claude Code sessions on two machines —
 build Quicuts without treading on each other.
@@ -10,29 +10,35 @@ The *rules and the incidents that produced them* live in
 `docs/two-agent-review-process.md`. The one-page summary that both sessions
 always have in context is in `CLAUDE.md`.
 
+The sessions are named `<machine>-<env>-<project>`. The Windows lead is
+`pro-wsl-quicuts` (`pro-win-quicuts` once the Windows build leaves WSL).
+Until 2026-10-13 the two sessions were `win-claude` and `mac-claude`. That's
+what older PRs, issues and comment tags say, and this document has been
+renamed throughout, including the incidents that predate the change.
+
 ## The three actors
 
 | | Machine | Owns |
 |---|---|---|
-| **Michael** | the Windows box | Scope, priorities, on-device testing, bringing mac-claude online. Product delivery management — **not** development. |
-| **win-claude** | WSL2 on that box | Lead. Design decisions, task assignment, Windows development, merges. The default worker. |
-| **mac-claude** | the Mac | On-demand. The macOS port, deep peer review, and a duty to push back — having verified first. |
+| **Michael** | the Windows box | Scope, priorities, on-device testing, bringing mac-quicuts online. Product delivery management — **not** development. |
+| **pro-wsl-quicuts** | WSL2 on that box | Lead. Design decisions, task assignment, Windows development, merges. The default worker. |
+| **mac-quicuts** | the Mac | On-demand. The macOS port, deep peer review, and a duty to push back — having verified first. |
 
 **Michael does not push.** He stepped out of development on 2026-09-01, and the
 sessions do their own branch management. He remains available to both, but
-operates primarily through win-claude: work flows Michael → win-claude →
-mac-claude, and findings flow back the same way.
+operates primarily through pro-wsl-quicuts: work flows Michael → pro-wsl-quicuts →
+mac-quicuts, and findings flow back the same way.
 
-**win-claude works solo roughly half the time.** mac-claude is not a
+**pro-wsl-quicuts works solo roughly half the time.** mac-quicuts is not a
 continuously-running peer; it is brought online for a port or for an in-depth
-review. Asking Michael to wake it is a lever win-claude should use, not a
+review. Asking Michael to wake it is a lever pro-wsl-quicuts should use, not a
 favour to be rationed — a change that deserves a second pair of eyes is worth
 the round trip.
 
-**Lead means owning decisions, not the keyboard.** mac-claude's duty to push
+**Lead means owning decisions, not the keyboard.** mac-quicuts's duty to push
 back is load-bearing, not decorative — and is paired with a duty to **verify
 before pushing back**, because an eager reviewer's failure mode is confident
-noise rather than silence. On 2026-09-01 it was right and win-claude
+noise rather than silence. On 2026-09-01 it was right and pro-wsl-quicuts
 was wrong about gating the macOS title poll on `SetOverlayVisible`; a weaker
 role would have made that pushback less likely and the feature would have
 shipped broken. A lead who is never contradicted is being told what they want
@@ -78,20 +84,20 @@ encouraged — it turned a week of relay through Michael into a day — but it i
 
 The failure this prevents is invisible until it bites. On 2026-09-01 the
 argument about the macOS title poll's cost and the reason `SetOverlayVisible`
-was rejected survived *only* because mac-claude deliberately wrote it into ADR
+was rejected survived *only* because mac-quicuts deliberately wrote it into ADR
 0006. Had it stayed in the message thread, the next session to look at a 5 Hz
 poll would have "optimised" it and silently deleted a working feature.
 
 ## Handing work over
 
-**The issue is the spec; the message is the nudge.** Anything mac-claude needs
+**The issue is the spec; the message is the nudge.** Anything mac-quicuts needs
 in order to do the work goes in a GitHub issue — including the gaps in
 dependency order, so it can see what blocks what. The message points at the
 issue and carries reasoning *about* it.
 
 Issue #19 is the worked example: it enumerated three gaps in dependency order
 (agent title reporting → bundle-id host matching → manifest port), and
-mac-claude cited that ordering as the reason the work took a day rather than a
+mac-quicuts cited that ordering as the reason the work took a day rather than a
 week. What did *not* survive was the surrounding message context — which is the
 point.
 
@@ -124,7 +130,7 @@ have to remember what needs testing. So:
 1. **Stage first.** `just stage` builds, terminates his running instance,
    deploys, relaunches and reports. On 2026-09-01 he spent an afternoon on an
    08:31 build while four merges landed, including a fix for a bug he could
-   have reproduced. **win-claude only** — there is no mac equivalent yet, and
+   have reproduced. **pro-wsl-quicuts only** — there is no mac equivalent yet, and
    the Mac loop is a different shape (`mac-run` holds the terminal on
    `cargo tauri dev` rather than deploying and detaching), so `mac-stage`
    should be written once its right shape is known rather than guessed at.
@@ -140,11 +146,11 @@ and now recorded in ADR 0006.
 
 ## When the other session is offline
 
-win-claude may merge unreviewed, and often will. **Flag it in the PR body** —
+pro-wsl-quicuts may merge unreviewed, and often will. **Flag it in the PR body** —
 this is mandatory, not a courtesy. An unreviewed merge that announces itself is
 recoverable and greppable; one that looks like every other merge is neither.
-The flag doubles as the shortlist of PRs worth asking mac-claude to review
+The flag doubles as the shortlist of PRs worth asking mac-quicuts to review
 retrospectively.
 
 If the change is significant enough to want review before it lands, ask Michael
-to bring mac-claude online rather than merging and hoping.
+to bring mac-quicuts online rather than merging and hoping.

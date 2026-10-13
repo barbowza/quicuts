@@ -1,6 +1,6 @@
 ---
 name: two-agent-flow
-description: Procedure for win-claude ↔ mac-claude collaboration on Quicuts — claiming work, handing it over, posting a PR review with inline comments, announcing intent, and merging. Use when reviewing or merging the other session's PR, handing work across the Windows/macOS seam, or starting work that the other session might collide with.
+description: Procedure for pro-wsl-quicuts ↔ mac-quicuts collaboration on Quicuts — claiming work, handing it over, posting a PR review with inline comments, announcing intent, and merging. Use when reviewing or merging the other session's PR, handing work across the Windows/macOS seam, or starting work that the other session might collide with.
 ---
 
 # Two-agent flow
@@ -10,14 +10,14 @@ autonomy envelope) is `docs/collaboration.md`; the **rules and why they exist**
 are `docs/two-agent-review-process.md`. The invariants are in `CLAUDE.md` and
 are already in context — this skill assumes them.
 
-Both sessions use this file. Sections marked **[lead]** are win-claude's;
+Both sessions use this file. Sections marked **[lead]** are pro-wsl-quicuts's;
 **[owner]** is whichever session owns the branch under review.
 
 ## 0. One-time, per checkout
 
 ```bash
-git config user.name  win-claude        # or mac-claude
-git config user.email win-claude@quicuts.invalid
+git config user.name  pro-wsl-quicuts        # or mac-quicuts
+git config user.email pro-wsl-quicuts@quicuts.invalid
 ```
 
 Not committed — `.git/config` is local, so each checkout sets its own.
@@ -48,7 +48,7 @@ writer per branch — never push to a branch you do not own.
 The issue is the spec; the message is the nudge.
 
 ```bash
-gh issue create --title "[mac-claude] <what>" --label enhancement --body "$(cat <<'EOF'
+gh issue create --title "[mac-quicuts] <what>" --label enhancement --body "$(cat <<'EOF'
 ## Problem
 <what is broken or missing, with file:line evidence>
 
@@ -96,7 +96,7 @@ REST API rather than `gh pr review`:
 ```bash
 python3 - <<'PY'
 import json
-body = """**[win-claude] REQUEST CHANGES** (or **Approving**) — verdict first.
+body = """**[pro-wsl-quicuts] REQUEST CHANGES** (or **Approving**) — verdict first.
 
 ## What I verified
 <commands run and what they showed>
@@ -105,7 +105,7 @@ body = """**[win-claude] REQUEST CHANGES** (or **Approving**) — verdict first.
 <the other platform, runtime behaviour, anything needing hardware>
 """
 comments = [
-  {"path":"crates/…/foo.rs","line":42,"side":"RIGHT","body":"**[win-claude]** …"},
+  {"path":"crates/…/foo.rs","line":42,"side":"RIGHT","body":"**[pro-wsl-quicuts]** …"},
 ]
 json.dump({"commit_id":"<headRefOid>","event":"COMMENT","body":body,"comments":comments},
           open("review.json","w"))
@@ -114,12 +114,12 @@ gh api -X POST repos/barbowza/quicuts/pulls/<N>/reviews --input review.json --jq
 ```
 
 `event` must be `COMMENT` — `APPROVE` and `REQUEST_CHANGES` 422 on your own
-PR. Every comment opens with your `**[win-claude]**` / `**[mac-claude]**` tag.
+PR. Every comment opens with your `**[pro-wsl-quicuts]**` / `**[mac-quicuts]**` tag.
 
 Replying on an existing thread:
 
 ```bash
-gh api -X POST repos/barbowza/quicuts/pulls/comments/<comment-id>/replies -f body='**[mac-claude]** …'
+gh api -X POST repos/barbowza/quicuts/pulls/comments/<comment-id>/replies -f body='**[mac-quicuts]** …'
 ```
 
 ## 4. Responding to a review  **[owner]**
@@ -156,7 +156,7 @@ server rather than by memory.
 **Merging unreviewed** (the other session is offline — expected roughly half
 the time): allowed, but put a line in the PR body saying so before merging, so
 the set of unreviewed merges is greppable and can be reviewed retrospectively.
-If the change is significant, ask Michael to bring mac-claude online instead.
+If the change is significant, ask Michael to bring mac-quicuts online instead.
 
 ## 6. Asking Michael to test
 
