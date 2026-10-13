@@ -1,0 +1,525 @@
+# Quicuts-maintained manifest (not from PowerToys — see NOTICE.txt).
+# Source of truth: Microsoft's "Keyboard shortcuts for Microsoft Teams",
+# macOS tab (support.microsoft.com, article 2e8e2a70; synced 2026-10-13),
+# cross-checked against a running Teams' menu bar with
+# `just mac-menus com.microsoft.teams2`. The menu has only standard rows, but
+# it shows ⌘0 for Actual Size where the article says ⌃0; the menu wins.
+# Rows the article gives two actions for the same keys (e.g. ⌘⇧A) keep the
+# call action only. Sections follow the Windows manifest.
+# ⌘=Win, ⌃=Ctrl, ⌥=Alt, ⇧=Shift.
+PackageName: Microsoft.Teams
+Name: Teams
+WindowFilter: "com.microsoft.teams2"
+BackgroundProcess: false
+Shortcuts:
+  - SectionName: General
+    Properties:
+      - Name: Show keyboard shortcuts
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "."
+      - Name: Go to Search
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - E
+      - Name: Open filter
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - F
+      - Name: Start a new chat
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - N
+      - Name: Start a chat in a new window
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - N
+      - Name: Open existing conversation in new window
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - O
+      - Name: Open Settings
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - ","
+      - Name: Open Help
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F1
+      - Name: Close
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Escape>"
+      - Name: Zoom in
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "="
+      - Name: Zoom out
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "-"
+      - Name: Reset zoom level
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<0>"
+      - Name: Go to a specific chat or channel
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - G
+      - Name: Report a problem
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - R
+      - Name: Quit and close all windows
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - Q
+  - SectionName: Navigation
+    Properties:
+      - Name: Open an app on the app bar (1-9)
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<1>"
+      - Name: Move focus to chat or channel list
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - L
+      - Name: Move focus to message pane
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - P
+      - Name: Go to compose box
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - R
+      - Name: Open history menu
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Y
+      - Name: Go to previous section
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - F6
+      - Name: Go to next section
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F6
+      - Name: Go back
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "["
+      - Name: Go forward
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "]"
+  - SectionName: Messaging
+    Properties:
+      - Name: Mark all as read
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Escape>"
+      - Name: Jump to last read or newest message
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - J
+      - Name: Find in current chat or channel
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F
+      - Name: Open a tab on the chat header (1-9)
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<1>"
+      - Name: Toggle details pane
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - D
+      - Name: Reply to the last message
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - R
+      - Name: React to the last message
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - R
+      - Name: Edit last sent message
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - E
+      - Name: See all unread items
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - U
+      - Name: See all items you are mentioned in
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - M
+  - SectionName: Compose
+    Properties:
+      - Name: Expand compose box
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - X
+      - Name: Send message (expanded compose box)
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Enter>"
+      - Name: Start new line
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Enter>"
+      - Name: Attach file
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - O
+      - Name: Bold
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - B
+      - Name: Italic
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - I
+      - Name: Underline
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - U
+      - Name: Strikethrough
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - X
+      - Name: Insert link
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - K
+      - Name: Insert inline code
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - C
+      - Name: Insert code block
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - B
+      - Name: Mark message as important
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - I
+      - Name: Apply Heading 1
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<1>"
+      - Name: Apply Heading 2
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<2>"
+      - Name: Apply Heading 3
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<3>"
+  - SectionName: Meetings and calls
+    Properties:
+      - Name: Toggle mute
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - M
+      - Name: Temporarily unmute
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - Space
+      - Name: Raise or lower your hand
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - K
+      - Name: Toggle video
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - O
+      - Name: Accept video call
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - V
+      - Name: Accept audio call
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - A
+      - Name: Decline call
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - D
+      - Name: Start audio call
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - S
+      - Name: Start video call
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - S
+      - Name: End call
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - H
+      - Name: Toggle share content tray
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - E
+      - Name: Admit people from lobby notification
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - Y
+      - Name: Schedule a meeting
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - N

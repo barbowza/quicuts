@@ -424,3 +424,46 @@ fn firefox_mac_manifest_covers_every_edition() {
     assert_eq!(rail[0].kind, quicuts_manifest::MatchKind::Exact);
     assert!(rail.iter().any(|m| m.lm.manifest.id == "Google.Gmail"));
 }
+
+/// Tier-1 coverage: Edge, Slack and Teams are mac manifests of their own, and
+/// the VS Code forks (Cursor, Antigravity) share the VS Code manifest.
+#[test]
+fn tier1_apps_resolve_to_their_manifests() {
+    let s = store();
+    let hc = HostClasses::builtin();
+    let rail = |identity: &str| -> Vec<String> {
+        s.match_foreground(Some(identity), "en-US", &hc, |_| false)
+            .iter()
+            .map(|m| m.lm.manifest.id.clone())
+            .collect()
+    };
+    for (identity, id) in [
+        ("com.microsoft.edgemac", "Microsoft.Edge"),
+        ("com.microsoft.edgemac.beta", "Microsoft.Edge"),
+        ("com.tinyspeck.slackmacgap", "SlackTechnologies.Slack"),
+        ("com.microsoft.teams2", "Microsoft.Teams"),
+        ("com.todesktop.230313mzl4w4u92", "Microsoft.VSCode"),
+        ("com.google.antigravity", "Microsoft.VSCode"),
+    ] {
+        assert_eq!(rail(identity).first().map(String::as_str), Some(id), "{identity}");
+    }
+
+    // Edge is a browser, so hosted collections join its rail behind Edge.
+    let edge = rail("com.microsoft.edgemac");
+    assert!(edge.iter().any(|m| m == "Google.Gmail"));
+    // Slack and Teams are not, even though both are web-based.
+    assert!(!rail("com.tinyspeck.slackmacgap").iter().any(|m| m == "Google.Gmail"));
+    assert!(!rail("com.microsoft.teams2").iter().any(|m| m == "Google.Gmail"));
+
+    // ⌘ maps to Win in the new set too: Teams' Toggle mute is ⌘⇧M.
+    let teams = s.get("Microsoft.Teams", "en-US").expect("teams mac manifest");
+    let mute = teams
+        .manifest
+        .sections
+        .iter()
+        .flat_map(|s| &s.entries)
+        .find(|e| e.name == "Toggle mute")
+        .expect("Toggle mute");
+    let c = &mute.combos[0];
+    assert!(c.win && c.shift && !c.ctrl && !c.alt);
+}
