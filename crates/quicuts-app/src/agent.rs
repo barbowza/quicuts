@@ -234,6 +234,13 @@ fn handle_event(app: &AppHandle, ev: AgentEvent) {
             send(app, &AgentCommand::SetOverlayVisible { visible: false });
         }
         // Esc: may just clear the filter box instead of closing (two-step).
+        // A Win/⌘ combo passed through to the OS mid-hold: the panel steps
+        // aside (plain hide). Not a dismissal of the session, so settings
+        // opened from it stays.
+        AgentEvent::Dismissed { reason: quicuts_proto::DismissReason::Passthrough } => {
+            overlay::hide(app);
+            send(app, &AgentCommand::SetOverlayVisible { visible: false });
+        }
         AgentEvent::Dismissed { .. } => overlay::dismiss(app),
         AgentEvent::ShellFlyoutChanged { open, window } => {
             overlay::duck_under_flyout(app, open, window);
