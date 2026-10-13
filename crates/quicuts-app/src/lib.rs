@@ -9,6 +9,8 @@ mod commands;
 mod customizations;
 mod engine;
 mod icons;
+#[cfg(target_os = "macos")]
+mod macpanel;
 mod overlay;
 mod pinned;
 mod procs;
@@ -152,11 +154,19 @@ pub fn run() {
                 last_taskbar: Mutex::new(None),
                 overlay_visible: Mutex::new(false),
                 shown_by_hold: Mutex::new(false),
+                settings_attached: Mutex::new(false),
                 filter_active: Mutex::new(false),
                 overlay_modal: Mutex::new("none".into()),
                 panel_expected_w: Mutex::new(None),
                 panel_resize_gen: Mutex::new(0),
             });
+
+            // Before the overlay's first show: the window server reads the
+            // non-activating flag when the panel is ordered in.
+            #[cfg(target_os = "macos")]
+            if let Some(w) = handle.get_webview_window("overlay") {
+                macpanel::install(&w);
+            }
 
             tray::build(&handle)?;
             apply_autostart(&handle);

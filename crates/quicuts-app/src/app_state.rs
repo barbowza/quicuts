@@ -39,6 +39,10 @@ pub struct AppState {
     /// The visible panel came from a hold (vs the chord or the tray), so
     /// the overlay hides its filter box.
     pub shown_by_hold: Mutex<bool>,
+    /// Settings was opened from the panel and the panel stayed up (sticky
+    /// mode): dismissing the panel deliberately closes settings with it.
+    /// Cleared whenever either window hides.
+    pub settings_attached: Mutex<bool>,
     /// Whether the overlay's filter box currently has text (reported by the
     /// webview), so Esc can clear it before closing the panel.
     pub filter_active: Mutex<bool>,
