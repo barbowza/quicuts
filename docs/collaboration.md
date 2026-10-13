@@ -1,6 +1,6 @@
-# Collaboration model (Michael ↔ pro-wsl-quicuts ↔ mac-quicuts)
+# Collaboration model (Michael ↔ pro-win-quicuts ↔ pro-wsl-quicuts ↔ mac-quicuts)
 
-How three actors — one human and two Claude Code sessions on two machines —
+How four actors — one human and three Claude Code sessions on two machines —
 build Quicuts without treading on each other.
 
 This document is the **model**: who decides what, which channel is
@@ -10,28 +10,32 @@ The *rules and the incidents that produced them* live in
 `docs/two-agent-review-process.md`. The one-page summary that both sessions
 always have in context is in `CLAUDE.md`.
 
-The sessions are named `<machine>-<env>-<project>`. The Windows lead is
-`pro-wsl-quicuts` (`pro-win-quicuts` once the Windows build leaves WSL).
-Until 2026-10-13 the two sessions were `win-claude` and `mac-claude`. That's
+The sessions are named `<machine>-<env>-<project>`. The lead is
+`pro-win-quicuts`, the native Windows clone on Prometheus; `pro-wsl-quicuts`,
+the WSL clone on the same box, held the role until issue #43 (2026-10-13).
+Until 2026-10-13 the sessions were `win-claude` and `mac-claude`. That's
 what older PRs, issues and comment tags say, and this document has been
-renamed throughout, including the incidents that predate the change.
+renamed throughout, including the incidents that predate the change. Where an
+incident below names pro-wsl-quicuts as the lead, that is who held the role at
+the time.
 
 ## The three actors
 
 | | Machine | Owns |
 |---|---|---|
 | **Michael** | the Windows box | Scope, priorities, on-device testing, bringing mac-quicuts online. Product delivery management — **not** development. |
-| **pro-wsl-quicuts** | WSL2 on that box | Lead. Design decisions, task assignment, Windows development, merges. The default worker. |
+| **pro-win-quicuts** | that box, natively (PowerShell) | Lead. Design decisions, task assignment, Windows development, merges. The default worker. |
+| **pro-wsl-quicuts** | WSL2 on that box | Secondary. Keeps the WSL cross-build working, takes assigned work, reviews. |
 | **mac-quicuts** | the Mac | On-demand. The macOS port, deep peer review, and a duty to push back — having verified first. |
 
 **Michael does not push.** He stepped out of development on 2026-09-01, and the
 sessions do their own branch management. He remains available to both, but
-operates primarily through pro-wsl-quicuts: work flows Michael → pro-wsl-quicuts →
-mac-quicuts, and findings flow back the same way.
+operates primarily through the lead: work flows Michael → pro-win-quicuts →
+pro-wsl-quicuts / mac-quicuts, and findings flow back the same way.
 
-**pro-wsl-quicuts works solo roughly half the time.** mac-quicuts is not a
+**The lead works solo roughly half the time.** mac-quicuts is not a
 continuously-running peer; it is brought online for a port or for an in-depth
-review. Asking Michael to wake it is a lever pro-wsl-quicuts should use, not a
+review. Asking Michael to wake it is a lever the lead should use, not a
 favour to be rationed — a change that deserves a second pair of eyes is worth
 the round trip.
 
@@ -104,9 +108,9 @@ point.
 ## Staying in sync
 
 `git ls-remote --heads` is the claim board. Push your branch **at claim time**,
-even empty, before doing the work. Branches are `win/<topic>` and `mac/<topic>`,
-**one writer each** — the other session never pushes to a branch it does not
-own.
+even empty, before doing the work. Branches are `pw/<topic>` (pro-win-quicuts),
+`win/<topic>` (pro-wsl-quicuts) and `mac/<topic>`, **one writer each** — no
+session ever pushes to a branch it does not own.
 
 Run `just status` before starting work and before merging: it fetches, prunes,
 and shows the resolved `gh` account, open PRs, remote branches and in-flight
@@ -130,7 +134,9 @@ have to remember what needs testing. So:
 1. **Stage first.** `just stage` builds, terminates his running instance,
    deploys, relaunches and reports. On 2026-09-01 he spent an afternoon on an
    08:31 build while four merges landed, including a fix for a bug he could
-   have reproduced. **pro-wsl-quicuts only** — there is no mac equivalent yet, and
+   have reproduced. **Windows sessions only** (both Prometheus clones deploy to
+   the same folder, so either one's stage replaces the other's build) — there
+   is no mac equivalent yet, and
    the Mac loop is a different shape (`mac-run` holds the terminal on
    `cargo tauri dev` rather than deploying and detaching), so `mac-stage`
    should be written once its right shape is known rather than guessed at.
@@ -146,7 +152,7 @@ and now recorded in ADR 0006.
 
 ## When the other session is offline
 
-pro-wsl-quicuts may merge unreviewed, and often will. **Flag it in the PR body** —
+The lead may merge unreviewed, and often will. **Flag it in the PR body** —
 this is mandatory, not a courtesy. An unreviewed merge that announces itself is
 recoverable and greppable; one that looks like every other merge is neither.
 The flag doubles as the shortlist of PRs worth asking mac-quicuts to review

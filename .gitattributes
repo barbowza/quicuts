@@ -1,0 +1,10 @@
+# LF everywhere, whatever core.autocrlf says: CRLF breaks the bash recipes and
+# scripts, and both Windows build paths share this repo with the Mac.
+* text=auto eol=lf
+
+*.png  binary
+*.ico  binary
+*.icns binary
+
+# Third-party file, kept byte-identical (it is CRLF upstream).
+manifests/POWERTOYS-LICENSE -text
