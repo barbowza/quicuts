@@ -26,6 +26,15 @@ static AWAITING_PERMISSION: AtomicBool = AtomicBool::new(false);
 /// This run reported `PermissionRequired`; reset per run, so a later crash
 /// for another reason goes back to the counted backoff.
 static RUN_NEEDS_PERMISSION: AtomicBool = AtomicBool::new(false);
+/// This run reached `Ready`, so its exit starts a fresh crash budget: the
+/// limit is for crash loops, not for an agent that dies once a day or for
+/// tray Restart clicks.
+static RUN_REACHED_READY: AtomicBool = AtomicBool::new(false);
+
+/// Retrying a missing permission: per-retry noise stays out of the log.
+fn quiet() -> bool {
+    AWAITING_PERMISSION.load(Ordering::SeqCst)
+}
 
 /// Spawn (or respawn) the agent sidecar and pump its events.
 pub fn start(app: AppHandle) {
@@ -71,8 +80,8 @@ fn spawn(app: AppHandle, attempt: u32) {
             *state.agent_child.lock().unwrap() = Some(child);
         }
         RUN_NEEDS_PERMISSION.store(false, Ordering::SeqCst);
-        let quiet = AWAITING_PERMISSION.load(Ordering::SeqCst);
-        if !quiet {
+        RUN_REACHED_READY.store(false, Ordering::SeqCst);
+        if !quiet() {
             log::info!("agent spawned (attempt {attempt})");
         }
 
@@ -87,13 +96,13 @@ fn spawn(app: AppHandle, attempt: u32) {
                     // The agent only writes stderr for notable events; keep
                     // them visible at the default Info filter (but not the
                     // same permission error every few seconds).
-                    if !quiet {
+                    if !quiet() {
                         log::info!("agent: {}", String::from_utf8_lossy(&bytes).trim());
                     }
                 }
                 CommandEvent::Error(e) => log::error!("agent error: {e}"),
                 CommandEvent::Terminated(payload) => {
-                    if !quiet {
+                    if !quiet() {
                         log::warn!("agent terminated: {:?}", payload.code);
                     }
                     break;
@@ -116,6 +125,7 @@ fn spawn(app: AppHandle, attempt: u32) {
             return;
         }
         AWAITING_PERMISSION.store(false, Ordering::SeqCst);
+        let attempt = if RUN_REACHED_READY.swap(false, Ordering::SeqCst) { 0 } else { attempt };
         schedule_restart(app, attempt);
     });
 }
@@ -123,8 +133,8 @@ fn spawn(app: AppHandle, attempt: u32) {
 fn schedule_restart(app: AppHandle, attempt: u32) {
     if attempt >= MAX_RESTARTS {
         log::error!("agent gave up after {MAX_RESTARTS} restarts; tray Restart agent retries");
-        tray::set_error(&app, true);
         GAVE_UP.store(true, Ordering::SeqCst);
+        tray::set_error(&app, true);
         return;
     }
     let delay = Duration::from_millis(250u64 * (1 << attempt).min(20));
@@ -222,6 +232,7 @@ fn handle_event(app: &AppHandle, ev: AgentEvent) {
     match ev {
         AgentEvent::Ready { proto_version, .. } => {
             log::info!("agent ready (proto {proto_version})");
+            RUN_REACHED_READY.store(true, Ordering::SeqCst);
             if AWAITING_PERMISSION.swap(false, Ordering::SeqCst) {
                 log::info!("agent: permission granted");
             }
