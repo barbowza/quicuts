@@ -164,9 +164,18 @@ Two things learned on hardware that the design had guessed at:
 
 ## Known gaps (deferred deliberately)
 
-- **Non-activating panel** — showing the overlay activates Quicuts (menu
-  bar switches). Needs `NSPanel` + `nonactivatingPanel`, not exposed by
-  Tauri v2.
+- ~~**Non-activating panel**~~ — closed 2026-10-12 (issue #32). Tauri v2
+  still exposes no panels, so `macpanel.rs` re-classes the overlay's
+  `TaoWindow` in place to an `NSPanel` subclass (`object_setClass`, the
+  `tauri-nspanel` technique, without taking the dependency) and sets
+  `NonactivatingPanel`, `hidesOnDeactivate = NO`, `CanJoinAllSpaces |
+  FullScreenAuxiliary`. A class swap on a live object is only sound with an
+  identical instance layout, so it is checked at runtime (instance size, and
+  tao's `focusable` ivar at the same offset); if a tao upgrade breaks that,
+  the overlay is left as an ordinary window and keeps working, activating
+  Quicuts as before, with a log line naming the check. `overlay::show` no
+  longer calls `set_focus` on macOS, since tao's version adds
+  `activateIgnoringOtherApps`.
 - **App icons in the rail** — `icons.rs` is a `cfg(not(windows))` stub; the
   rail falls back to a glyph. macOS impl would read the bundle's `.icns`.
 - **Running-apps detection** — `procs.rs` stub: named `BackgroundProcess`

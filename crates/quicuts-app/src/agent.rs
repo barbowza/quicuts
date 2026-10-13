@@ -185,7 +185,7 @@ fn handle_event(app: &AppHandle, ev: AgentEvent) {
             } else {
                 *state.selected.lock().unwrap() = state.pinned_app.lock().unwrap().clone();
             }
-            overlay::show(app);
+            overlay::show_held(app);
             send(app, &AgentCommand::SetOverlayVisible { visible: true });
         }
         // The chord cycles: hidden -> show+focus; visible but unfocused
@@ -203,12 +203,19 @@ fn handle_event(app: &AppHandle, ev: AgentEvent) {
                 .as_ref()
                 .map(|w| w.is_focused().unwrap_or(false))
                 .unwrap_or(false);
-            if visible && focused {
-                overlay::hide(app);
+            // Settings opened from a sticky panel is part of that session:
+            // the chord pressed from it closes both, not just refocuses.
+            let attached_settings_focused = *state.settings_attached.lock().unwrap()
+                && app
+                    .get_webview_window("settings")
+                    .map(|w| w.is_focused().unwrap_or(false))
+                    .unwrap_or(false);
+            if visible && (focused || attached_settings_focused) {
+                overlay::hide_deliberate(app);
                 send(app, &AgentCommand::SetOverlayVisible { visible: false });
             } else if visible {
                 if let Some(w) = window {
-                    let _ = w.set_focus();
+                    overlay::focus(&w);
                 }
                 send(app, &AgentCommand::SetOverlayVisible { visible: true });
             } else {
@@ -227,6 +234,13 @@ fn handle_event(app: &AppHandle, ev: AgentEvent) {
             send(app, &AgentCommand::SetOverlayVisible { visible: false });
         }
         // Esc: may just clear the filter box instead of closing (two-step).
+        // A Win/⌘ combo passed through to the OS mid-hold: the panel steps
+        // aside (plain hide). Not a dismissal of the session, so settings
+        // opened from it stays.
+        AgentEvent::Dismissed { reason: quicuts_proto::DismissReason::Passthrough } => {
+            overlay::hide(app);
+            send(app, &AgentCommand::SetOverlayVisible { visible: false });
+        }
         AgentEvent::Dismissed { .. } => overlay::dismiss(app),
         AgentEvent::ShellFlyoutChanged { open, window } => {
             overlay::duck_under_flyout(app, open, window);

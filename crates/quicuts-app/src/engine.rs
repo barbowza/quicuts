@@ -45,6 +45,10 @@ pub struct OverlayStatePayload {
     /// matched by the overlay webview itself, never by the agent hook.
     pub settings_chord_enabled: bool,
     pub settings_chord: quicuts_proto::ChordSpec,
+    /// The panel is up only while the activation key is held: typing can't
+    /// reach it (every key is a modifier combo), so the filter box hides.
+    /// Set by `overlay::push_state`, not by the engine.
+    pub held: bool,
 }
 
 pub struct Engine {
@@ -337,6 +341,7 @@ impl Engine {
             chord: activation.chord,
             settings_chord_enabled: activation.settings_chord_enabled,
             settings_chord: activation.settings_chord,
+            held: false,
         }
     }
 }

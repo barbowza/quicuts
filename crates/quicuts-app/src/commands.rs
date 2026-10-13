@@ -44,6 +44,11 @@ pub fn open_settings(app: AppHandle) {
     }
     agent::send(&app, &quicuts_proto::AgentCommand::SetOverlayVisible { visible: false });
     crate::tray::open_settings(&app);
+    // A panel still up now (sticky mode) owns this settings window: the
+    // chord or Esc that closes the panel closes settings too.
+    let state = app.state::<AppState>();
+    let panel_up = *state.overlay_visible.lock().unwrap();
+    *state.settings_attached.lock().unwrap() = panel_up;
 }
 
 #[tauri::command]
