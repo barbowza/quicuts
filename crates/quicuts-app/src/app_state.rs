@@ -36,6 +36,10 @@ pub struct AppState {
     pub agent_child: Mutex<Option<CommandChild>>,
     pub last_taskbar: Mutex<Option<TaskbarSnapshot>>,
     pub overlay_visible: Mutex<bool>,
+    /// Settings was opened from the panel and the panel stayed up (sticky
+    /// mode): dismissing the panel deliberately closes settings with it.
+    /// Cleared whenever either window hides.
+    pub settings_attached: Mutex<bool>,
     /// Whether the overlay's filter box currently has text (reported by the
     /// webview), so Esc can clear it before closing the panel.
     pub filter_active: Mutex<bool>,

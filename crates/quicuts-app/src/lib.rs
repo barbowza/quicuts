@@ -153,6 +153,7 @@ pub fn run() {
                 agent_child: Mutex::new(None),
                 last_taskbar: Mutex::new(None),
                 overlay_visible: Mutex::new(false),
+                settings_attached: Mutex::new(false),
                 filter_active: Mutex::new(false),
                 overlay_modal: Mutex::new("none".into()),
                 panel_expected_w: Mutex::new(None),

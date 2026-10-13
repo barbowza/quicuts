@@ -132,7 +132,7 @@ pub fn dismiss(app: &AppHandle) {
         let _ = app.emit_to("overlay", "overlay://clear-filter", ());
         return;
     }
-    hide(app);
+    hide_deliberate(app);
     crate::agent::send(
         app,
         &quicuts_proto::AgentCommand::SetOverlayVisible { visible: false },
@@ -185,7 +185,20 @@ pub fn duck_under_flyout(app: &AppHandle, open: bool, flyout: Option<u64>) {
     }
 }
 
+/// Hide the panel because the user dismissed it (Esc, the chord), closing
+/// settings too when it was opened from this panel session. Focus loss and
+/// hold release use plain `hide`: settings opened from the panel must
+/// survive the panel stepping aside for it.
+pub fn hide_deliberate(app: &AppHandle) {
+    let attached = *app.state::<AppState>().settings_attached.lock().unwrap();
+    hide(app);
+    if attached {
+        crate::tray::close_settings(app);
+    }
+}
+
 pub fn hide(app: &AppHandle) {
+    *app.state::<AppState>().settings_attached.lock().unwrap() = false;
     if let Some(window) = app.get_webview_window("overlay") {
         let _ = window.hide();
     }
