@@ -43,6 +43,8 @@ just ui                    # pnpm build the frontend
 
 Set `WINUSER` to your Windows username. `deploy` must target a Windows-local path (`/mnt/c/...`), never `\\wsl$`. The app is self-contained once deployed — it can be relaunched directly from `C:\Users\<you>\AppData\Local\QuicutsDev\quicuts.exe` without rebuilding.
 
+After moving or renaming the clone, run `cargo clean` once: cargo reused binaries with the old `CARGO_MANIFEST_DIR` baked in after the 2026-10-13 move, and the mac manifest tests loaded 0 manifests until the clean.
+
 ### Frontend HMR
 
 `just dev-build` builds a debug exe pointed at a Vite dev server (via `conf/dev-remote.json`); `just dev-server` runs Vite on `0.0.0.0:1420` in WSL. Windows↔WSL `localhost` forwarding gives the frontend hot reload. Rust changes still require a rebuild (`just run`).
