@@ -2969,6 +2969,8 @@ dependencies = [
  "anyhow",
  "log",
  "notify",
+ "objc2",
+ "objc2-app-kit",
  "plist",
  "png 0.18.1",
  "quicuts-manifest",
