@@ -173,9 +173,12 @@ Two things learned on hardware that the design had guessed at:
   identical instance layout, so it is checked at runtime (instance size, and
   tao's `focusable` ivar at the same offset); if a tao upgrade breaks that,
   the overlay is left as an ordinary window and keeps working, activating
-  Quicuts as before, with a log line naming the check. `overlay::show` no
-  longer calls `set_focus` on macOS, since tao's version adds
-  `activateIgnoringOtherApps`.
+  Quicuts as before, with a log line naming the check. The swap accepts
+  `TaoWindow` or AppKit's `NSKVONotifying_TaoWindow` (by setup, AppKit
+  internals observe `_windowLayerContext`, `contentLayoutRect` and
+  `titlebarAppearsTransparent`; seen on device). `overlay::focus` skips
+  `set_focus` (tao's adds `activateIgnoringOtherApps`) only while the live
+  class is the panel.
 - ~~**App icons in the rail**~~ — closed 2026-10-12 (issue #32). `icons.rs` asks
   `NSWorkspace.iconForFile` for the `.app` bundle the agent reports and
   renders it to a 64px PNG, rather than reading the bundle's `.icns`: plenty
@@ -192,12 +195,32 @@ Two things learned on hardware that the design had guessed at:
   PowerToys/Telegram.
 - **Dock badges** — permanently out: macOS has no ⌘1–9 Dock switching, so
   there is nothing to badge. The agent simply never advertises `taskbar`.
-- **Code signing & notarization** — everything runs ad-hoc from the
-  terminal today; a distributable .app needs a stable identity (see TCC
-  facts above), hardened runtime, and notarization.
-- **Launch-at-login** — `tauri-plugin-autostart` (LaunchAgent) is wired but
-  unverified on macOS; the plist records the launching binary's path, so
-  it's only meaningful for an installed .app.
+- **Code signing & notarization** — partly closed 2026-10-12 (issue #32).
+  Michael chose a **self-signed local identity now, notarization later**:
+  there is no Developer ID yet. `just mac-build` signs with hardened runtime
+  (tauri signs the agent sidecar and the app; checked with an ad-hoc build:
+  both carry `flags=adhoc,runtime`) using, in order, `APPLE_SIGNING_IDENTITY`,
+  the local "Quicuts Local Signing" identity, or ad-hoc. The local identity
+  fixes the per-rebuild TCC staleness described in the TCC facts above;
+  `docs/macos-dev.md` § Signing has the mechanics. **Verified on device
+  2026-10-12:** Michael installed a bundle signed with the local identity,
+  then a rebuild with a different CDHash (`151d4fd4…` → `f963ad0e…`, same
+  designated requirement `identifier "com.barbowza.quicuts" and certificate
+  leaf = H"383328d5…"`), and the agent reached `Ready` on attempt 0 with no
+  fresh grant. Agent and webview both work under hardened runtime. Michael
+  accepted the local key's trade-off on 2026-10-13 (any process running as
+  the user can read it and sign as Quicuts; `docs/macos-dev.md` § Signing).
+  **Still open:**
+  notarization. tauri already does it when a Developer ID and Apple
+  credentials are in the environment, so it is an account question, not a
+  code one.
+- ~~**Launch-at-login**~~ — closed 2026-10-12 (issue #32).
+  `tauri-plugin-autostart` (LaunchAgent) records the running binary's path,
+  so `just mac-install` puts the bundle in `/Applications` to enable it from.
+  Verified on device: the setting wrote `~/Library/LaunchAgents/Quicuts.plist`
+  pointing at `/Applications/Quicuts.app/Contents/MacOS/quicuts`, and after a
+  logout/login Quicuts was in the menu bar with ⌘-hold working, so the
+  bundle's Accessibility grant applies to a launchd start too.
 - ~~**Settings-window chord capture on macOS**~~ — audited and closed
   2026-10-12 (issue #32). WebKit's `keyCode` (`KeyEventMac.mm`) is
   **character-derived** for letters and US punctuation

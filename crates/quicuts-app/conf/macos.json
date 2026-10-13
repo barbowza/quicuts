@@ -1,6 +1,9 @@
 {
   "bundle": {
     "targets": ["app"],
-    "resources": { "../../manifests-mac/": "manifests-mac/" }
+    "resources": { "../../manifests-mac/": "manifests-mac/" },
+    "macOS": {
+      "hardenedRuntime": true
+    }
   }
 }
