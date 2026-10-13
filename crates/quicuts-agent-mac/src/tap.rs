@@ -244,9 +244,12 @@ fn device_bit(keycode: u16) -> Option<u64> {
 }
 
 /// CGKeyCode (ANSI layout positions) → Windows virtual-key code, covering
-/// every key the settings UI can capture into a `ChordSpec` plus the
-/// modifiers/Esc the state machine tracks. Unknown keys stay None and pass
-/// through untouched.
+/// the modifiers/Esc the state machine tracks plus every key a `ChordSpec`
+/// may name. Unknown keys stay None and pass through untouched.
+///
+/// `MAC_CODE_VK` in `ui/src/lib/chord.ts` mirrors the non-modifier rows by
+/// `KeyboardEvent.code`, so settings captures exactly what this reports (a
+/// key added here must be added there, or it can never be captured).
 fn vk_for_keycode(keycode: u16) -> Option<u32> {
     Some(match keycode {
         // Modifiers (⌘ maps to the Win VKs; see activation.rs).
