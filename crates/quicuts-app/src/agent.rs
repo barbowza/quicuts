@@ -208,7 +208,7 @@ fn handle_event(app: &AppHandle, ev: AgentEvent) {
                 send(app, &AgentCommand::SetOverlayVisible { visible: false });
             } else if visible {
                 if let Some(w) = window {
-                    let _ = w.set_focus();
+                    overlay::focus(&w);
                 }
                 send(app, &AgentCommand::SetOverlayVisible { visible: true });
             } else {

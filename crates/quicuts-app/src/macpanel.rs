@@ -27,6 +27,15 @@ use objc2_app_kit::{NSPanel, NSWindow, NSWindowCollectionBehavior, NSWindowStyle
 
 const FOCUSABLE: &std::ffi::CStr = c"focusable";
 
+/// Set once the swap succeeded; until then the overlay is an ordinary
+/// activating window and must still be focused the ordinary way.
+static INSTALLED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Whether the overlay is a non-activating panel (see `overlay::focus`).
+pub fn installed() -> bool {
+    INSTALLED.load(std::sync::atomic::Ordering::Relaxed)
+}
+
 /// Re-class the overlay window as a non-activating panel. Must run on the
 /// main thread (Tauri's `setup` does) and before the window is first shown:
 /// the window server reads the non-activating flag when it orders the
@@ -68,6 +77,7 @@ pub fn install(window: &tauri::WebviewWindow) {
         // Take keys on show, so the filter box gets typing straight away.
         panel.setBecomesKeyOnlyIfNeeded(false);
     }
+    INSTALLED.store(true, std::sync::atomic::Ordering::Relaxed);
     log::info!("panel: overlay is a non-activating NSPanel");
 }
 
@@ -100,9 +110,15 @@ fn panel_class() -> Option<&'static AnyClass> {
     })
 }
 
-/// Same instance size, and `focusable` at the same offset. Without both,
-/// `object_setClass` would let one class's methods read the other's bytes.
+/// Exactly tao's class, the same instance size, and `focusable` at the same
+/// offset. Without the last two, `object_setClass` would let one class's
+/// methods read the other's bytes. The name check refuses anything that has
+/// already re-classed the window, such as a KVO `NSKVONotifying_TaoWindow`:
+/// swapping that isa would silently drop the observer's class.
 fn compatible(current: &AnyClass, panel: &AnyClass) -> Result<(), String> {
+    if current.name() != c"TaoWindow" {
+        return Err("not a plain TaoWindow".into());
+    }
     if current.instance_size() != panel.instance_size() {
         return Err(format!(
             "instance size {} vs {}",

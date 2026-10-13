@@ -32,7 +32,7 @@ tokio = { version = "1", features = ["time"] }
 plist = "1"
 # The overlay as a non-activating NSPanel (macpanel.rs).
 objc2 = "0.6"
-objc2-app-kit = { version = "0.3", features = ["NSPanel", "NSResponder", "NSWindow"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSPanel", "NSResponder", "NSWindow"] }
 
 [target.'cfg(windows)'.dependencies]
 png = "0.18"
