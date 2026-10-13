@@ -119,7 +119,7 @@ PR. Every comment opens with your `**[pro-win-quicuts]**` / `**[pro-wsl-quicuts]
 Replying on an existing thread:
 
 ```bash
-gh api -X POST repos/barbowza/quicuts/pulls/comments/<comment-id>/replies -f body='**[mac-quicuts]** …'
+gh api -X POST repos/barbowza/quicuts/pulls/<N>/comments/<comment-id>/replies -f body='**[mac-quicuts]** …'
 ```
 
 ## 4. Responding to a review  **[owner]**
