@@ -38,12 +38,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<TrayIcon> {
         .on_menu_event(|app, event| match event.id.as_ref() {
             "show" => overlay::show(app),
             "settings" => open_settings(app),
-            "restart" => {
-                if let Some(child) = app.state::<AppState>().agent_child.lock().unwrap().take() {
-                    let _ = child.kill();
-                }
-                // The supervisor loop respawns on termination.
-            }
+            "restart" => agent::restart(app),
             "quit" => app.exit(0),
             _ => {}
         })

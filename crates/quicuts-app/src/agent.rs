@@ -1,6 +1,7 @@
 //! Sidecar supervisor: spawn the agent, stream its NDJSON events, translate
 //! them into overlay show/hide + view-model updates, and restart on crash.
 
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use quicuts_proto::{AgentCommand, AgentEvent};
@@ -12,10 +13,40 @@ use crate::app_state::AppState;
 use crate::{overlay, tray};
 
 const MAX_RESTARTS: u32 = 5;
+/// How often to retry an agent that exited for want of a TCC permission.
+const PERMISSION_RETRY: Duration = Duration::from_secs(3);
+
+/// The supervisor stopped respawning (MAX_RESTARTS crashes in a row); only
+/// the tray's Restart revives it.
+static GAVE_UP: AtomicBool = AtomicBool::new(false);
+/// The last agent run ended with `Fatal { PermissionRequired }`: it waits
+/// for the user to grant the permission, retried quietly and without limit,
+/// so first-run setup needs no restart.
+static AWAITING_PERMISSION: AtomicBool = AtomicBool::new(false);
+/// This run reported `PermissionRequired`; reset per run, so a later crash
+/// for another reason goes back to the counted backoff.
+static RUN_NEEDS_PERMISSION: AtomicBool = AtomicBool::new(false);
 
 /// Spawn (or respawn) the agent sidecar and pump its events.
 pub fn start(app: AppHandle) {
     spawn(app, 0);
+}
+
+/// Tray "Restart agent". With an agent running, kill it and let the
+/// supervisor respawn it. Once the supervisor has given up there is no child
+/// to kill, so start a fresh supervisor with a full restart budget.
+pub fn restart(app: &AppHandle) {
+    if GAVE_UP.swap(false, Ordering::SeqCst) {
+        log::info!("agent: restart requested after give-up");
+        tray::set_error(app, false);
+        spawn(app.clone(), 0);
+        return;
+    }
+    if let Some(child) = app.state::<AppState>().agent_child.lock().unwrap().take() {
+        let _ = child.kill();
+    }
+    // Otherwise a respawn is already scheduled (between exit and backoff,
+    // or a permission retry); it picks up on its own.
 }
 
 fn spawn(app: AppHandle, attempt: u32) {
@@ -39,7 +70,11 @@ fn spawn(app: AppHandle, attempt: u32) {
             let state = app.state::<AppState>();
             *state.agent_child.lock().unwrap() = Some(child);
         }
-        log::info!("agent spawned (attempt {attempt})");
+        RUN_NEEDS_PERMISSION.store(false, Ordering::SeqCst);
+        let quiet = AWAITING_PERMISSION.load(Ordering::SeqCst);
+        if !quiet {
+            log::info!("agent spawned (attempt {attempt})");
+        }
 
         let mut buf = String::new();
         while let Some(event) = rx.recv().await {
@@ -50,12 +85,17 @@ fn spawn(app: AppHandle, attempt: u32) {
                 }
                 CommandEvent::Stderr(bytes) => {
                     // The agent only writes stderr for notable events; keep
-                    // them visible at the default Info filter.
-                    log::info!("agent: {}", String::from_utf8_lossy(&bytes).trim());
+                    // them visible at the default Info filter (but not the
+                    // same permission error every few seconds).
+                    if !quiet {
+                        log::info!("agent: {}", String::from_utf8_lossy(&bytes).trim());
+                    }
                 }
                 CommandEvent::Error(e) => log::error!("agent error: {e}"),
                 CommandEvent::Terminated(payload) => {
-                    log::warn!("agent terminated: {:?}", payload.code);
+                    if !quiet {
+                        log::warn!("agent terminated: {:?}", payload.code);
+                    }
                     break;
                 }
                 _ => {}
@@ -66,14 +106,25 @@ fn spawn(app: AppHandle, attempt: u32) {
             let state = app.state::<AppState>();
             *state.agent_child.lock().unwrap() = None;
         }
+        if RUN_NEEDS_PERMISSION.swap(false, Ordering::SeqCst) {
+            // Not a crash: retry at a fixed pace, forever, with the budget
+            // untouched, until the user grants the permission.
+            tauri::async_runtime::spawn(async move {
+                tokio::time::sleep(PERMISSION_RETRY).await;
+                spawn(app, 0);
+            });
+            return;
+        }
+        AWAITING_PERMISSION.store(false, Ordering::SeqCst);
         schedule_restart(app, attempt);
     });
 }
 
 fn schedule_restart(app: AppHandle, attempt: u32) {
     if attempt >= MAX_RESTARTS {
-        log::error!("agent gave up after {MAX_RESTARTS} restarts");
+        log::error!("agent gave up after {MAX_RESTARTS} restarts; tray Restart agent retries");
         tray::set_error(&app, true);
+        GAVE_UP.store(true, Ordering::SeqCst);
         return;
     }
     let delay = Duration::from_millis(250u64 * (1 << attempt).min(20));
@@ -171,6 +222,11 @@ fn handle_event(app: &AppHandle, ev: AgentEvent) {
     match ev {
         AgentEvent::Ready { proto_version, .. } => {
             log::info!("agent ready (proto {proto_version})");
+            if AWAITING_PERMISSION.swap(false, Ordering::SeqCst) {
+                log::info!("agent: permission granted");
+            }
+            // A running agent clears any earlier failure from the tooltip.
+            tray::set_error(app, false);
             let cmd = state.settings.lock().unwrap().to_configure();
             send(app, &cmd);
         }
@@ -251,7 +307,20 @@ fn handle_event(app: &AppHandle, ev: AgentEvent) {
             overlay::update_badges(app, &snap);
         }
         AgentEvent::Fatal { kind, message } => {
-            log::error!("agent fatal {kind:?}: {message}");
+            let permission = kind == quicuts_proto::FatalKind::PermissionRequired;
+            // Log a permission wait once, not on every quiet retry.
+            if !(permission && AWAITING_PERMISSION.load(Ordering::SeqCst)) {
+                log::error!("agent fatal {kind:?}: {message}");
+            }
+            if permission {
+                RUN_NEEDS_PERMISSION.store(true, Ordering::SeqCst);
+            }
+            if permission && !AWAITING_PERMISSION.swap(true, Ordering::SeqCst) {
+                log::info!(
+                    "agent: waiting for the permission; retrying every {}s",
+                    PERMISSION_RETRY.as_secs()
+                );
+            }
             tray::set_error(app, true);
         }
         AgentEvent::Pong => {}
