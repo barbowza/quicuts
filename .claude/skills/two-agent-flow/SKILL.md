@@ -10,7 +10,7 @@ autonomy envelope) is `docs/collaboration.md`; the **rules and why they exist**
 are `docs/two-agent-review-process.md`. The invariants are in `CLAUDE.md` and
 are already in context — this skill assumes them.
 
-Both sessions use this file. Sections marked **[lead]** are pro-wsl-quicuts';
+Both sessions use this file. Sections marked **[lead]** are pro-wsl-quicuts's;
 **[owner]** is whichever session owns the branch under review.
 
 ## 0. One-time, per checkout
