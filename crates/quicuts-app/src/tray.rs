@@ -62,6 +62,7 @@ pub fn open_settings(app: &AppHandle) {
 /// Hide the settings window (it is never destroyed) and persist its geometry,
 /// same as the titlebar-close path in `lib.rs`.
 pub fn close_settings(app: &AppHandle) {
+    *app.state::<AppState>().settings_attached.lock().unwrap() = false;
     if let Some(w) = app.get_webview_window("settings") {
         let _ = w.hide();
         use tauri_plugin_window_state::{AppHandleExt, StateFlags};

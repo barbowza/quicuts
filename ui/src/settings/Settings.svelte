@@ -7,17 +7,12 @@
     openSettings,
     previewAppearance,
   } from "../lib/ipc";
+  import { chordLabel, chordVk, matchesChord, sameChord, type ChordSpec } from "../lib/chord";
   import { applyTheme } from "../lib/theme";
   import type { HostedCollection, Theme, TitleBinding } from "../lib/types";
   import HelpTip from "./HelpTip.svelte";
 
-  interface Chord {
-    win: boolean;
-    ctrl: boolean;
-    shift: boolean;
-    alt: boolean;
-    vk: number;
-  }
+  type Chord = ChordSpec;
 
   interface Settings {
     schemaVersion: number;
@@ -55,6 +50,8 @@
   let excludedText = $state("");
   let extraBrowserText = $state("");
   let capturing = $state<"chord" | "settingsChord" | null>(null);
+  // Why the last capture was refused (a key the agent cannot report).
+  let captureError = $state<string | null>(null);
   let hosted = $state<HostedCollection[]>([]);
   let lastTitle = $state<string | null>(null);
   let newPattern = $state("");
@@ -200,17 +197,30 @@
       // Esc closes this window before the chord could toggle it).
       if (e.key === "Escape") {
         capturing = null;
+        captureError = null;
         return;
       }
       const mod = e.key === "Control" || e.key === "Shift" || e.key === "Alt" || e.key === "Meta";
       if (mod) return;
-      s.activation[capturing] = {
-        win: e.metaKey,
-        ctrl: e.ctrlKey,
-        shift: e.shiftKey,
-        alt: e.altKey,
-        vk: e.keyCode,
-      };
+      const vk = chordVk(e);
+      if (vk === null) {
+        // Keep capturing: the user can just press another key.
+        captureError = `${e.code || e.key} can't be part of a hotkey on this Mac; try another key.`;
+        return;
+      }
+      const next = { win: e.metaKey, ctrl: e.ctrlKey, shift: e.shiftKey, alt: e.altKey, vk };
+      // Both hotkeys on one chord would leave the agent's chord shadowing the
+      // panel's settings chord, so refuse and keep capturing.
+      // Even when the other hotkey is disabled: enabling it later would bring
+      // the clash back.
+      const other = capturing === "chord" ? s.activation.settingsChord : s.activation.chord;
+      if (sameChord(next, other)) {
+        const otherName = capturing === "chord" ? "Open / close settings" : "Show with a hotkey";
+        captureError = `${chordLabel(next)} is already the "${otherName}" hotkey; try another.`;
+        return;
+      }
+      captureError = null;
+      s.activation[capturing] = next;
       capturing = null;
       save();
       return;
@@ -223,46 +233,10 @@
     }
     // The settings chord also closes this window (open_settings toggles);
     // without this, the chord only works while the panel has focus.
-    const c = s.activation.settingsChord;
-    if (
-      s.activation.settingsChordEnabled &&
-      e.keyCode === c.vk &&
-      e.ctrlKey === c.ctrl &&
-      e.shiftKey === c.shift &&
-      e.altKey === c.alt &&
-      e.metaKey === c.win
-    ) {
+    if (s.activation.settingsChordEnabled && matchesChord(e, s.activation.settingsChord)) {
       e.preventDefault();
       openSettings();
     }
-  }
-
-  // Map a Windows virtual-key code to its keycap label, when known.
-  function vkName(vk: number): string | null {
-    if (vk >= 0x41 && vk <= 0x5a) return String.fromCharCode(vk); // A-Z
-    if (vk >= 0x30 && vk <= 0x39) return String.fromCharCode(vk); // 0-9
-    if (vk >= 0x70 && vk <= 0x87) return `F${vk - 0x6f}`; // F1-F24
-    const named: Record<number, string> = {
-      0x08: "Backspace", 0x09: "Tab", 0x0d: "Enter", 0x1b: "Esc", 0x20: "Space",
-      0x21: "Page Up", 0x22: "Page Down", 0x23: "End", 0x24: "Home",
-      0x25: "←", 0x26: "↑", 0x27: "→", 0x28: "↓",
-      0x2d: "Insert", 0x2e: "Delete",
-      0xba: ";", 0xbb: "=", 0xbc: ",", 0xbd: "-", 0xbe: ".", 0xbf: "/",
-      0xc0: "`", 0xdb: "[", 0xdc: "\\", 0xdd: "]", 0xde: "'",
-    };
-    return named[vk] ?? null;
-  }
-
-  function chordLabel(c: Chord): string {
-    const parts: string[] = [];
-    if (c.win) parts.push("Win");
-    if (c.ctrl) parts.push("Ctrl");
-    if (c.alt) parts.push("Alt");
-    if (c.shift) parts.push("Shift");
-    const hex = `0x${c.vk.toString(16).toUpperCase()}`;
-    const name = vkName(c.vk);
-    parts.push(name ? `${name} (${hex})` : hex);
-    return parts.join(" + ");
   }
 </script>
 
@@ -306,10 +280,13 @@
       </label>
       <div class="chord">
         <code>{chordLabel(s.activation.chord)}</code>
-        <button onclick={() => (capturing = "chord")} disabled={!s.activation.chordEnabled}>
+        <button onclick={() => ((capturing = "chord"), (captureError = null))} disabled={!s.activation.chordEnabled}>
           {capturing === "chord" ? "Press keys…" : "Change"}
         </button>
       </div>
+      {#if capturing === "chord" && captureError}
+        <p class="warn">{captureError}</p>
+      {/if}
       <label class="check">
         <input type="checkbox" bind:checked={s.activation.settingsChordEnabled} onchange={save} />
         Open / close settings with a hotkey (while the panel is focused)
@@ -317,12 +294,15 @@
       <div class="chord">
         <code>{chordLabel(s.activation.settingsChord)}</code>
         <button
-          onclick={() => (capturing = "settingsChord")}
+          onclick={() => ((capturing = "settingsChord"), (captureError = null))}
           disabled={!s.activation.settingsChordEnabled}
         >
           {capturing === "settingsChord" ? "Press keys…" : "Change"}
         </button>
       </div>
+      {#if capturing === "settingsChord" && captureError}
+        <p class="warn">{captureError}</p>
+      {/if}
     </section>
 
     <section>

@@ -11,7 +11,7 @@ const MIN_PANEL_WIDTH: f64 = 586.0;
 /// Recompute the overlay view model and push it to the overlay window.
 pub fn push_state(app: &AppHandle) {
     let state = app.state::<AppState>();
-    let payload = {
+    let mut payload = {
         let fg = state.foreground.lock().unwrap();
         let selected = state.selected.lock().unwrap().clone();
         let pinned = state.pinned_app.lock().unwrap().clone();
@@ -38,6 +38,7 @@ pub fn push_state(app: &AppHandle) {
             activation,
         )
     };
+    payload.held = *state.shown_by_hold.lock().unwrap();
     // Remember the resolved selection.
     *state.selected.lock().unwrap() = payload.selected.clone();
     let _ = app.emit("overlay://state", &payload);
@@ -63,6 +64,16 @@ fn sync_badges(app: &AppHandle) {
 }
 
 pub fn show(app: &AppHandle) {
+    show_as(app, false);
+}
+
+/// Show for a hold activation: the panel lives only while the key is held.
+pub fn show_held(app: &AppHandle) {
+    show_as(app, true);
+}
+
+fn show_as(app: &AppHandle, held: bool) {
+    *app.state::<AppState>().shown_by_hold.lock().unwrap() = held;
     // The hidden webviews may have loaded before AppState was managed, so
     // their mount-time appearance fetch can miss; re-push on every show.
     crate::agent::emit_appearance(app);
@@ -86,6 +97,20 @@ pub fn show(app: &AppHandle) {
     // missed close event must not leave a freshly shown panel non-topmost.
     let _ = window.set_always_on_top(true);
     let _ = window.show();
+    focus(&window);
+}
+
+/// Give the overlay keyboard focus. On macOS, once macpanel.rs has made it a
+/// non-activating panel, `show` (makeKeyAndOrderFront) is enough to make it
+/// key; `set_focus` would add `activateIgnoringOtherApps`, activating
+/// Quicuts: the very thing the panel exists to avoid. If the panel install
+/// failed, the window is an ordinary one and needs `set_focus` to take keys.
+pub fn focus(window: &tauri::WebviewWindow) {
+    #[cfg(target_os = "macos")]
+    if crate::macpanel::installed(window) {
+        let _ = window.show();
+        return;
+    }
     let _ = window.set_focus();
 }
 
@@ -118,7 +143,7 @@ pub fn dismiss(app: &AppHandle) {
         let _ = app.emit_to("overlay", "overlay://clear-filter", ());
         return;
     }
-    hide(app);
+    hide_deliberate(app);
     crate::agent::send(
         app,
         &quicuts_proto::AgentCommand::SetOverlayVisible { visible: false },
@@ -171,7 +196,20 @@ pub fn duck_under_flyout(app: &AppHandle, open: bool, flyout: Option<u64>) {
     }
 }
 
+/// Hide the panel because the user dismissed it (Esc, the chord), closing
+/// settings too when it was opened from this panel session. Focus loss and
+/// hold release use plain `hide`: settings opened from the panel must
+/// survive the panel stepping aside for it.
+pub fn hide_deliberate(app: &AppHandle) {
+    let attached = *app.state::<AppState>().settings_attached.lock().unwrap();
+    hide(app);
+    if attached {
+        crate::tray::close_settings(app);
+    }
+}
+
 pub fn hide(app: &AppHandle) {
+    *app.state::<AppState>().settings_attached.lock().unwrap() = false;
     if let Some(window) = app.get_webview_window("overlay") {
         let _ = window.hide();
     }

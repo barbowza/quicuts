@@ -1,9 +1,11 @@
 //! Executable icon extraction, returned as a `data:` URI so no custom URI
-//! scheme (and its 404 edge cases) is needed. Windows-only; other platforms
-//! return `None` and the rail falls back to a glyph.
+//! scheme (and its 404 edge cases) is needed. Windows reads the exe's icon
+//! resource; macOS asks NSWorkspace for the `.app` bundle's icon (the path
+//! the mac agent reports). Elsewhere `None`, and the rail falls back to a
+//! glyph.
 //!
-//! Not AV-sensitive: this reads the icon resource of an on-disk exe, it does
-//! not hook or inspect running processes.
+//! Not AV-sensitive: this reads the icon of an on-disk file, it does not
+//! hook or inspect running processes.
 
 #[cfg(windows)]
 pub fn icon_data_uri(exe_path: &str) -> Option<String> {
@@ -12,9 +14,79 @@ pub fn icon_data_uri(exe_path: &str) -> Option<String> {
     })
 }
 
-#[cfg(not(windows))]
+#[cfg(target_os = "macos")]
+pub fn icon_data_uri(app_path: &str) -> Option<String> {
+    mac_impl::extract(app_path).map(|png| {
+        format!("data:image/png;base64,{}", base64_encode(&png))
+    })
+}
+
+#[cfg(not(any(windows, target_os = "macos")))]
 pub fn icon_data_uri(_exe_path: &str) -> Option<String> {
     None
+}
+
+#[cfg(target_os = "macos")]
+mod mac_impl {
+    use objc2::rc::autoreleasepool;
+    use objc2::AnyThread;
+    use objc2_app_kit::{
+        NSBitmapImageFileType, NSBitmapImageRep, NSCompositingOperation, NSDeviceRGBColorSpace,
+        NSGraphicsContext, NSWorkspace,
+    };
+    use objc2_foundation::{NSDictionary, NSPoint, NSRect, NSSize, NSString};
+
+    /// Rendered edge in pixels. The rail draws icons at 1.125rem, so this
+    /// stays sharp on a 2x display up to ~175% font scale; an `.icns` holds
+    /// reps up to 1024px, and passing that through would put a ~1MB data
+    /// URI on every rail entry.
+    const PX: isize = 64;
+
+    /// NSWorkspace and offscreen bitmap contexts are both safe off the main
+    /// thread, which matters: `build_state` runs on whatever thread the
+    /// agent event arrived on, and the main thread is Tauri's run loop.
+    pub fn extract(app_path: &str) -> Option<Vec<u8>> {
+        // Resolve symlinks first: NSWorkspace badges a symlink's icon with
+        // the alias arrow, and /Applications/Safari.app is one (Safari lives
+        // in a cryptex).
+        let resolved = std::fs::canonicalize(app_path).ok()?;
+        let resolved = resolved.to_str()?;
+        autoreleasepool(|_| unsafe {
+            let image = NSWorkspace::sharedWorkspace().iconForFile(&NSString::from_str(resolved));
+            let rep = NSBitmapImageRep::initWithBitmapDataPlanes_pixelsWide_pixelsHigh_bitsPerSample_samplesPerPixel_hasAlpha_isPlanar_colorSpaceName_bytesPerRow_bitsPerPixel(
+                NSBitmapImageRep::alloc(),
+                std::ptr::null_mut(),
+                PX,
+                PX,
+                8,
+                4,
+                true,
+                false,
+                NSDeviceRGBColorSpace,
+                0,
+                0,
+            )?;
+            // One point per pixel, so the draw rect below is in pixels.
+            let edge = PX as f64;
+            rep.setSize(NSSize::new(edge, edge));
+            let ctx = NSGraphicsContext::graphicsContextWithBitmapImageRep(&rep)?;
+            let previous = NSGraphicsContext::currentContext();
+            NSGraphicsContext::setCurrentContext(Some(&ctx));
+            image.drawInRect_fromRect_operation_fraction(
+                NSRect::new(NSPoint::new(0.0, 0.0), NSSize::new(edge, edge)),
+                NSRect::ZERO, // the whole image
+                NSCompositingOperation::SourceOver,
+                1.0,
+            );
+            ctx.flushGraphics();
+            NSGraphicsContext::setCurrentContext(previous.as_deref());
+            let png = rep.representationUsingType_properties(
+                NSBitmapImageFileType::PNG,
+                &NSDictionary::new(),
+            )?;
+            Some(png.to_vec())
+        })
+    }
 }
 
 #[cfg(windows)]
@@ -134,5 +206,21 @@ mod windows_impl {
 
 /// Manifest icon files (platform-free) live in the manifest crate; exe
 /// icons share its base64.
-#[cfg_attr(not(windows), allow(unused_imports))]
+#[cfg_attr(not(any(windows, target_os = "macos")), allow(unused_imports))]
 pub use quicuts_manifest::icon::{base64_encode, file_data_uri};
+
+#[cfg(all(test, target_os = "macos"))]
+mod mac_tests {
+    #[test]
+    fn renders_a_bundle_icon_as_a_small_png() {
+        // Finder is present on every Mac and cannot be uninstalled.
+        let png = super::mac_impl::extract("/System/Library/CoreServices/Finder.app")
+            .expect("Finder's icon renders");
+        assert_eq!(&png[..8], b"\x89PNG\r\n\x1a\n");
+        // IHDR width and height, big-endian, right after the 8-byte
+        // signature and the chunk's length + type.
+        let w = u32::from_be_bytes(png[16..20].try_into().unwrap());
+        let h = u32::from_be_bytes(png[20..24].try_into().unwrap());
+        assert_eq!((w, h), (64, 64));
+    }
+}

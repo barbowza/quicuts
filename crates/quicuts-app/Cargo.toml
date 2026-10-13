@@ -30,6 +30,12 @@ tokio = { version = "1", features = ["time"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 plist = "1"
+# Rail icons and running apps (icons.rs, procs.rs) and the non-activating
+# overlay panel (macpanel.rs). None is input access, so — like procs.rs on
+# Windows — they live here, not in the agent.
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSArray", "NSData", "NSDictionary", "NSGeometry", "NSString", "NSURL"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSBitmapImageRep", "NSGraphics", "NSGraphicsContext", "NSImage", "NSImageRep", "NSPanel", "NSResponder", "NSRunningApplication", "NSWindow", "NSWorkspace", "libc"] }
 
 [target.'cfg(windows)'.dependencies]
 png = "0.18"
