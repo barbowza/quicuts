@@ -106,10 +106,10 @@ names older PRs, issues and comment tags carry.
 
 ## The journal
 
-On the Mac the clone sits in a root folder, `~/learnings/tools/quicuts/`, as
-`quicuts/` next to `quicuts-journal/` (`barbowza/quicuts-journal` on GitHub).
-Prometheus isn't in that layout yet: its journal is
-`/home/dev/projects/_docs/quicuts-journal` in WSL. `just start` in the journal
+On each machine the clone sits in a root folder as `quicuts/` next to
+`quicuts-journal/` (`barbowza/quicuts-journal` on GitHub): the root is
+`~/learnings/tools/quicuts/` on the Mac and `/home/dev/projects/quicuts/` in
+WSL on Prometheus. `just start` in the journal
 launches the day (sync, today's entry, VS Code, Claude), its steps switched in
 `machines/<machine>.env`.
 
