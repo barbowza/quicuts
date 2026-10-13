@@ -44,10 +44,11 @@ protection possible. **Deferred 2026-09-01**, and the reason matters: not that
 it would have prevented nothing so far — that is true and nearly irrelevant,
 since the question is always the *next* failure — but that mac-quicuts is absent
 **by design**. Required approval would convert its intended absence into a hard
-block on the lead's default mode: a permanent cost against an intermittent
-benefit. The "flag unreviewed merges in the PR body" rule below buys most of
-the same value at none of the blocking cost, which is why that rule is
-load-bearing rather than a courtesy. Revisit if a PR is ever merged without
+block whenever it is away: a permanent cost against an intermittent
+benefit. Since 2026-10-13 the rule is enforced by convention instead: every
+PR needs another session's tagged approval, and only Michael can waive it,
+flagged in the PR body. That buys most of the same value at none of the
+blocking cost, which is why the flag is load-bearing rather than a courtesy. Revisit if a PR is ever merged without
 real review, or if mac-quicuts stops being on-demand.)
 
 ## Round shape
@@ -67,7 +68,9 @@ outcome still lands in the PR before merge (`docs/collaboration.md`).
 
 ## Merge authority
 
-The lead (pro-win-quicuts; pro-wsl-quicuts before 2026-10-13) merges. That authority is real but bounded, and the bounds were
+The author merges its own PR once another session has approved it (since
+2026-10-13; before that the lead held the only merge button, which is the
+role the incidents below describe). That authority is real but bounded, and the bounds were
 learned the hard way on PRs #20 and #21 (2026-09-01) — both merges were of
 *correct, green* code, which is exactly why the rules below are about
 authority rather than quality. "The change is right" is never the question a

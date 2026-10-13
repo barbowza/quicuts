@@ -24,7 +24,7 @@ the time.
 | | Machine | Owns |
 |---|---|---|
 | **Michael** | the Windows box | Scope, priorities, on-device testing, bringing mac-quicuts online. Product delivery management — **not** development. |
-| **pro-win-quicuts** | that box, natively (PowerShell) | Lead. Design decisions, task assignment, Windows development, merges. The default worker. |
+| **pro-win-quicuts** | that box, natively (PowerShell) | Lead. Design decisions, task assignment, Windows development, the order colliding PRs land in. The default worker. |
 | **pro-wsl-quicuts** | WSL2 on that box | Secondary. Keeps the WSL cross-build working, takes assigned work, reviews. |
 | **mac-quicuts** | the Mac | On-demand. The macOS port, deep peer review, and a duty to push back — having verified first. |
 
@@ -150,13 +150,26 @@ steps: unprompted, Michael found that switching browser tabs while the panel is
 on screen flips the page live — a stricter bar than either session had claimed,
 and now recorded in ADR 0006.
 
-## When the other session is offline
+## Who merges
 
-The lead may merge unreviewed, and often will. **Flag it in the PR body** —
-this is mandatory, not a courtesy. An unreviewed merge that announces itself is
-recoverable and greppable; one that looks like every other merge is neither.
-The flag doubles as the shortlist of PRs worth asking mac-quicuts to review
-retrospectively.
+**The author merges its own PR, once another session has approved it**
+(Michael, 2026-10-13). Until then the lead held the only merge button, which
+turned every finished PR into a relay: on #45 mac-quicuts had Michael's
+device check in hand and still had to route the merge through two other
+sessions. The author is also the branch's only writer, so the "merged while
+I was still pushing" race the announce rules guard against mostly disappears.
+
+The lead keeps design decisions, task assignment, and the call on which PR
+lands first when two collide.
+
+## When no reviewer is available
+
+Only Michael can let a PR merge without another session's approval, and he
+says so in the author's own session (a relayed "Michael said merge" is not
+it). **Flag it in the PR body** — mandatory, not a courtesy. An unreviewed
+merge that announces itself is recoverable and greppable; one that looks like
+every other merge is neither. The flag doubles as the shortlist of PRs worth
+reviewing retrospectively.
 
 If the change is significant enough to want review before it lands, ask Michael
-to bring mac-quicuts online rather than merging and hoping.
+to bring mac-quicuts online rather than asking him to waive it.

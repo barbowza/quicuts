@@ -1,6 +1,6 @@
 ---
 name: two-agent-flow
-description: Procedure for pro-win-quicuts ↔ pro-wsl-quicuts ↔ mac-quicuts collaboration on Quicuts — claiming work, handing it over, posting a PR review with inline comments, announcing intent, and merging. Use when reviewing or merging the other session's PR, handing work across the Windows/macOS seam or between the two Windows clones, or starting work that the other session might collide with.
+description: Procedure for pro-win-quicuts ↔ pro-wsl-quicuts ↔ mac-quicuts collaboration on Quicuts — claiming work, handing it over, posting a PR review with inline comments, announcing intent, and merging. Use when reviewing the other session's PR, merging your own once approved, handing work across the Windows/macOS seam or between the two Windows clones, or starting work that the other session might collide with.
 ---
 
 # Two-agent flow
@@ -11,7 +11,8 @@ are `docs/two-agent-review-process.md`. The invariants are in `CLAUDE.md` and
 are already in context — this skill assumes them.
 
 Every session uses this file. Sections marked **[lead]** are pro-win-quicuts's;
-**[owner]** is whichever session owns the branch under review.
+**[owner]** is whichever session owns the branch under review — and the owner
+is also who merges it, once approved.
 
 ## 0. One-time, per checkout
 
@@ -128,17 +129,23 @@ Reply on **every** thread — including ones you disagree with, with reasoning.
 Resolve a thread only when it is actually fixed. Do not rebase or force-push
 while a review is in flight; the inline anchors rot. Merge `main` in instead.
 
-## 5. Announcing and merging  **[lead]**
+## 5. Announcing and merging  **[owner]**
+
+You need another session's approval comment naming your **current head SHA**.
+If you pushed after it (a fix, a merge of `main`), ask the reviewer to re-check
+the new head first. Every reviewer objection that isn't marked optional must
+be cleared by the reviewer, and any Michael gate (device check, shipped
+behaviour) must be his answer in your own session.
 
 ```bash
-just status                                    # again — state moves
+just status                                    # again — state moves; an open PR on the same files? agree the order first
 gh pr checks <N>                               # must be pass, not pending
 gh pr view <N> --json mergeStateStatus -q .mergeStateStatus   # want CLEAN
 ```
 
 Then announce, and **wait for an actual reply**:
 
-> "Merging #N now — check green (run <id>). Stand off the branch."
+> "Merging #N now — approved at <sha>, check green (run <id>)."
 
 If you are not willing to block on a reply, do not offer a window. Say
 "merging now, follow-ups as separate PRs" instead. An announcement that does
@@ -153,10 +160,11 @@ Branch protection will refuse a merge with a pending or failing check. That is
 deliberate — it is the gate that failed on 2026-09-01, now enforced by the
 server rather than by memory.
 
-**Merging unreviewed** (the other session is offline — expected roughly half
-the time): allowed, but put a line in the PR body saying so before merging, so
-the set of unreviewed merges is greppable and can be reviewed retrospectively.
-If the change is significant, ask Michael to bring mac-quicuts online instead.
+**No reviewer available** (expected often — mac-quicuts is on-demand): only
+Michael can let it merge unreviewed, in your own session. Put a line in the PR
+body saying so before merging, so the set of unreviewed merges is greppable
+and can be reviewed retrospectively. If the change is significant, ask Michael
+to bring a reviewer online instead.
 
 ## 6. Asking Michael to test
 
