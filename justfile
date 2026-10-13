@@ -99,11 +99,12 @@ dev-build: agent
 dev-server:
     cd ui && pnpm dev
 
+# tauri-plugin-log writes to %LOCALAPPDATA%\<identifier>\logs (Roaming holds
+# only settings), the same file the [windows] log tails.
 # Tail the host-side log.
 [unix]
 log:
-    tail -f "{{deploy_dir}}/logs/Quicuts.log" 2>/dev/null || \
-      tail -f "/mnt/c/Users/{{winuser}}/AppData/Roaming/com.barbowza.quicuts/logs/Quicuts.log"
+    tail -f "/mnt/c/Users/{{winuser}}/AppData/Local/com.barbowza.quicuts/logs/Quicuts.log"
 
 # --- Windows, native (Git bash on the host; see docs/adr/0008) ---------------
 # Same recipe names as the WSL ones above; just picks by OS. Process control
