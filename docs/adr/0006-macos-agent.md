@@ -210,10 +210,11 @@ Two things learned on hardware that the design had guessed at:
   fresh grant. Agent and webview both work under hardened runtime. Michael
   accepted the local key's trade-off on 2026-10-13 (any process running as
   the user can read it and sign as Quicuts; `docs/macos-dev.md` § Signing).
-  **Still open:**
-  notarization. tauri already does it when a Developer ID and Apple
-  credentials are in the environment, so it is an account question, not a
-  code one.
+  **On hold: notarization.** Michael decided on 2026-10-13 to hold it until
+  Quicuts is published to the public: until then every install is built
+  locally and the self-signed identity is enough. tauri already notarizes
+  when a Developer ID and Apple credentials are in the environment, so
+  resuming it is an account question, not a code one.
 - ~~**Launch-at-login**~~ — closed 2026-10-12 (issue #32).
   `tauri-plugin-autostart` (LaunchAgent) records the running binary's path,
   so `just mac-install` puts the bundle in `/Applications` to enable it from.
