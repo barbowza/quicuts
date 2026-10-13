@@ -99,8 +99,8 @@ dev-build: agent
 dev-server:
     cd ui && pnpm dev
 
-# tauri-plugin-log writes to %LOCALAPPDATA%\<identifier>\logs (Roaming holds
-# only settings), the same file the [windows] log tails.
+# tauri-plugin-log writes to %LOCALAPPDATA%\<identifier>\logs (Roaming has the
+# settings, pins, customizations and user manifests), the file [windows] log tails.
 # Tail the host-side log.
 [unix]
 log:
