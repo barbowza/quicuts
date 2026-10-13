@@ -86,6 +86,20 @@ pub fn show(app: &AppHandle) {
     // missed close event must not leave a freshly shown panel non-topmost.
     let _ = window.set_always_on_top(true);
     let _ = window.show();
+    focus(&window);
+}
+
+/// Give the overlay keyboard focus. On macOS, once macpanel.rs has made it a
+/// non-activating panel, `show` (makeKeyAndOrderFront) is enough to make it
+/// key; `set_focus` would add `activateIgnoringOtherApps`, activating
+/// Quicuts: the very thing the panel exists to avoid. If the panel install
+/// failed, the window is an ordinary one and needs `set_focus` to take keys.
+pub fn focus(window: &tauri::WebviewWindow) {
+    #[cfg(target_os = "macos")]
+    if crate::macpanel::installed(window) {
+        let _ = window.show();
+        return;
+    }
     let _ = window.set_focus();
 }
 
