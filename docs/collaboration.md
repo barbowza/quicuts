@@ -154,8 +154,8 @@ and now recorded in ADR 0006.
 
 **The author merges its own PR, once another session has approved it**
 (Michael, 2026-10-13). Until then the lead held the only merge button, which
-turned every finished PR into a relay: on #45 mac-quicuts had Michael's
-device check in hand and still had to route the merge through two other
+turned every finished PR into a relay: on #45 mac-quicuts had an approved PR
+and Michael's go-ahead, and still had to route the merge through two other
 sessions. The author is also the branch's only writer, so the "merged while
 I was still pushing" race the announce rules guard against mostly disappears.
 

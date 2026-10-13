@@ -132,8 +132,16 @@ while a review is in flight; the inline anchors rot. Merge `main` in instead.
 ## 5. Announcing and merging  **[owner]**
 
 You need another session's approval comment naming your **current head SHA**.
-If you pushed after it (a fix, a merge of `main`), ask the reviewer to re-check
-the new head first. Every reviewer objection that isn't marked optional must
+If you pushed after it, ask the reviewer to re-check the new head first —
+except for a merge of `main` with no conflicts that leaves your PR's own files
+untouched, which you may self-certify:
+
+```bash
+git diff <approved-sha> HEAD -- $(gh pr view <N> --json files -q '.files[].path')   # must be empty
+```
+
+Say so in the merge announcement. A fix commit or a resolved conflict always
+goes back to the reviewer. Every reviewer objection that isn't marked optional must
 be cleared by the reviewer, and any Michael gate (device check, shipped
 behaviour) must be his answer in your own session.
 
@@ -143,9 +151,12 @@ gh pr checks <N>                               # must be pass, not pending
 gh pr view <N> --json mergeStateStatus -q .mergeStateStatus   # want CLEAN
 ```
 
-Then announce, and **wait for an actual reply**:
+Then announce to the reviewer — and to the owner of any open PR touching the
+same files — and **wait for an actual reply** from them:
 
 > "Merging #N now — approved at <sha>, check green (run <id>)."
+> (after a self-certified merge of `main`: "approved at <sha>; head <sha2> adds
+> only a clean merge of `main`, PR files unchanged")
 
 If you are not willing to block on a reply, do not offer a window. Say
 "merging now, follow-ups as separate PRs" instead. An announcement that does

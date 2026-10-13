@@ -101,7 +101,10 @@ the PR body.
 `docs/two-agent-review-process.md`):
 
 - Approval is **per-PR** and **per-SHA**: it never generalises to the next PR,
-  and a push after it needs the reviewer to re-check the new head.
+  and a push after it needs the reviewer to re-check the new head. One
+  exception (Michael, 2026-10-13): a merge of `main` with no conflicts, where
+  `git diff <approved-sha> HEAD -- <the PR's files>` is empty — the author
+  self-certifies it and says so when announcing the merge.
 - Only the reviewer clears its own objections; the author cannot overrule a
   requested change or an open question. Nits the reviewer marked optional don't block.
 - An approval never replaces **Michael's** gates: on-device checks, shipped
