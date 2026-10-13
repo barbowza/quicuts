@@ -2,7 +2,8 @@
 //! them into overlay show/hide + view-model updates, and restart on crash.
 
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Duration;
+use std::sync::Mutex;
+use std::time::{Duration, Instant};
 
 use quicuts_proto::{AgentCommand, AgentEvent};
 use tauri::{AppHandle, Emitter, Manager};
@@ -26,10 +27,14 @@ static AWAITING_PERMISSION: AtomicBool = AtomicBool::new(false);
 /// This run reported `PermissionRequired`; reset per run, so a later crash
 /// for another reason goes back to the counted backoff.
 static RUN_NEEDS_PERMISSION: AtomicBool = AtomicBool::new(false);
-/// This run reached `Ready`, so its exit starts a fresh crash budget: the
-/// limit is for crash loops, not for an agent that dies once a day or for
-/// tray Restart clicks.
-static RUN_REACHED_READY: AtomicBool = AtomicBool::new(false);
+/// A run that stayed up this long after `Ready` was healthy: its exit starts
+/// a fresh crash budget. The limit is for crash loops, not for an agent that
+/// dies once a day or for tray Restart clicks. `Ready` alone is not enough:
+/// the Windows agent sends it right after installing its hook, before any
+/// real work, so a crash-after-Ready loop would otherwise never give up.
+const STABLE_RUN: Duration = Duration::from_secs(30);
+/// When this run sent `Ready`; reset per run.
+static READY_AT: Mutex<Option<Instant>> = Mutex::new(None);
 
 /// Retrying a missing permission: per-retry noise stays out of the log.
 fn quiet() -> bool {
@@ -80,7 +85,7 @@ fn spawn(app: AppHandle, attempt: u32) {
             *state.agent_child.lock().unwrap() = Some(child);
         }
         RUN_NEEDS_PERMISSION.store(false, Ordering::SeqCst);
-        RUN_REACHED_READY.store(false, Ordering::SeqCst);
+        *READY_AT.lock().unwrap() = None;
         if !quiet() {
             log::info!("agent spawned (attempt {attempt})");
         }
@@ -125,7 +130,8 @@ fn spawn(app: AppHandle, attempt: u32) {
             return;
         }
         AWAITING_PERMISSION.store(false, Ordering::SeqCst);
-        let attempt = if RUN_REACHED_READY.swap(false, Ordering::SeqCst) { 0 } else { attempt };
+        let stable = READY_AT.lock().unwrap().take().is_some_and(|t| t.elapsed() >= STABLE_RUN);
+        let attempt = if stable { 0 } else { attempt };
         schedule_restart(app, attempt);
     });
 }
@@ -232,7 +238,7 @@ fn handle_event(app: &AppHandle, ev: AgentEvent) {
     match ev {
         AgentEvent::Ready { proto_version, .. } => {
             log::info!("agent ready (proto {proto_version})");
-            RUN_REACHED_READY.store(true, Ordering::SeqCst);
+            *READY_AT.lock().unwrap() = Some(Instant::now());
             if AWAITING_PERMISSION.swap(false, Ordering::SeqCst) {
                 log::info!("agent: permission granted");
             }
