@@ -1,8 +1,13 @@
-# Quicuts dev loop: build in WSL2, run on the Windows host.
-# Requires: rustup + x86_64-pc-windows-msvc target, cargo-xwin, tauri-cli,
-# clang-cl + llvm-rc on PATH (see docs/adr/0002-wsl-cross-toolchain.md), pnpm.
+# Quicuts dev loop. Two Windows build paths share one set of recipe names
+# (docs/adr/0008-native-windows-build.md):
+#   WSL2 cross-build ([unix] recipes): rustup + x86_64-pc-windows-msvc target,
+#     cargo-xwin, clang-cl + llvm-rc on PATH (docs/adr/0002-wsl-cross-toolchain.md).
+#   Native, from PowerShell ([windows] recipes): rustup (msvc host), VS 2022
+#     Build Tools (C++ + Windows SDK), Git for Windows (recipes run in its bash).
+# Both: pnpm 10, just. The macOS recipes are the mac-* ones further down.
 
 set shell := ["bash", "-uc"]
+set windows-shell := ["C:/Program Files/Git/bin/bash.exe", "-uc"]
 
 # Account routing for gh: the Mac selects the GitHub account with a zsh chpwd
 # hook, which non-interactive recipes never source — so gh silently falls back
@@ -15,21 +20,34 @@ triple := "x86_64-pc-windows-msvc"
 profile := "debug"
 # Set WINUSER to your Windows username (the deploy target lives under it).
 winuser := env_var_or_default("WINUSER", "you")
-deploy_dir := "/mnt/c/Users/" + winuser + "/AppData/Local/QuicutsDev"
+# Both Windows paths deploy to the same folder, so only one Quicuts (one
+# keyboard hook) runs and settings stay shared. Natively it comes from
+# %LOCALAPPDATA%, with backslashes flipped for Git bash.
+deploy_dir := if os() == "windows" {
+    replace(env("LOCALAPPDATA", ""), "\\", "/") + "/QuicutsDev"
+} else {
+    "/mnt/c/Users/" + winuser + "/AppData/Local/QuicutsDev"
+}
+# Native builds are host builds, so there is no target-triple directory.
+native_out := "target/" + profile
 export XWIN_CACHE_DIR := justfile_directory() + "/.cache/xwin"
 
 # Default: full build + deploy + run on host.
 default: run
 
 # Fast Rust/manifest checks on the Linux toolchain (no cross-compile).
+# quicuts-app is not tested here: it does not cross-compile on the Linux host
+# (the [windows] test below and mac-test cover it).
 # quicuts-agent-mac builds here too — its mac deps are target-gated and the
 # activation state machine is platform-free — so the Windows side gets free
 # regression coverage on it.
+[unix]
 test:
     cargo test
     cargo test -p quicuts-agent-mac
 
 # Cross-compile the agent sidecar and stage it for the app bundle.
+[unix]
 agent:
     cargo xwin build -p quicuts-agent-win --target {{target}}
     mkdir -p crates/quicuts-app/binaries
@@ -41,10 +59,12 @@ ui:
     cd ui && pnpm install --prefer-offline && pnpm build
 
 # Full app build (agent + ui + app exe). No installer (that's CI-only).
+[unix]
 build: agent ui
     cargo xwin build -p quicuts-app --target {{target}}
 
 # Copy exe + sidecar + manifests to a Windows-local folder (NOT \\wsl$).
+[unix]
 deploy: build
     mkdir -p "{{deploy_dir}}" "{{deploy_dir}}/manifests"
     cp target/{{target}}/{{profile}}/quicuts.exe "{{deploy_dir}}/"
@@ -53,10 +73,12 @@ deploy: build
     cp manifests/*.png "{{deploy_dir}}/manifests/" 2>/dev/null || true
 
 # Launch on the Windows host.
+[unix]
 run: deploy
     cmd.exe /c start "" "C:\\Users\\{{winuser}}\\AppData\\Local\\QuicutsDev\\quicuts.exe"
 
 # Kill any running instances on the host.
+[unix]
 kill:
     -taskkill.exe /IM quicuts.exe /F 2>/dev/null
     -taskkill.exe /IM quicuts-agent.exe /F 2>/dev/null
@@ -65,6 +87,7 @@ kill:
 # WSL<->Windows). Rebuild the exe with the dev-remote config once, then run.
 # The overlay goes in via TAURI_CONFIG (a JSON *string*, json-patch-merged by
 # tauri-build) — `cargo --config` is cargo's own flag and only parses TOML.
+[unix]
 dev-build: agent
     TAURI_CONFIG="$(cat crates/quicuts-app/conf/dev-remote.json)" \
         cargo xwin build -p quicuts-app --target {{target}}
@@ -77,9 +100,85 @@ dev-server:
     cd ui && pnpm dev
 
 # Tail the host-side log.
+[unix]
 log:
     tail -f "{{deploy_dir}}/logs/Quicuts.log" 2>/dev/null || \
       tail -f "/mnt/c/Users/{{winuser}}/AppData/Roaming/com.barbowza.quicuts/logs/Quicuts.log"
+
+# --- Windows, native (Git bash on the host; see docs/adr/0008) ---------------
+# Same recipe names as the WSL ones above; just picks by OS. Process control
+# goes through PowerShell: Git bash rewrites `/IM`-style switches as paths.
+
+# Every crate, natively, including quicuts-app (the engine's rail-selection
+# tests), which the WSL `test` cannot build. quicuts-app's build needs the
+# staged sidecar and ui/dist, hence the dependencies.
+# Test every crate natively.
+[windows]
+test: agent ui
+    cargo test -p quicuts-proto -p quicuts-manifest -p quicuts-agent-win -p quicuts-agent-mac -p quicuts-app
+
+# Build the agent sidecar and stage it for the app bundle.
+[windows]
+agent:
+    cargo build -p quicuts-agent-win
+    mkdir -p crates/quicuts-app/binaries
+    cp {{native_out}}/quicuts-agent.exe \
+       crates/quicuts-app/binaries/quicuts-agent-{{triple}}.exe
+
+# Full app build (agent + ui + app exe). No installer (that's CI-only).
+[windows]
+build: agent ui
+    cargo build -p quicuts-app
+
+# Kills first: a running exe cannot be overwritten on Windows.
+# Copy exe + sidecar + manifests to the shared QuicutsDev.
+[windows]
+deploy: build kill
+    mkdir -p "{{deploy_dir}}" "{{deploy_dir}}/manifests"
+    cp {{native_out}}/quicuts.exe "{{deploy_dir}}/"
+    cp crates/quicuts-app/binaries/quicuts-agent-{{triple}}.exe "{{deploy_dir}}/quicuts-agent.exe"
+    cp manifests/*.yml "{{deploy_dir}}/manifests/"
+    cp manifests/*.png "{{deploy_dir}}/manifests/" 2>/dev/null || true
+
+# Launch the deployed build.
+[windows]
+run: deploy
+    powershell.exe -NoProfile -Command 'Start-Process -FilePath "{{deploy_dir}}/quicuts.exe"'
+
+# Succeeds when nothing is running, and waits for the processes to exit so
+# the exe locks are gone before a deploy copies over them.
+# Kill any running instances (either build path's).
+[windows]
+kill:
+    powershell.exe -NoProfile -Command '$p = Get-Process quicuts,quicuts-agent -ErrorAction SilentlyContinue; if ($p) { $p | Stop-Process -Force; $p | Wait-Process -Timeout 10 -ErrorAction SilentlyContinue }; exit 0'
+
+# Frontend HMR: run `just dev-server` in one terminal, then this; the debug
+# exe loads the UI from Vite on localhost.
+# Rebuild the exe pointed at the Vite dev server, and deploy it.
+[windows]
+dev-build: agent kill
+    TAURI_CONFIG="$(cat crates/quicuts-app/conf/dev-remote.json)" \
+        cargo build -p quicuts-app
+    mkdir -p "{{deploy_dir}}"
+    cp {{native_out}}/quicuts.exe "{{deploy_dir}}/"
+    cp crates/quicuts-app/binaries/quicuts-agent-{{triple}}.exe "{{deploy_dir}}/quicuts-agent.exe"
+
+# tauri-plugin-log writes to %LOCALAPPDATA%\<identifier>\logs, not Roaming.
+# Tail the host-side log.
+[windows]
+log:
+    tail -f "{{replace(env("LOCALAPPDATA", ""), "\\", "/")}}/com.barbowza.quicuts/logs/Quicuts.log"
+
+# Terminates the running app, deploys, relaunches, reports what he now has, so
+# he never tests a stale build.
+# Put a fresh instance in front of Michael before asking him to test.
+[windows]
+stage: deploy
+    @powershell.exe -NoProfile -Command 'Start-Process -FilePath "{{deploy_dir}}/quicuts.exe"'
+    @echo "staged and relaunched:"
+    @printf '  commit:  %s\n' "$(git log --format='%h %s' -1 | cut -c1-64)"
+    @printf '  branch:  %s\n' "$(git rev-parse --abbrev-ref HEAD)"
+    @echo "  now give Michael a numbered plan with an expected result per step."
 
 # --- macOS (native build on the Mac; see docs/macos-dev.md) ---
 
@@ -213,6 +312,7 @@ status:
 # Terminates the running app, deploys, relaunches, reports what he now has, so
 # he never tests a stale build.
 # Put a fresh instance in front of Michael before asking him to test.
+[unix]
 stage: build
     @just kill
     @mkdir -p "{{deploy_dir}}" "{{deploy_dir}}/manifests"

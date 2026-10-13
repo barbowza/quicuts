@@ -1,6 +1,8 @@
 # ADR 0002 — WSL2 → Windows cross-build toolchain
 
-Status: accepted (2026-07-02)
+Status: accepted (2026-07-02). Amended by ADR 0008 (2026-10-13): this is now
+one of two supported Windows build paths; the other is a native build on the
+Windows host.
 
 ## Context
 
