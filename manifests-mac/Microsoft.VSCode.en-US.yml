@@ -1,6 +1,11 @@
 PackageName: Microsoft.VSCode
 Name: Visual Studio Code
-WindowFilter: "com.microsoft.VSCode"
+WindowFilter:
+  - com.microsoft.VSCode
+  # VS Code forks that keep its default keymap: Cursor (a ToDesktop build,
+  # hence the opaque id) and Google Antigravity.
+  - com.todesktop.230313mzl4w4u92
+  - com.google.antigravity
 BackgroundProcess: false
 Shortcuts:
   - SectionName: General
