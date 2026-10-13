@@ -1,6 +1,6 @@
 ---
 name: two-agent-flow
-description: Procedure for pro-wsl-quicuts ↔ mac-quicuts collaboration on Quicuts — claiming work, handing it over, posting a PR review with inline comments, announcing intent, and merging. Use when reviewing or merging the other session's PR, handing work across the Windows/macOS seam, or starting work that the other session might collide with.
+description: Procedure for pro-win-quicuts ↔ pro-wsl-quicuts ↔ mac-quicuts collaboration on Quicuts — claiming work, handing it over, posting a PR review with inline comments, announcing intent, and merging. Use when reviewing or merging the other session's PR, handing work across the Windows/macOS seam or between the two Windows clones, or starting work that the other session might collide with.
 ---
 
 # Two-agent flow
@@ -10,14 +10,14 @@ autonomy envelope) is `docs/collaboration.md`; the **rules and why they exist**
 are `docs/two-agent-review-process.md`. The invariants are in `CLAUDE.md` and
 are already in context — this skill assumes them.
 
-Both sessions use this file. Sections marked **[lead]** are pro-wsl-quicuts's;
+Every session uses this file. Sections marked **[lead]** are pro-win-quicuts's;
 **[owner]** is whichever session owns the branch under review.
 
 ## 0. One-time, per checkout
 
 ```bash
-git config user.name  pro-wsl-quicuts        # or mac-quicuts
-git config user.email pro-wsl-quicuts@quicuts.invalid
+git config user.name  pro-win-quicuts        # or pro-wsl-quicuts / mac-quicuts
+git config user.email pro-win-quicuts@quicuts.invalid
 ```
 
 Not committed — `.git/config` is local, so each checkout sets its own.
@@ -36,8 +36,8 @@ first.
 Then claim:
 
 ```bash
-git checkout -b win/<topic>          # or mac/<topic>
-git push -u origin win/<topic>       # push immediately, even empty
+git checkout -b pw/<topic>           # pro-win-quicuts; win/ = pro-wsl-quicuts, mac/ = mac-quicuts
+git push -u origin pw/<topic>        # push immediately, even empty
 ```
 
 Pushing at claim time is what makes `git ls-remote --heads` a live board. One
@@ -114,7 +114,7 @@ gh api -X POST repos/barbowza/quicuts/pulls/<N>/reviews --input review.json --jq
 ```
 
 `event` must be `COMMENT` — `APPROVE` and `REQUEST_CHANGES` 422 on your own
-PR. Every comment opens with your `**[pro-wsl-quicuts]**` / `**[mac-quicuts]**` tag.
+PR. Every comment opens with your `**[pro-win-quicuts]**` / `**[pro-wsl-quicuts]**` / `**[mac-quicuts]**` tag.
 
 Replying on an existing thread:
 

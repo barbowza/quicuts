@@ -15,7 +15,7 @@ Built with **Tauri v2** — Rust backend + Svelte 5/Vite frontend.
 
 ## Development environments
 
-Quicuts targets two platforms and the dev loop differs by target. Jump to the section for the machine you are on.
+Quicuts targets two platforms, and Windows has two build paths: a WSL2 cross-build and a native one from PowerShell. They share one set of `just` recipe names, with `[unix]`/`[windows]` attributes picking the implementation (ADR 0008). Jump to the section for the environment you are in.
 
 Common to both: `Cargo.toml` `default-members` is limited to `quicuts-proto` + `quicuts-manifest` on purpose, so a plain `cargo build`/`cargo test` never tries to build a platform crate that can't compile on the current host. Platform crates are built explicitly by the `just` recipes.
 
@@ -47,6 +47,20 @@ Set `WINUSER` to your Windows username. `deploy` must target a Windows-local pat
 
 `just dev-build` builds a debug exe pointed at a Vite dev server (via `conf/dev-remote.json`); `just dev-server` runs Vite on `0.0.0.0:1420` in WSL. Windows↔WSL `localhost` forwarding gives the frontend hot reload. Rust changes still require a rebuild (`just run`).
 
+## Windows target — built natively from PowerShell
+
+pro-win-quicuts's clone, `C:\Users\pcpro\projects\quicuts\quicuts`, builds on the host itself: `cargo build` with the MSVC host toolchain, no cross-compile and no tauri-cli. Decisions and consequences: `docs/adr/0008-native-windows-build.md`.
+
+Toolchain: rustup (default host `x86_64-pc-windows-msvc`), VS 2022 Build Tools (Desktop C++ + a Windows SDK), Git for Windows (the recipes run in its bash via `windows-shell`), Node + pnpm 10, `just`. Clone with `-c core.autocrlf=false`; `.gitattributes` also forces LF.
+
+The commands are the same as the WSL ones above, with these differences:
+
+- `just test` covers **every crate**, including `quicuts-app`, and builds `agent` + `ui` first, because `quicuts-app`'s build needs the staged sidecar and `ui/dist`.
+- `deploy` (and so `run`, `stage`, `dev-build`) kills the running instance first, since a running exe cannot be overwritten. `WINUSER` is not needed: the deploy folder comes from `%LOCALAPPDATA%`, and it is the **same `QuicutsDev` the WSL build deploys to**, so a deploy from either clone replaces the other's build.
+- `just log` tails `%LOCALAPPDATA%\com.barbowza.quicuts\logs\Quicuts.log`.
+
+Two host hazards: Bitdefender quarantines unsigned debug exes unless `target\` and `QuicutsDev` have exceptions (symptom: `LNK1104`, or an exe that vanishes), and the Claude desktop app redirects `%LOCALAPPDATA%`, so build and deploy from the Claude Code CLI.
+
 ## macOS target — built natively on the Mac
 
 **Status: first vertical slice working.** Hold-⌘ panel, `⌃⌘/` toggle, Esc dismiss, and bundle-ID app matching are verified on a real Mac. `docs/macos-dev.md` is the setup and dev-loop reference (the `mac-*` `just` recipes are the entry points; TCC needs a one-time Accessibility grant to your terminal — see its *Autonomous mode* section). Decisions and known gaps: `docs/adr/0006-macos-agent.md`.
@@ -62,9 +76,10 @@ How the mac loop differs from the Windows one:
 ## Who does what, and what needs Michael
 
 **Michael** = product delivery management: scope, priorities, on-device testing;
-brings mac-quicuts online on request; does not develop or push. **pro-wsl-quicuts** =
-lead: design decisions, task assignment, Windows development, the merge button;
-works solo by default. **mac-quicuts** = on-demand: the macOS port, deep peer
+brings mac-quicuts online on request; does not develop or push. **pro-win-quicuts** =
+lead: design decisions, task assignment, Windows development (native build), the
+merge button; works solo by default. **pro-wsl-quicuts** = secondary: keeps the
+WSL cross-build working, takes assigned work, reviews. **mac-quicuts** = on-demand: the macOS port, deep peer
 review, and an explicit **duty to push back** — paired with a duty to
 **verify before pushing back**, since a reviewer's failure mode is confident
 noise, not silence.
@@ -91,25 +106,29 @@ on-device verification, changes scope — or that you are unsure about.
 direct commits — but **only those**. Every invariant above is still perfectly
 legal against a green check; the server closes one hole, not the loop.
 
-**Branches:** `win/<topic>`, `mac/<topic>`, one writer each, pushed at claim time
-so `git ls-remote --heads` shows who holds what. Run `just status` before
-starting or merging (both machines); pro-wsl-quicuts runs `just stage` before asking
-Michael to test — there is no mac equivalent yet.
+**Branches:** `pw/<topic>` (pro-win-quicuts), `win/<topic>` (pro-wsl-quicuts),
+`mac/<topic>`, one writer each, pushed at claim time so `git ls-remote --heads`
+shows who holds what. Run `just status` before starting or merging (every
+checkout); the Windows sessions run `just stage` before asking Michael to test —
+there is no mac equivalent yet.
 
 Model and envelope in full: `docs/collaboration.md`. Review procedure and `gh`
 incantations: the **`two-agent-flow`** skill.
 
-**Session names** are `<machine>-<env>-<project>`: `mac-quicuts` on the Mac,
-`pro-wsl-quicuts` on Prometheus (`pro-win-quicuts` once the Windows build moves
-out of WSL). Before 2026-10-13 they were `mac-claude` and `win-claude`, the
-names older PRs, issues and comment tags carry.
+**Session names** are `<machine>-<env>-<project>`: `mac-quicuts` on the Mac;
+on Prometheus, `pro-win-quicuts` (native Windows clone) and `pro-wsl-quicuts`
+(WSL clone). Before 2026-10-13 they were `mac-claude` and `win-claude`, the
+names older PRs, issues and comment tags carry; pro-wsl-quicuts was the lead
+until #43 moved the role to pro-win-quicuts the same day.
 
 ## The journal
 
 On each machine the clone sits in a root folder as `quicuts/` next to
 `quicuts-journal/` (`barbowza/quicuts-journal` on GitHub): the root is
-`~/learnings/tools/quicuts/` on the Mac and `/home/dev/projects/quicuts/` in
-WSL on Prometheus. `just start` in the journal
+`~/learnings/tools/quicuts/` on the Mac, `/home/dev/projects/quicuts/` in
+WSL on Prometheus and `C:\Users\pcpro\projects\quicuts\` natively on
+Prometheus. Both Prometheus clones use machine `pro` and write `diary/pro/`.
+`just start` in the journal
 launches the day (sync, today's entry, VS Code, Claude), its steps switched in
 `machines/<machine>.env`.
 
@@ -166,4 +185,4 @@ Working daily-driver on Windows: hold-to-show with Win-key suppression, app-awar
 
 macOS: first slice verified on-screen (hold/chord/Esc, app-aware panels by bundle ID, tray-only), plus hosted collections — the mac agent reports window titles through the Accessibility API (no extra TCC grant beyond the tap's) and the browser host class knows bundle IDs, so Gmail/Yahoo Mail auto-select on a Mac exactly as on Windows. The IPC protocol was the seam both plugged into and needed no new commands or events. Deliberate gaps are listed in ADR 0006. The overlay is a non-activating `NSPanel` (`macpanel.rs`; Tauri v2 has no panels, so the window is re-classed in place behind a runtime layout check), so showing it leaves the user's app active. Rail icons and running-apps detection were closed under issue #32. Remaining gap: no notarization, on hold until a public release (bundles are signed with a local self-signed identity; `docs/macos-dev.md` § Signing).
 
-ADRs: `docs/adr/0001` (why Tauri v2), `docs/adr/0002` (the no-sudo cross-toolchain), `docs/adr/0003` (hosted collections), `docs/adr/0004` (unsupported-app placeholder), `docs/adr/0005` (overlay font scaling / accessibility zoom), `docs/adr/0006` (the macOS agent + TCC responsible-process findings), `docs/adr/0007` (user title-signature bindings + multi-pattern TitleMatch). `docs/macos-slice-brief.md` is the handoff brief that scoped the macOS slice — historical now, kept for the reasoning. `docs/two-agent-review-process.md` is how the Mac and Windows Claude sessions review each other's PRs.
+ADRs: `docs/adr/0001` (why Tauri v2), `docs/adr/0002` (the no-sudo cross-toolchain), `docs/adr/0003` (hosted collections), `docs/adr/0004` (unsupported-app placeholder), `docs/adr/0005` (overlay font scaling / accessibility zoom), `docs/adr/0006` (the macOS agent + TCC responsible-process findings), `docs/adr/0007` (user title-signature bindings + multi-pattern TitleMatch), `docs/adr/0008` (the native Windows build path beside the WSL one). `docs/macos-slice-brief.md` is the handoff brief that scoped the macOS slice — historical now, kept for the reasoning. `docs/two-agent-review-process.md` is how the Mac and Windows Claude sessions review each other's PRs.

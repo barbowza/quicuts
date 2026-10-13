@@ -1,6 +1,6 @@
-# Review process and merge authority (pro-wsl-quicuts ↔ mac-quicuts)
+# Review process and merge authority (pro-win-quicuts ↔ pro-wsl-quicuts ↔ mac-quicuts)
 
-How the two sessions review each other's work, and the bounds on the merge
+How the sessions review each other's work, and the bounds on the merge
 button. **Who decides what, and which channel is authoritative, is in
 `docs/collaboration.md`.** The step-by-step procedure — the `gh` incantations,
 the `review.json` shape, the handover template — is in the **`two-agent-flow`**
@@ -9,6 +9,8 @@ skill; load it when you are actually running a review.
 Written up after the first run (PR #1, the macOS vertical slice, merged
 2026-08-02) and substantially extended after 2026-09-01, when four PRs and
 three merge-discipline failures in one session produced most of what is below.
+The lead was pro-wsl-quicuts until issue #43 moved the role to pro-win-quicuts
+on 2026-10-13; the incidents below name whoever held it at the time.
 
 ## Constraint: one GitHub account, so review states are unusable
 
@@ -33,7 +35,7 @@ The same account also means **neither session can tell its own comments from
 the other's**, and two agents that can't distinguish self from other will reply
 to themselves indefinitely. So:
 
-> **Every comment opens with `**[pro-wsl-quicuts]**` or `**[mac-quicuts]**`.**
+> **Every comment opens with `**[pro-win-quicuts]**`, `**[pro-wsl-quicuts]**` or `**[mac-quicuts]**`.**
 > Each session ignores any thread whose last comment carries its own tag.
 
 Cheap, and it makes the PR readable to a human later. (The clean fix is a
@@ -42,7 +44,7 @@ protection possible. **Deferred 2026-09-01**, and the reason matters: not that
 it would have prevented nothing so far — that is true and nearly irrelevant,
 since the question is always the *next* failure — but that mac-quicuts is absent
 **by design**. Required approval would convert its intended absence into a hard
-block on pro-wsl-quicuts's default mode: a permanent cost against an intermittent
+block on the lead's default mode: a permanent cost against an intermittent
 benefit. The "flag unreviewed merges in the PR body" rule below buys most of
 the same value at none of the blocking cost, which is why that rule is
 load-bearing rather than a courtesy. Revisit if a PR is ever merged without
@@ -65,7 +67,7 @@ outcome still lands in the PR before merge (`docs/collaboration.md`).
 
 ## Merge authority
 
-pro-wsl-quicuts merges. That authority is real but bounded, and the bounds were
+The lead (pro-win-quicuts; pro-wsl-quicuts before 2026-10-13) merges. That authority is real but bounded, and the bounds were
 learned the hard way on PRs #20 and #21 (2026-09-01) — both merges were of
 *correct, green* code, which is exactly why the rules below are about
 authority rather than quality. "The change is right" is never the question a
