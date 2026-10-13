@@ -120,7 +120,6 @@ mac-agent-release:
 mac-ui:
     cd ui && pnpm install --prefer-offline && pnpm build
 
-# Full .app bundle build (permission-realistic; TCC attributes to the app).
 # Signing, in order of preference:
 #   APPLE_SIGNING_IDENTITY set  -> that identity. A Developer ID plus
 #                                  APPLE_ID/APPLE_PASSWORD/APPLE_TEAM_ID (or
@@ -130,6 +129,7 @@ mac-ui:
 #                                  stable TCC identity, not distributable).
 #   neither                     -> ad-hoc: the Accessibility grant is lost on
 #                                  every rebuild. `just mac-signing-identity`.
+# Full signed .app bundle build (permission-realistic; TCC attributes to the app).
 mac-build: mac-agent-release mac-ui
     #!/usr/bin/env bash
     set -euo pipefail
@@ -140,14 +140,17 @@ mac-build: mac-agent-release mac-ui
     echo "signing identity: ${APPLE_SIGNING_IDENTITY:-(none: ad-hoc)}"
     cd crates/quicuts-app && cargo tauri build --config conf/macos.json
 
-# One-time: create the self-signed local signing identity (its own keychain;
-# the login keychain is untouched). Read the script header first.
+# Its own keychain; the login keychain is untouched. Read the script header first.
+# One-time: create the self-signed local signing identity.
 mac-signing-identity:
     ./scripts/mac-signing-identity.sh
 
-# Copy the built bundle to /Applications. Launch-at-login records the
-# running binary's path, so it is only meaningful for an installed copy.
+# Launch-at-login records the running binary's path, so it is only
+# meaningful for an installed copy. Replaces, not merges: `ditto` onto an
+# existing bundle keeps files the new build dropped, which breaks the seal.
+# Copy the built bundle to /Applications (replacing any installed copy).
 mac-install:
+    rm -rf /Applications/Quicuts.app
     ditto target/release/bundle/macos/Quicuts.app /Applications/Quicuts.app
     @echo "installed /Applications/Quicuts.app"
 

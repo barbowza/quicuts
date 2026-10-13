@@ -85,6 +85,14 @@ needs your login password; without that, codesign fails with
 kept in a 0600 file beside it, so `mac-build` can unlock it after a logout.
 The script header has the removal commands.
 
+**The trade-off.** TCC keys the Accessibility grant to this certificate, and
+the key and its keychain password are readable by any process running as
+you. Such a process could sign its own binary as `com.barbowza.quicuts` and
+inherit Quicuts's grant, which means system-wide keyboard access without a
+TCC prompt. That is the price of unattended signing. A Developer ID key in
+the password-protected login keychain closes the gap. Until then, remove the
+local identity on a shared Mac or one where untrusted code runs as you.
+
 **Launch at login** (Settings) registers a LaunchAgent pointing at the
 *running* binary, so turn it on from an installed copy: `just mac-build`,
 `just mac-install` (copies to `/Applications`), then launch

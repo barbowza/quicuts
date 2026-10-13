@@ -19,7 +19,16 @@
 # without it codesign fails with errSecInternalComponent. A keychain this
 # script owns has a password it knows (a random one, kept in a 0600 file
 # next to the keychain), so setup and every later unlock are unattended.
-# The key protects nothing but this signature.
+#
+# The trade-off (Michael's call; docs/macos-dev.md § Signing): TCC keys the
+# Accessibility grant to this certificate, and both the key and its keychain
+# password are readable by any process running as you. Such a process could
+# sign its own binary as com.barbowza.quicuts with this certificate and
+# inherit Quicuts's grant, i.e. system-wide keyboard access, which a
+# process running as you otherwise does not get without a TCC prompt. A
+# Developer ID key in the login keychain behind its password would close
+# that; until then, delete this keychain if the Mac is shared or untrusted
+# code runs as you.
 #
 # Remove everything with:
 #   security delete-keychain ~/Library/Keychains/quicuts-signing.keychain-db
@@ -45,6 +54,13 @@ add_to_search_list() {
 if [[ -f "$KEYCHAIN" && -f "$PASSFILE" ]]; then
     security unlock-keychain -p "$(cat "$PASSFILE")" "$KEYCHAIN"
     searchable || add_to_search_list
+    # Files present but no identity: an earlier run failed after
+    # create-keychain. Say so instead of "ready", or mac-build fails later
+    # with a less helpful codesign error.
+    if ! security find-identity -p codesigning "$KEYCHAIN" | grep -q "\"$NAME\""; then
+        echo "keychain exists but holds no '$NAME' identity; remove it (commands in this script's header) and rerun" >&2
+        exit 1
+    fi
     echo "identity '$NAME' ready"
     exit 0
 fi
@@ -76,8 +92,8 @@ p12pass=$(/usr/bin/openssl rand -hex 16)
 kcpass=$(/usr/bin/openssl rand -hex 24)
 (umask 077 && printf '%s' "$kcpass" >"$PASSFILE")
 security create-keychain -p "$kcpass" "$KEYCHAIN"
-# No auto-lock timeout; it still locks at logout/sleep, and the recipe
-# re-runs this script, which unlocks it.
+# No auto-lock timeout and no lock on sleep (that would need -l); it locks
+# at logout, and mac-build re-runs this script, which unlocks it.
 security set-keychain-settings "$KEYCHAIN"
 security unlock-keychain -p "$kcpass" "$KEYCHAIN"
 security import "$tmp/id.p12" -k "$KEYCHAIN" -P "$p12pass" -T /usr/bin/codesign >/dev/null
