@@ -467,3 +467,43 @@ fn tier1_apps_resolve_to_their_manifests() {
     let c = &mute.combos[0];
     assert!(c.win && c.shift && !c.ctrl && !c.alt);
 }
+
+/// Tier-2 coverage: Apple's own apps each resolve to their manifest by
+/// bundle id, ahead of the wildcard system manifest.
+#[test]
+fn tier2_apple_apps_resolve_to_their_manifests() {
+    let s = store();
+    let hc = HostClasses::builtin();
+    for (identity, id) in [
+        ("com.apple.mail", "Apple.Mail"),
+        ("com.apple.Preview", "Apple.Preview"),
+        ("com.apple.Notes", "Apple.Notes"),
+        ("com.apple.iCal", "Apple.Calendar"),
+        ("com.apple.MobileSMS", "Apple.Messages"),
+        ("com.apple.dt.Xcode", "Apple.Xcode"),
+        ("com.apple.iWork.Keynote", "Apple.Keynote"),
+        ("com.apple.iWork.Numbers", "Apple.Numbers"),
+        ("com.apple.iWork.Pages", "Apple.Pages"),
+    ] {
+        let rail: Vec<String> = s
+            .match_foreground(Some(identity), "en-US", &hc, |_| false)
+            .iter()
+            .map(|m| m.lm.manifest.id.clone())
+            .collect();
+        assert_eq!(rail.first().map(String::as_str), Some(id), "{identity}");
+        assert!(rail.contains(&"Apple.System".to_string()), "{identity}");
+    }
+
+    // Xcode's breakpoint key is a literal backslash, which must survive the
+    // YAML escaping as one character.
+    let xcode = s.get("Apple.Xcode", "en-US").expect("xcode mac manifest");
+    let bp = xcode
+        .manifest
+        .sections
+        .iter()
+        .flat_map(|s| &s.entries)
+        .find(|e| e.name == "Toggle breakpoint at current line")
+        .expect("breakpoint row");
+    assert!(bp.combos[0].win);
+    assert_eq!(bp.combos[0].keys, vec![quicuts_manifest::Key::Literal("\\".into())]);
+}

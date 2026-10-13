@@ -1,0 +1,445 @@
+# Quicuts-maintained manifest (not from PowerToys — see NOTICE.txt).
+# Menu-bar shortcuts read from a running Mail with
+# `just mac-menus com.apple.mail` (2026-10-13). Apple-menu, window-tiling and
+# generic Edit rows (Undo, Copy …) are deliberately excluded.
+# The reading Mac uses the British-PC layout, which macOS localises
+# some key equivalents for: "#" and "~" there are US "\" and "|",
+# and are written here as the US keys this en-US manifest names.
+# Mac modifiers map to the PTSG flags as ⌘=Win, ⌃=Ctrl, ⌥=Alt, ⇧=Shift.
+PackageName: Apple.Mail
+Name: Mail
+WindowFilter: "com.apple.mail"
+BackgroundProcess: false
+Shortcuts:
+  - SectionName: Messages
+    Properties:
+      - Name: New message
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - N
+      - Name: Reply
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - R
+      - Name: Reply all
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - R
+      - Name: Forward
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - F
+      - Name: Redirect
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - E
+      - Name: Send
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - D
+      - Name: Delete
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Backspace>"
+      - Name: Archive
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - A
+      - Name: Mark as read or unread
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - U
+      - Name: Toggle flag
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - L
+      - Name: Move to Junk
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - J
+      - Name: Mute conversation
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - M
+      - Name: Apply rules
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - L
+      - Name: Attach files
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - A
+      - Name: Quick Look attachments
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Y
+      - Name: Show all headers
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - H
+      - Name: Show raw source
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - U
+  - SectionName: Mailboxes
+    Properties:
+      - Name: Get new mail
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - N
+      - Name: Go to favorite mailbox (1-9)
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<1>"
+      - Name: Move to favorite mailbox (1-9)
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<1>"
+      - Name: Go to category (Primary, Transactions, Updates, Promotions, All Mail)
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<1>"
+      - Name: Next mailbox
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "]"
+      - Name: Previous mailbox
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "["
+      - Name: Next unread mailbox
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - "]"
+      - Name: Previous unread mailbox
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - "["
+      - Name: Erase deleted items
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Backspace>"
+      - Name: Erase junk mail
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - J
+      - Name: Toggle message filter
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - L
+  - SectionName: Find
+    Properties:
+      - Name: Search mailbox
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - F
+      - Name: Find in message
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F
+      - Name: Find next
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - G
+      - Name: Find previous
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - G
+  - SectionName: Compose
+    Properties:
+      - Name: Add link
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - K
+      - Name: Paste as quotation
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - V
+      - Name: Increase quote level
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "'"
+      - Name: Decrease quote level
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "'"
+      - Name: Bold
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - B
+      - Name: Italic
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - I
+      - Name: Underline
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - U
+      - Name: Align left
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "{"
+      - Name: Center
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "|"
+      - Name: Align right
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "}"
+      - Name: Increase indent
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "]"
+      - Name: Decrease indent
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "["
+      - Name: Make rich text or plain text
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - T
+      - Name: Show Bcc field
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - B
+      - Name: Complete address
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<Escape>"
+  - SectionName: Windows
+    Properties:
+      - Name: New viewer window
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - N
+      - Name: Message viewer
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<0>"
+      - Name: Show sidebar
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - S
+      - Name: Activity
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - "<0>"
+      - Name: Settings
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - ","

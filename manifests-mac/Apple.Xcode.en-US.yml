@@ -1,0 +1,553 @@
+# Quicuts-maintained manifest (not from PowerToys — see NOTICE.txt).
+# Menu-bar shortcuts read from a running Xcode with
+# `just mac-menus com.apple.dt.Xcode` (2026-10-13). Apple-menu, window-tiling and
+# generic Edit rows (Undo, Copy …) are deliberately excluded.
+# Xcode does not localise its key equivalents (it reports "\" on this
+# British-PC Mac), so its punctuation is taken as read.
+# Mac modifiers map to the PTSG flags as ⌘=Win, ⌃=Ctrl, ⌥=Alt, ⇧=Shift.
+PackageName: Apple.Xcode
+Name: Xcode
+WindowFilter: "com.apple.dt.Xcode"
+BackgroundProcess: false
+Shortcuts:
+  - SectionName: General
+    Properties:
+      - Name: Open quickly
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - O
+      - Name: Show quick actions
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - A
+      - Name: New file from template
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - N
+      - Name: New project
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - N
+      - Name: New tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - T
+      - Name: New window
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - T
+      - Name: Save all
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - S
+      - Name: Close tab, pane or window
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - W
+      - Name: Show library
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - L
+      - Name: Settings
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - ","
+  - SectionName: Build and run
+    Properties:
+      - Name: Build
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - B
+      - Name: Run
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - R
+      - Name: Test
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - U
+      - Name: Stop
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "."
+      - Name: Profile
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - I
+      - Name: Analyze
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - B
+      - Name: Clean build folder
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - K
+      - Name: Run without building
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - R
+      - Name: Test again
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - G
+      - Name: Test selected items
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - U
+      - Name: Edit scheme
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "<"
+      - Name: Choose scheme
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<0>"
+      - Name: Choose destination
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "<0>"
+  - SectionName: Navigate
+    Properties:
+      - Name: Jump to definition
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - J
+      - Name: Reveal in project navigator
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - J
+      - Name: Show navigator (Project, Source Control, Bookmarks, Find, Issues, Tests, Debug, Breakpoints, Reports)
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "<1>"
+      - Name: Filter in navigator
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - J
+      - Name: Back
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Left>"
+      - Name: Forward
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<Right>"
+      - Name: Next tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "}"
+      - Name: Previous tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - "{"
+      - Name: Next issue
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "'"
+      - Name: Previous issue
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "\""
+      - Name: Move focus to editor pane
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - J
+      - Name: Show document items
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<6>"
+      - Name: Show related items
+        Shortcut:
+        - Win: false
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "<1>"
+  - SectionName: Find
+    Properties:
+      - Name: Find in workspace
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - F
+      - Name: Find and replace in workspace
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: true
+          Keys:
+            - F
+      - Name: Find selected symbol in workspace
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - F
+      - Name: Find call hierarchy
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - H
+      - Name: Find
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F
+      - Name: Find and replace
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - F
+      - Name: Find next
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - G
+      - Name: Find previous
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - G
+      - Name: Select next occurrence
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - E
+  - SectionName: Editor
+    Properties:
+      - Name: New editor pane on right
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - T
+      - Name: New editor pane below
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - T
+      - Name: Focus editor pane
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: true
+          Alt: false
+          Keys:
+            - "<Enter>"
+      - Name: Pin editor tab
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - P
+      - Name: Bookmark line
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "'"
+      - Name: Copy file and line
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: true
+          Keys:
+            - C
+      - Name: Show quick help
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - "?"
+  - SectionName: Debug
+    Properties:
+      - Name: Toggle breakpoint at current line
+        Recommended: true
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - "\\"
+      - Name: Activate breakpoints
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - Y
+      - Name: Pause or continue
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - Y
+      - Name: Step over
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F6
+      - Name: Step into
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F7
+      - Name: Step out
+        Shortcut:
+        - Win: false
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - F8
+      - Name: Continue to current line
+        Shortcut:
+        - Win: true
+          Ctrl: true
+          Shift: false
+          Alt: false
+          Keys:
+            - C
+      - Name: Show debug area
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - Y
+      - Name: Activate console
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - C
+      - Name: Clear console
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: false
+          Keys:
+            - K
+  - SectionName: Source control
+    Properties:
+      - Name: Commit
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - C
+      - Name: Pull
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: false
+          Alt: true
+          Keys:
+            - X
+      - Name: Reveal in changes navigator
+        Shortcut:
+        - Win: true
+          Ctrl: false
+          Shift: true
+          Alt: false
+          Keys:
+            - M
