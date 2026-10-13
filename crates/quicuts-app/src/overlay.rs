@@ -96,7 +96,7 @@ pub fn show(app: &AppHandle) {
 /// failed, the window is an ordinary one and needs `set_focus` to take keys.
 pub fn focus(window: &tauri::WebviewWindow) {
     #[cfg(target_os = "macos")]
-    if crate::macpanel::installed() {
+    if crate::macpanel::installed(window) {
         let _ = window.show();
         return;
     }

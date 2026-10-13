@@ -27,13 +27,38 @@ use objc2_app_kit::{NSPanel, NSWindow, NSWindowCollectionBehavior, NSWindowStyle
 
 const FOCUSABLE: &std::ffi::CStr = c"focusable";
 
-/// Set once the swap succeeded; until then the overlay is an ordinary
-/// activating window and must still be focused the ordinary way.
+/// Set once the swap succeeded; cleared (with one warning) if the window is
+/// later found to have lost the panel class.
 static INSTALLED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
-/// Whether the overlay is a non-activating panel (see `overlay::focus`).
-pub fn installed() -> bool {
-    INSTALLED.load(std::sync::atomic::Ordering::Relaxed)
+/// Whether the overlay is a non-activating panel *right now* (see
+/// `overlay::focus`). Checks the live class rather than trusting the
+/// one-shot install: if anything restores the window's old isa (KVO could,
+/// when its observer goes away), the overlay is an activating window again
+/// and must be focused the ordinary way, or it never takes typing.
+pub fn installed(window: &tauri::WebviewWindow) -> bool {
+    use std::sync::atomic::Ordering;
+    if !INSTALLED.load(Ordering::Relaxed) {
+        return false;
+    }
+    let Ok(ptr) = window.ns_window() else {
+        return false;
+    };
+    let Some(panel) = panel_class() else {
+        return false;
+    };
+    // SAFETY: `ns_window` is the live NSWindow; reading its class is safe.
+    let current = unsafe { &*object_getClass(ptr as *mut AnyObject) };
+    if std::ptr::eq(current, panel) {
+        return true;
+    }
+    if INSTALLED.swap(false, Ordering::Relaxed) {
+        log::warn!(
+            "panel: overlay class changed back to {}; it activates Quicuts again",
+            current.name().to_string_lossy()
+        );
+    }
+    false
 }
 
 /// Re-class the overlay window as a non-activating panel. Must run on the
