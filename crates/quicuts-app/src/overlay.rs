@@ -11,7 +11,7 @@ const MIN_PANEL_WIDTH: f64 = 586.0;
 /// Recompute the overlay view model and push it to the overlay window.
 pub fn push_state(app: &AppHandle) {
     let state = app.state::<AppState>();
-    let payload = {
+    let mut payload = {
         let fg = state.foreground.lock().unwrap();
         let selected = state.selected.lock().unwrap().clone();
         let pinned = state.pinned_app.lock().unwrap().clone();
@@ -38,6 +38,7 @@ pub fn push_state(app: &AppHandle) {
             activation,
         )
     };
+    payload.held = *state.shown_by_hold.lock().unwrap();
     // Remember the resolved selection.
     *state.selected.lock().unwrap() = payload.selected.clone();
     let _ = app.emit("overlay://state", &payload);
@@ -63,6 +64,16 @@ fn sync_badges(app: &AppHandle) {
 }
 
 pub fn show(app: &AppHandle) {
+    show_as(app, false);
+}
+
+/// Show for a hold activation: the panel lives only while the key is held.
+pub fn show_held(app: &AppHandle) {
+    show_as(app, true);
+}
+
+fn show_as(app: &AppHandle, held: bool) {
+    *app.state::<AppState>().shown_by_hold.lock().unwrap() = held;
     // The hidden webviews may have loaded before AppState was managed, so
     // their mount-time appearance fetch can miss; re-push on every show.
     crate::agent::emit_appearance(app);

@@ -83,6 +83,9 @@ export interface OverlayState {
   /** Chord that toggles the settings window while the panel has focus. */
   settingsChordEnabled: boolean;
   settingsChord: ChordSpec;
+  /** Shown by holding the activation key: no filter box (typing can't
+   * reach the panel while a modifier is held). */
+  held: boolean;
 }
 
 /** Mirror of quicuts_proto::ChordSpec (vk is a Windows virtual-key code). */

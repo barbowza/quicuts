@@ -36,6 +36,9 @@ pub struct AppState {
     pub agent_child: Mutex<Option<CommandChild>>,
     pub last_taskbar: Mutex<Option<TaskbarSnapshot>>,
     pub overlay_visible: Mutex<bool>,
+    /// The visible panel came from a hold (vs the chord or the tray), so
+    /// the overlay hides its filter box.
+    pub shown_by_hold: Mutex<bool>,
     /// Settings was opened from the panel and the panel stayed up (sticky
     /// mode): dismissing the panel deliberately closes settings with it.
     /// Cleared whenever either window hides.

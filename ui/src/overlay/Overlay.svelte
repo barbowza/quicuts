@@ -33,6 +33,7 @@
     chord: { win: true, ctrl: false, shift: true, alt: false, vk: 0xbf },
     settingsChordEnabled: false,
     settingsChord: { win: false, ctrl: true, shift: false, alt: false, vk: 0xbc },
+    held: false,
   });
 
   const sections = $derived(view.selected ? (view.pages[view.selected] ?? []) : []);
@@ -71,11 +72,15 @@
     return `${e.name} ${e.description ?? ""} ${keys}`.toLowerCase();
   }
 
+  // A held panel has no filter box, so its text must not hide shortcuts.
+  // Kept, not cleared: a sticky panel's filter survives a hold over it.
+  const activeFilter = $derived(view.held ? "" : filter);
+
   const filteredSections = $derived.by(() => {
     // Whitespace splits the query into AND-ed terms ("ctrl space" = entries
     // matching both, in the keys or the text); "win+e" stays one term and
     // matches the chord text exactly.
-    const terms = filter.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    const terms = activeFilter.trim().toLowerCase().split(/\s+/).filter(Boolean);
     let secs = sections;
     if (terms.length > 0) {
       secs = secs
@@ -153,7 +158,7 @@
   // the panel is focused.
   let prevFilterActive = false;
   $effect(() => {
-    const active = filter.trim().length > 0;
+    const active = activeFilter.trim().length > 0;
     if (active !== prevFilterActive) {
       prevFilterActive = active;
       setFilterActive(active);
@@ -268,18 +273,22 @@
     {:else if unsupported}
       <div class="unsupported">No shortcuts for {selectedApp?.displayName}.</div>
     {:else}
-      <input
-        class="filter"
-        type="text"
-        placeholder="Filter shortcuts (Ctrl+F)"
-        spellcheck="false"
-        bind:value={filter}
-        bind:this={filterInput}
-      />
+      <!-- Held panel: every key is a modifier combo, so typing can't reach
+           a filter box; it only takes space from the shortcuts. -->
+      {#if !view.held}
+        <input
+          class="filter"
+          type="text"
+          placeholder="Filter shortcuts (Ctrl+F)"
+          spellcheck="false"
+          bind:value={filter}
+          bind:this={filterInput}
+        />
+      {/if}
       {#if filteredSections.length === 0}
         <div class="placeholder">
-          {filter.trim()
-            ? `No shortcuts match “${filter.trim()}”.`
+          {activeFilter.trim()
+            ? `No shortcuts match “${activeFilter.trim()}”.`
             : mode === "custom"
               ? "No customized shortcuts for this app yet. Double-click a shortcut to add one."
               : "No shortcuts for this app yet."}

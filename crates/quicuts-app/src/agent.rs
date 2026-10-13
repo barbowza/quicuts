@@ -185,7 +185,7 @@ fn handle_event(app: &AppHandle, ev: AgentEvent) {
             } else {
                 *state.selected.lock().unwrap() = state.pinned_app.lock().unwrap().clone();
             }
-            overlay::show(app);
+            overlay::show_held(app);
             send(app, &AgentCommand::SetOverlayVisible { visible: true });
         }
         // The chord cycles: hidden -> show+focus; visible but unfocused
