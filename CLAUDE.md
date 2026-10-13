@@ -157,6 +157,10 @@ launches the day (sync, today's entry, VS Code, Claude), its steps switched in
   since several sessions may write the same day's file;
 - `<machine>` is the word in the journal's `.machine` file (`mac` or `pro`),
   never a guess;
+- **pull the journal before appending** (`git pull --rebase --autostash` in
+  it, not `just sync`, which would commit Michael's files): another session,
+  or Prometheus's other clone, may have appended to the same file, and two
+  appends at its end conflict when the second is published;
 - publish it with `just sync-file <that path>` in the journal, which commits
   and pushes that one file, never Michael's half-written entries. If the push
   fails the commit stays local: say so, and never force-push or rewrite the
