@@ -211,6 +211,8 @@
       const next = { win: e.metaKey, ctrl: e.ctrlKey, shift: e.shiftKey, alt: e.altKey, vk };
       // Both hotkeys on one chord would leave the agent's chord shadowing the
       // panel's settings chord, so refuse and keep capturing.
+      // Even when the other hotkey is disabled: enabling it later would bring
+      // the clash back.
       const other = capturing === "chord" ? s.activation.settingsChord : s.activation.chord;
       if (sameChord(next, other)) {
         const otherName = capturing === "chord" ? "Open / close settings" : "Show with a hotkey";
