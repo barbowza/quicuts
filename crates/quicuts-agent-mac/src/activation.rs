@@ -12,6 +12,11 @@
 pub const VK_LWIN: u32 = 0x5B;
 pub const VK_RWIN: u32 = 0x5C;
 pub const VK_ESCAPE: u32 = 0x1B;
+/// Stand-in for a key the adapter has no VK for (non-ANSI keys such as the
+/// ISO `§`/`` ` `` key, media keys). The machine never needs its identity, only
+/// that a non-modifier key went down — dropping it instead would let ⌘ plus
+/// that key count as a lone ⌘ hold.
+pub const VK_UNMAPPED: u32 = 0xFF;
 
 /// Snapshot of the agent configuration relevant to activation. The adapter
 /// materializes this from its cached atomics on every callback.
@@ -154,6 +159,7 @@ impl Activation {
 
     fn chord_matches(&self, cfg: &Config, vk: u32) -> bool {
         cfg.chord_enabled
+            && vk != VK_UNMAPPED
             && vk == cfg.chord_vk
             && self.cmd_down() == cfg.chord_win
             && self.shift == cfg.chord_shift
@@ -261,6 +267,18 @@ impl Activation {
                 Decision::PASS
             }
         }
+    }
+
+    /// A mouse button went down. ⌘-click (Finder multi-select, open link in
+    /// a new tab) is a combo just like ⌘-key, so a pending hold is cancelled.
+    /// Clicks are never swallowed, and once the panel is up they leave it
+    /// alone: the user may be clicking the panel itself.
+    pub fn on_pointer_down(&mut self) -> Decision {
+        if self.phase == Phase::CmdDown {
+            self.phase = Phase::Combo;
+            return Decision { timer: Some(TimerCmd::Cancel), ..Decision::PASS };
+        }
+        Decision::PASS
     }
 
     /// The hold timer elapsed. `foreground_excluded` is resolved by the
@@ -492,6 +510,63 @@ mod tests {
         assert_eq!(a.on_key(&c, VK_LWIN, false).event, None);
         // The last ⌘ up ends it.
         assert_eq!(a.on_key(&c, VK_RWIN, false).event, Some(Event::HoldReleased));
+    }
+
+    /// ⌘` (cycle windows) on a British keyboard: `` ` `` is the ISO key left
+    /// of 1, a keycode the adapter has no VK for. It must still count as a
+    /// combo, not leave ⌘ looking like a lone hold.
+    #[test]
+    fn unmapped_key_with_cmd_is_a_combo() {
+        let mut a = Activation::new();
+        let c = cfg(false);
+        a.on_key(&c, VK_LWIN, true);
+        let d = a.on_key(&c, VK_UNMAPPED, true);
+        assert!(!d.swallow);
+        assert_eq!(d.timer, Some(TimerCmd::Cancel));
+        assert_eq!(a.on_hold_timer(&c, false), Decision::PASS);
+        assert_eq!(a.on_key(&c, VK_UNMAPPED, false), Decision::PASS);
+        assert_eq!(a.on_key(&c, VK_LWIN, false).event, None);
+    }
+
+    /// An unmapped key can never complete the chord, whatever `chord_vk` holds.
+    #[test]
+    fn unmapped_key_never_matches_the_chord() {
+        let mut a = Activation::new();
+        let mut c = cfg(false);
+        c.chord_vk = VK_UNMAPPED;
+        a.on_key(&c, VK_LWIN, true);
+        a.on_key(&c, 0xA2, true);
+        let d = a.on_key(&c, VK_UNMAPPED, true);
+        assert!(!d.swallow);
+        assert_eq!(d.event, None);
+    }
+
+    /// ⌘-click in Finder to multi-select: the click cancels the hold.
+    #[test]
+    fn cmd_click_cancels_the_hold() {
+        let mut a = Activation::new();
+        let c = cfg(false);
+        a.on_key(&c, VK_LWIN, true);
+        let d = a.on_pointer_down();
+        assert!(!d.swallow);
+        assert_eq!(d.timer, Some(TimerCmd::Cancel));
+        assert_eq!(a.on_hold_timer(&c, false), Decision::PASS);
+        assert_eq!(a.on_key(&c, VK_LWIN, false).event, None);
+        // The next ⌘ press is a fresh one and can hold again.
+        assert_eq!(a.on_key(&c, VK_LWIN, true).timer, Some(TimerCmd::Arm(900)));
+        assert_eq!(a.on_hold_timer(&c, false).event, Some(Event::HoldActivated));
+    }
+
+    /// Clicks with no ⌘ down, or on the panel while it is up, change nothing.
+    #[test]
+    fn clicks_outside_a_pending_hold_are_ignored() {
+        let mut a = Activation::new();
+        let c = cfg(false);
+        assert_eq!(a.on_pointer_down(), Decision::PASS);
+        a.on_key(&c, VK_LWIN, true);
+        a.on_hold_timer(&c, false);
+        assert_eq!(a.on_pointer_down(), Decision::PASS);
+        assert_eq!(a.on_key(&c, VK_LWIN, false).event, Some(Event::HoldReleased));
     }
 
     #[test]
