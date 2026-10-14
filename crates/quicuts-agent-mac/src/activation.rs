@@ -541,6 +541,22 @@ mod tests {
         assert_eq!(d.event, None);
     }
 
+    /// An unmapped key pressed while the hold panel is up behaves like any
+    /// other ⌘-key: it passes through and dismisses the panel. Before
+    /// `VK_UNMAPPED` such keys were dropped and the panel stayed up.
+    #[test]
+    fn unmapped_key_while_hold_active_dismisses() {
+        let mut a = Activation::new();
+        let c = cfg(false);
+        a.on_key(&c, VK_LWIN, true);
+        assert_eq!(a.on_hold_timer(&c, false).event, Some(Event::HoldActivated));
+        let d = a.on_key(&c, VK_UNMAPPED, true);
+        assert!(!d.swallow);
+        assert_eq!(d.event, Some(Event::DismissedPassthrough));
+        assert_eq!(a.on_key(&c, VK_UNMAPPED, false), Decision::PASS);
+        assert_eq!(a.on_key(&c, VK_LWIN, false).event, None);
+    }
+
     /// ⌘-click in Finder to multi-select: the click cancels the hold.
     #[test]
     fn cmd_click_cancels_the_hold() {
