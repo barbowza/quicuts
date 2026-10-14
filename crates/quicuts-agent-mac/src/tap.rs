@@ -26,7 +26,7 @@ use core_graphics::event::{
 };
 use quicuts_proto::{caps, AgentCommand, AgentEvent, DismissReason, FatalKind, PROTO_VERSION};
 
-use crate::activation::{Activation, Event, TimerCmd};
+use crate::activation::{Activation, Event, TimerCmd, VK_UNMAPPED};
 use crate::foreground;
 use crate::ipc::{self, EventSink};
 use crate::state::{self, CONFIG, EXCLUDED};
@@ -188,6 +188,12 @@ fn on_tap_event(
             return CallbackResult::Keep;
         }
         CGEventType::KeyDown | CGEventType::KeyUp | CGEventType::FlagsChanged => {}
+        CGEventType::LeftMouseDown | CGEventType::RightMouseDown | CGEventType::OtherMouseDown => {
+            if let Some(TimerCmd::Cancel) = activation().on_pointer_down().timer {
+                let _ = timer_tx.send(TimerMsg::Cancel);
+            }
+            return CallbackResult::Keep;
+        }
         _ => return CallbackResult::Keep,
     }
     let Some((vk, down)) = translate(etype, event) else {
@@ -215,8 +221,10 @@ fn on_tap_event(
 fn translate(etype: CGEventType, event: &CGEvent) -> Option<(u32, bool)> {
     let keycode = event.get_integer_value_field(EventField::KEYBOARD_EVENT_KEYCODE) as u16;
     match etype {
-        CGEventType::KeyDown => Some((vk_for_keycode(keycode)?, true)),
-        CGEventType::KeyUp => Some((vk_for_keycode(keycode)?, false)),
+        // A key with no VK still has to reach the state machine, or ⌘ plus
+        // that key looks like a lone ⌘ hold.
+        CGEventType::KeyDown => Some((vk_for_keycode(keycode).unwrap_or(VK_UNMAPPED), true)),
+        CGEventType::KeyUp => Some((vk_for_keycode(keycode).unwrap_or(VK_UNMAPPED), false)),
         CGEventType::FlagsChanged => {
             // The event carries the modifier's keycode; whether it went down
             // or up is in the *device-dependent* flag bits (the generic
@@ -245,7 +253,8 @@ fn device_bit(keycode: u16) -> Option<u64> {
 
 /// CGKeyCode (ANSI layout positions) → Windows virtual-key code, covering
 /// the modifiers/Esc the state machine tracks plus every key a `ChordSpec`
-/// may name. Unknown keys stay None and pass through untouched.
+/// may name. Unknown keys stay None; `translate` reports them as
+/// `VK_UNMAPPED` and they pass through untouched.
 ///
 /// `MAC_CODE_VK` in `ui/src/lib/chord.ts` mirrors the non-modifier rows by
 /// `KeyboardEvent.code`, so settings captures exactly what this reports (a
@@ -373,7 +382,15 @@ pub fn run() -> anyhow::Result<()> {
         CGEventTapLocation::Session,
         CGEventTapPlacement::HeadInsertEventTap,
         CGEventTapOptions::Default,
-        vec![CGEventType::KeyDown, CGEventType::KeyUp, CGEventType::FlagsChanged],
+        // Mouse-downs only to spot ⌘-click; they are never swallowed.
+        vec![
+            CGEventType::KeyDown,
+            CGEventType::KeyUp,
+            CGEventType::FlagsChanged,
+            CGEventType::LeftMouseDown,
+            CGEventType::RightMouseDown,
+            CGEventType::OtherMouseDown,
+        ],
         move |_proxy: CGEventTapProxy, etype, event| {
             on_tap_event(&tap_sink, &timer_tx, etype, event)
         },
