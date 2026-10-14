@@ -28,7 +28,31 @@ use engine::Engine;
 use pinned::PinStore;
 use settings::Settings;
 
+/// Route panics into the log file. On Windows the app is a GUI-subsystem exe
+/// with no stderr, so the default hook's message would go nowhere. The
+/// default hook still runs afterwards (it prints to stderr where there is one).
+/// Panics before tauri-plugin-log initialises are not logged: `log` no-ops
+/// until a logger is set. The backtrace honours `RUST_BACKTRACE`: off by
+/// default, since the deploy ships no .pdb and every frame is `<unknown>`.
+fn install_panic_hook() {
+    use std::backtrace::{Backtrace, BacktraceStatus};
+    let default_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let thread = std::thread::current();
+        let name = thread.name().unwrap_or("<unnamed>");
+        let backtrace = Backtrace::capture();
+        if backtrace.status() == BacktraceStatus::Captured {
+            log::error!("panic on thread '{name}': {info}\n{backtrace}");
+        } else {
+            log::error!("panic on thread '{name}': {info}");
+        }
+        log::logger().flush();
+        default_hook(info);
+    }));
+}
+
 pub fn run() {
+    install_panic_hook();
     tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             // A second launch just opens settings.
