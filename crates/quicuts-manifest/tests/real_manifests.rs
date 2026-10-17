@@ -2,13 +2,15 @@
 //! parse, and known structural facts about specific files must hold.
 //! The macOS set has its own suite in `mac_manifests.rs`.
 
+mod common;
+
 use std::collections::HashSet;
 use std::path::PathBuf;
 
 use quicuts_manifest::{assemble, HostClasses, Key, ManifestStore, SourceKind};
 
 fn manifests_dir() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../manifests")
+    common::crate_dir().join("../../manifests")
 }
 
 fn store() -> ManifestStore {

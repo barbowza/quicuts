@@ -43,7 +43,7 @@ just ui                    # pnpm build the frontend
 
 Set `WINUSER` to your Windows username. `deploy` must target a Windows-local path (`/mnt/c/...`), never `\\wsl$`. The app is self-contained once deployed — it can be relaunched directly from `C:\Users\<you>\AppData\Local\QuicutsDev\quicuts.exe` without rebuilding.
 
-After moving or renaming the clone, run `cargo clean` once: cargo reused binaries with the old `CARGO_MANIFEST_DIR` baked in after the 2026-10-13 move, and the mac manifest tests loaded 0 manifests until the clean.
+Cargo can reuse a binary built at another path (this clone before a move, or another checkout given this `target/` as `CARGO_TARGET_DIR`) with that path baked into `env!("CARGO_MANIFEST_DIR")`. The manifest suites and the app's dev manifests fallback read the runtime value first because of this (it cost a 0-manifests test failure on 2026-10-13 and again on 2026-10-17). Any new `env!("CARGO_MANIFEST_DIR")` path needs the same treatment, or `cargo clean` once after a move.
 
 ### Frontend HMR
 
