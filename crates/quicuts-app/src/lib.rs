@@ -253,7 +253,7 @@ fn bundled_manifests_dir(app: &tauri::AppHandle) -> PathBuf {
             candidates.push(res.join("_up_/_up_/manifests-mac"));
         }
         // Dev workspace fallback.
-        candidates.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../manifests-mac"));
+        candidates.extend(dev_crate_dirs().map(|dir| dir.join("../../manifests-mac")));
         first_existing(candidates)
     }
     #[cfg(not(target_os = "macos"))]
@@ -270,9 +270,19 @@ fn bundled_manifests_dir(app: &tauri::AppHandle) -> PathBuf {
             }
         }
         // Dev workspace fallback.
-        candidates.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../manifests"));
+        candidates.extend(dev_crate_dirs().map(|dir| dir.join("../../manifests")));
         first_existing(candidates)
     }
+}
+
+/// This crate's directory, for the dev fallback: the one cargo reports when
+/// it runs the app (`cargo tauri dev`) first, since a reused binary can carry
+/// another checkout's path in `env!`; then that compile-time value.
+fn dev_crate_dirs() -> impl Iterator<Item = PathBuf> {
+    std::env::var_os("CARGO_MANIFEST_DIR")
+        .map(PathBuf::from)
+        .into_iter()
+        .chain(std::iter::once(PathBuf::from(env!("CARGO_MANIFEST_DIR"))))
 }
 
 /// First candidate that exists, else the last one (the dev fallback) so the

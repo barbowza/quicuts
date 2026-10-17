@@ -1,13 +1,13 @@
 //! The macOS manifest set in /manifests-mac must parse and match by bundle
 //! id through the same platform-agnostic pipeline as the Windows set.
 
-use std::path::PathBuf;
+mod common;
 
 use quicuts_manifest::{HostClasses, ManifestStore, SourceKind};
 
 fn store() -> ManifestStore {
     let mut s = ManifestStore::new();
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../manifests-mac");
+    let dir = common::crate_dir().join("../../manifests-mac");
     let (ok, failed) = s.load_dir(&dir, SourceKind::Bundled);
     assert_eq!(failed, 0, "some mac manifests failed to parse");
     assert!(ok >= 5, "expected the mac manifests, parsed {ok}");
@@ -27,7 +27,7 @@ fn all_mac_manifests_parse() {
     // The mac set is keyed by bundle id, not exe name — a `.exe` filter in
     // here would be a copy/paste escape from the Windows set. Linted over
     // the files themselves; the store does not expose its whole contents.
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../manifests-mac");
+    let dir = common::crate_dir().join("../../manifests-mac");
     for f in std::fs::read_dir(dir).unwrap() {
         let path = f.unwrap().path();
         if path.extension().and_then(|e| e.to_str()) != Some("yml") {
