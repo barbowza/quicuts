@@ -5,6 +5,8 @@
 mod agent;
 mod app_state;
 mod appname;
+#[cfg(target_os = "macos")]
+mod autostart;
 mod commands;
 mod customizations;
 mod engine;
@@ -218,7 +220,20 @@ pub fn apply_autostart(app: &tauri::AppHandle) {
     let mgr = app.autolaunch();
     let is_on = mgr.is_enabled().unwrap_or(false);
     if want && !is_on {
+        #[cfg(target_os = "macos")]
+        if let Ok(exe) = std::env::current_exe() {
+            if !autostart::is_bundled(&exe) {
+                log::warn!(
+                    "autostart: login will start this dev binary ({}), which has no \
+                     Accessibility grant of its own; enable it from the installed app",
+                    exe.display()
+                );
+            }
+        }
         let _ = mgr.enable();
+    } else if want && is_on {
+        #[cfg(target_os = "macos")]
+        autostart::repoint_if_stale(app);
     } else if !want && is_on {
         let _ = mgr.disable();
     }
