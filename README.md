@@ -22,7 +22,7 @@ manifests unchanged.
   YAML separate from the bundled manifests.
 - **Web apps (experimental)**: title-based detection of hosted apps like Gmail
   running inside a browser tab.
-- 36 bundled manifests imported from PowerToys, plus any you drop in from a
+- 38 bundled manifests imported from PowerToys, plus any you drop in from a
   PowerToys installation or write yourself. macOS uses its own smaller set in
   `manifests-mac/`, matched by bundle ID.
 

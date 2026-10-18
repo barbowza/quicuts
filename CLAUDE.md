@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Quicuts is a cross-platform (Windows-first, macOS fast-follow) clone of PowerToys **Shortcut Guide v2**: a side-docked, app-aware panel of keyboard shortcuts shown when you hold Win/Cmd or press a hotkey chord. It imports PowerToys' YAML shortcut manifests unchanged (36 bundled in `manifests/`; macOS-specific ones live in `manifests-mac/`).
+Quicuts is a cross-platform (Windows-first, macOS fast-follow) clone of PowerToys **Shortcut Guide v2**: a side-docked, app-aware panel of keyboard shortcuts shown when you hold Win/Cmd or press a hotkey chord. It imports PowerToys' YAML shortcut manifests unchanged (38 bundled in `manifests/`; macOS-specific ones live in `manifests-mac/`).
 
 Built with **Tauri v2** — Rust backend + Svelte 5/Vite frontend.
 
