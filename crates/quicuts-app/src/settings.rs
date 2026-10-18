@@ -79,9 +79,11 @@ pub struct Settings {
     pub excluded_exes: Vec<String>,
     pub launch_at_login: bool,
     pub taskbar_badges: bool,
-    /// Hide the panel when it loses focus. Off = sticky: the panel stays up
-    /// while the user returns to their app to try the shortcuts.
-    #[serde(default = "default_true")]
+    /// Hide the panel when it loses focus. Off (the default, Michael
+    /// 2026-10-18) = sticky: the panel stays up while the user returns to
+    /// their app to try the shortcuts, and settings opened from it don't
+    /// make it vanish. A settings.json without the key also reads as off.
+    #[serde(default)]
     pub auto_hide: bool,
     /// When the filter box has text, the first Esc clears it and only the
     /// next Esc closes the panel.
@@ -134,7 +136,7 @@ impl Default for Settings {
             excluded_exes: Vec::new(),
             launch_at_login: false,
             taskbar_badges: true,
-            auto_hide: true,
+            auto_hide: false,
             esc_clears_filter: true,
             combo_display_mode: default_combo_display_mode(),
             title_detection: false,
@@ -188,6 +190,22 @@ mod tests {
         let s = Settings::default();
         assert!(!s.title_detection, "experimental features must default off");
         assert!(s.extra_browser_exes.is_empty());
+        assert!(
+            !s.auto_hide,
+            "sticky by default: a panel that vanishes when settings opens surprises (2026-10-18)"
+        );
+    }
+
+    #[test]
+    fn missing_auto_hide_reads_as_off() {
+        let s: Settings = serde_json::from_str(
+            r#"{"schemaVersion": 1, "activation": {"holdEnabled": true, "holdMs": 900,
+                "chordEnabled": true, "chord": {"win": true, "shift": true, "vk": 191}},
+                "appearance": {"theme": "system", "overlayStyle": "panel", "panelEdge": "right"},
+                "excludedExes": [], "launchAtLogin": false, "taskbarBadges": true}"#,
+        )
+        .expect("parses");
+        assert!(!s.auto_hide);
     }
 
     #[test]
