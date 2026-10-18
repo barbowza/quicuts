@@ -6,6 +6,12 @@
 //! because badges are a nice-to-have and the taskbar UIA surface is unstable
 //! across Windows builds.
 //!
+//! All rects are **physical** virtual-screen px: `main` makes the process
+//! per-monitor-v2 DPI aware before anything here runs, so UIA's bounding
+//! rects are not virtualized to logical px (they were, at 125%, before issue
+//! #60) and agree with the app-bar rect. `overlay.rs::update_badges` relies
+//! on that when it centres a chip over each button.
+//!
 //! Runs on its own STA thread so COM init is isolated from the message pump.
 
 use quicuts_proto::{Edge, Rect, TaskbarButton, TaskbarSnapshot};
