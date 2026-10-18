@@ -1,6 +1,6 @@
-# Collaboration model (Michael ↔ pro-win-quicuts ↔ pro-wsl-quicuts ↔ mac-quicuts)
+# Collaboration model (Michael ↔ pro-win-quicuts ↔ pro-wsl-quicuts ↔ zax-quicuts ↔ mac-quicuts)
 
-How four actors — one human and three Claude Code sessions on two machines —
+How five actors — one human and four Claude Code sessions on three machines —
 build Quicuts without treading on each other.
 
 This document is the **model**: who decides what, which channel is
@@ -19,13 +19,14 @@ renamed throughout, including the incidents that predate the change. Where an
 incident below names pro-wsl-quicuts as the lead, that is who held the role at
 the time.
 
-## The three actors
+## The actors
 
 | | Machine | Owns |
 |---|---|---|
 | **Michael** | the Windows box | Scope, priorities, on-device testing, bringing mac-quicuts online. Product delivery management — **not** development. |
 | **pro-win-quicuts** | that box, natively (PowerShell) | Lead. Design decisions, task assignment, Windows development, the order colliding PRs land in. The default worker. |
 | **pro-wsl-quicuts** | WSL2 on that box | Secondary. Keeps the WSL cross-build working, takes assigned work, reviews. |
+| **zax-quicuts** | zaxoc, natively (since 2026-10-18) | Second Windows machine, at 125% scaling. Takes assigned work, reviews. |
 | **mac-quicuts** | the Mac | On-demand. The macOS port, deep peer review, and a duty to push back — having verified first. |
 
 **Michael does not push.** He stepped out of development on 2026-09-01, and the
@@ -109,12 +110,12 @@ point.
 
 `git ls-remote --heads` is the claim board. Push your branch **at claim time**,
 even empty, before doing the work. Branches are `pw/<topic>` (pro-win-quicuts),
-`win/<topic>` (pro-wsl-quicuts) and `mac/<topic>`, **one writer each** — no
+`win/<topic>` (pro-wsl-quicuts), `zax/<topic>` (zax-quicuts) and `mac/<topic>`, **one writer each** — no
 session ever pushes to a branch it does not own.
 
 Run `just status` before starting work and before merging: it fetches, prunes,
 and shows the resolved `gh` account, open PRs, remote branches and in-flight
-CI. It is the same view for all three actors, so Michael can run it too.
+CI. It is the same view for every actor, so Michael can run it too.
 
 It prints the `gh` account deliberately. `gh` resolves per-machine, and `just`
 recipes do not source your shell rc — so a machine that routes between GitHub
