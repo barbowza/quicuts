@@ -81,7 +81,8 @@ How the mac loop differs from the Windows one:
 brings mac-quicuts online on request; does not develop or push. **pro-win-quicuts** =
 lead: design decisions, task assignment, Windows development (native build), and
 the order PRs land in when they collide; works solo by default. **pro-wsl-quicuts** = secondary: keeps the
-WSL cross-build working, takes assigned work, reviews. **mac-quicuts** = on-demand: the macOS port, deep peer
+WSL cross-build working, takes assigned work, reviews. **zax-quicuts** = second Windows
+machine (zaxoc, 125% scaling): takes assigned work, reviews. **mac-quicuts** = on-demand: the macOS port, deep peer
 review, and an explicit **duty to push back** — paired with a duty to
 **verify before pushing back**, since a reviewer's failure mode is confident
 noise, not silence.
@@ -123,7 +124,7 @@ direct commits — but **only those**. Every invariant above is still perfectly
 legal against a green check; the server closes one hole, not the loop.
 
 **Branches:** `pw/<topic>` (pro-win-quicuts), `win/<topic>` (pro-wsl-quicuts),
-`mac/<topic>`, one writer each, pushed at claim time so `git ls-remote --heads`
+`zax/<topic>` (zax-quicuts), `mac/<topic>`, one writer each, pushed at claim time so `git ls-remote --heads`
 shows who holds what. Run `just status` before starting or merging (every
 checkout); the Windows sessions run `just stage` before asking Michael to test —
 there is no mac equivalent yet.
@@ -133,7 +134,8 @@ incantations: the **`two-agent-flow`** skill.
 
 **Session names** are `<machine>-<env>-<project>`: `mac-quicuts` on the Mac;
 on Prometheus, `pro-win-quicuts` (native Windows clone) and `pro-wsl-quicuts`
-(WSL clone). Before 2026-10-13 they were `mac-claude` and `win-claude`, the
+(WSL clone); on zaxoc (machine `zax`, since 2026-10-18), `zax-quicuts`
+(native Windows clone). Before 2026-10-13 they were `mac-claude` and `win-claude`, the
 names older PRs, issues and comment tags carry; pro-wsl-quicuts was the lead
 until #43 moved the role to pro-win-quicuts the same day.
 
@@ -142,8 +144,9 @@ until #43 moved the role to pro-win-quicuts the same day.
 On each machine the clone sits in a root folder as `quicuts/` next to
 `quicuts-journal/` (`barbowza/quicuts-journal` on GitHub): the root is
 `~/learnings/tools/quicuts/` on the Mac, `/home/dev/projects/quicuts/` in
-WSL on Prometheus and `C:\Users\pcpro\projects\quicuts\` natively on
-Prometheus. Both Prometheus clones use machine `pro` and write `diary/pro/`.
+WSL on Prometheus, `C:\Users\pcpro\projects\quicuts\` natively on
+Prometheus and `C:\Users\Zax\projects\quicuts\` on zaxoc. Both Prometheus
+clones use machine `pro` and write `diary/pro/`; zaxoc uses `zax`.
 `just start` in the journal
 launches the day (sync, today's entry, VS Code, Claude), its steps switched in
 `machines/<machine>.env`.
@@ -155,7 +158,7 @@ launches the day (sync, today's entry, VS Code, Claude), its steps switched in
   `diary/<machine>/YYYY/MM-Mon/YYYY-MM-DD-claude.md` under a heading
   `## HH:MM <session name>` (what shipped, what's running, what's next),
   since several sessions may write the same day's file;
-- `<machine>` is the word in the journal's `.machine` file (`mac` or `pro`),
+- `<machine>` is the word in the journal's `.machine` file (`mac`, `pro` or `zax`),
   never a guess;
 - **pull the journal before appending** (`git pull --rebase --autostash` in
   it, not `just sync`, which would commit Michael's files): another session,

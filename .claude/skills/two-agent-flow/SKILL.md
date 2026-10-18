@@ -1,6 +1,6 @@
 ---
 name: two-agent-flow
-description: Procedure for pro-win-quicuts ↔ pro-wsl-quicuts ↔ mac-quicuts collaboration on Quicuts — claiming work, handing it over, posting a PR review with inline comments, announcing intent, and merging. Use when reviewing the other session's PR, merging your own once approved, handing work across the Windows/macOS seam or between the two Windows clones, or starting work that the other session might collide with.
+description: Procedure for pro-win-quicuts ↔ pro-wsl-quicuts ↔ zax-quicuts ↔ mac-quicuts collaboration on Quicuts — claiming work, handing it over, posting a PR review with inline comments, announcing intent, and merging. Use when reviewing the other session's PR, merging your own once approved, handing work across the Windows/macOS seam or between the two Windows clones, or starting work that the other session might collide with.
 ---
 
 # Two-agent flow
@@ -17,7 +17,7 @@ is also who merges it, once approved.
 ## 0. One-time, per checkout
 
 ```bash
-git config user.name  pro-win-quicuts        # or pro-wsl-quicuts / mac-quicuts
+git config user.name  pro-win-quicuts        # or pro-wsl-quicuts / zax-quicuts / mac-quicuts
 git config user.email pro-win-quicuts@quicuts.invalid
 ```
 
@@ -37,7 +37,7 @@ first.
 Then claim:
 
 ```bash
-git checkout -b pw/<topic>           # pro-win-quicuts; win/ = pro-wsl-quicuts, mac/ = mac-quicuts
+git checkout -b pw/<topic>           # pro-win-quicuts; win/ = pro-wsl-quicuts, zax/ = zax-quicuts, mac/ = mac-quicuts
 git push -u origin pw/<topic>        # push immediately, even empty
 ```
 
@@ -115,7 +115,7 @@ gh api -X POST repos/barbowza/quicuts/pulls/<N>/reviews --input review.json --jq
 ```
 
 `event` must be `COMMENT` — `APPROVE` and `REQUEST_CHANGES` 422 on your own
-PR. Every comment opens with your `**[pro-win-quicuts]**` / `**[pro-wsl-quicuts]**` / `**[mac-quicuts]**` tag.
+PR. Every comment opens with your `**[pro-win-quicuts]**` / `**[pro-wsl-quicuts]**` / `**[zax-quicuts]**` / `**[mac-quicuts]**` tag.
 
 Replying on an existing thread:
 
