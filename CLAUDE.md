@@ -51,14 +51,14 @@ Cargo can reuse a binary built at another path (this clone before a move, or ano
 
 ## Windows target — built natively from PowerShell
 
-pro-win-quicuts's clone, `C:\Users\pcpro\projects\quicuts\quicuts`, builds on the host itself: `cargo build` with the MSVC host toolchain, no cross-compile and no tauri-cli. Decisions and consequences: `docs/adr/0008-native-windows-build.md`.
+pro-quicuts's clone, `C:\Users\pcpro\projects\quicuts\quicuts`, builds on the host itself: `cargo build` with the MSVC host toolchain, no cross-compile and no tauri-cli. Decisions and consequences: `docs/adr/0008-native-windows-build.md`.
 
 Toolchain: rustup (default host `x86_64-pc-windows-msvc`), VS 2022 Build Tools (Desktop C++ + a Windows SDK), Git for Windows (the recipes run in its bash via `windows-shell`), Node + pnpm 10, `just`. Clone with `-c core.autocrlf=false`; `.gitattributes` also forces LF.
 
 The commands are the same as the WSL ones above, with these differences:
 
 - `just test` covers **every crate**, including `quicuts-app`, and builds `agent` + `ui` first, because `quicuts-app`'s build needs the staged sidecar and `ui/dist`.
-- `deploy` (and so `run`, `stage`, `dev-build`) kills the running instance first, since a running exe cannot be overwritten. `WINUSER` is not needed: the deploy folder comes from `%LOCALAPPDATA%`, and it is the **same `QuicutsDev` the WSL build deploys to**, so a deploy from either clone replaces the other's build.
+- `deploy` (and so `run`, `stage`, `dev-build`) kills the running instance first, since a running exe cannot be overwritten. `WINUSER` is not needed: the deploy folder comes from `%LOCALAPPDATA%`, and it is the **same `QuicutsDev` the WSL build deploys to**, so a WSL build on the same machine replaces the native one.
 - `just log` tails `%LOCALAPPDATA%\com.barbowza.quicuts\logs\Quicuts.log`.
 
 Two host hazards: Bitdefender quarantines unsigned debug exes unless `target\` and `QuicutsDev` have exceptions (symptom: `LNK1104`, or an exe that vanishes), and the Claude desktop app redirects `%LOCALAPPDATA%`, so build and deploy from the Claude Code CLI.
@@ -78,10 +78,9 @@ How the mac loop differs from the Windows one:
 ## Who does what, and what needs Michael
 
 **Michael** = product delivery management: scope, priorities, on-device testing;
-brings mac-quicuts online on request; does not develop or push. **pro-win-quicuts** =
+brings mac-quicuts online on request; does not develop or push. **pro-quicuts** =
 lead: design decisions, task assignment, Windows development (native build), and
-the order PRs land in when they collide; works solo by default. **pro-wsl-quicuts** = secondary: keeps the
-WSL cross-build working, takes assigned work, reviews. **zax-quicuts** = second Windows
+the order PRs land in when they collide; works solo by default. **zax-quicuts** = second Windows
 machine (zaxoc, 125% scaling): takes assigned work, reviews. **mac-quicuts** = on-demand: the macOS port, deep peer
 review, and an explicit **duty to push back** — paired with a duty to
 **verify before pushing back**, since a reviewer's failure mode is confident
@@ -123,8 +122,8 @@ the PR body.
 direct commits — but **only those**. Every invariant above is still perfectly
 legal against a green check; the server closes one hole, not the loop.
 
-**Branches:** `pw/<topic>` (pro-win-quicuts), `win/<topic>` (pro-wsl-quicuts),
-`zax/<topic>` (zax-quicuts), `mac/<topic>`, one writer each, pushed at claim time so `git ls-remote --heads`
+**Branches:** `pro/<topic>` (pro-quicuts), `zax/<topic>` (zax-quicuts),
+`mac/<topic>` (mac-quicuts), one writer each, pushed at claim time so `git ls-remote --heads`
 shows who holds what. Run `just status` before starting or merging (every
 checkout); the Windows sessions run `just stage` before asking Michael to test —
 there is no mac equivalent yet.
@@ -132,21 +131,22 @@ there is no mac equivalent yet.
 Model and envelope in full: `docs/collaboration.md`. Review procedure and `gh`
 incantations: the **`two-agent-flow`** skill.
 
-**Session names** are `<machine>-<env>-<project>`: `mac-quicuts` on the Mac;
-on Prometheus, `pro-win-quicuts` (native Windows clone) and `pro-wsl-quicuts`
-(WSL clone); on zaxoc (machine `zax`, since 2026-10-18), `zax-quicuts`
-(native Windows clone). Before 2026-10-13 they were `mac-claude` and `win-claude`, the
-names older PRs, issues and comment tags carry; pro-wsl-quicuts was the lead
-until #43 moved the role to pro-win-quicuts the same day.
+**Session names** are `<machine>-<project>`, one per machine: `pro-quicuts` on
+Prometheus (native Windows clone), `zax-quicuts` on zaxoc (machine `zax`, since
+2026-10-18) and `mac-quicuts` on the Mac. Older PRs, issues and comment tags
+carry earlier names: `mac-claude` and `win-claude` before 2026-10-13, then
+`pro-win-quicuts` (now `pro-quicuts`, branches `pw/`) and `pro-wsl-quicuts`
+(a WSL clone on Prometheus, branches `win/`, retired 2026-11-24).
+pro-wsl-quicuts was the lead until #43 moved the role to pro-win-quicuts on
+2026-10-13.
 
 ## The journal
 
 On each machine the clone sits in a root folder as `quicuts/` next to
 `quicuts-journal/` (`barbowza/quicuts-journal` on GitHub): the root is
-`~/learnings/tools/quicuts/` on the Mac, `/home/dev/projects/quicuts/` in
-WSL on Prometheus, `C:\Users\pcpro\projects\quicuts\` natively on
-Prometheus and `C:\Users\Zax\projects\quicuts\` on zaxoc. Both Prometheus
-clones use machine `pro` and write `diary/pro/`; zaxoc uses `zax`.
+`~/learnings/tools/quicuts/` on the Mac, `C:\Users\pcpro\projects\quicuts\`
+on Prometheus and `C:\Users\Zax\projects\quicuts\` on zaxoc. The machine
+names are `mac`, `pro` and `zax`, and each writes `diary/<machine>/`.
 `just start` in the journal
 launches the day (sync, today's entry, VS Code, Claude), its steps switched in
 `machines/<machine>.env`.
@@ -161,8 +161,8 @@ launches the day (sync, today's entry, VS Code, Claude), its steps switched in
 - `<machine>` is the word in the journal's `.machine` file (`mac`, `pro` or `zax`),
   never a guess;
 - **pull the journal before appending** (`git pull --rebase --autostash` in
-  it, not `just sync`, which would commit Michael's files): another session,
-  or Prometheus's other clone, may have appended to the same file, and two
+  it, not `just sync`, which would commit Michael's files): another session
+  may have appended to the same file, and two
   appends at its end conflict when the second is published;
 - publish it with `just sync-file <that path>` in the journal, which commits
   and pushes that one file, never Michael's half-written entries. If the push

@@ -1,4 +1,4 @@
-# Review process and merge authority (pro-win-quicuts ↔ pro-wsl-quicuts ↔ mac-quicuts)
+# Review process and merge authority (pro-quicuts ↔ zax-quicuts ↔ mac-quicuts)
 
 How the sessions review each other's work, and the bounds on the merge
 button. **Who decides what, and which channel is authoritative, is in
@@ -10,7 +10,9 @@ Written up after the first run (PR #1, the macOS vertical slice, merged
 2026-08-02) and substantially extended after 2026-09-01, when four PRs and
 three merge-discipline failures in one session produced most of what is below.
 The lead was pro-wsl-quicuts until issue #43 moved the role to pro-win-quicuts
-on 2026-10-13; the incidents below name whoever held it at the time.
+on 2026-10-13; the incidents below name whoever held it at the time. Since
+2026-11-24 the sessions are pro-quicuts (was pro-win-quicuts), zax-quicuts and
+mac-quicuts; pro-wsl-quicuts is retired.
 
 ## Constraint: one GitHub account, so review states are unusable
 
@@ -35,7 +37,7 @@ The same account also means **neither session can tell its own comments from
 the other's**, and two agents that can't distinguish self from other will reply
 to themselves indefinitely. So:
 
-> **Every comment opens with `**[pro-win-quicuts]**`, `**[pro-wsl-quicuts]**` or `**[mac-quicuts]**`.**
+> **Every comment opens with `**[pro-quicuts]**`, `**[zax-quicuts]**` or `**[mac-quicuts]**`.**
 > Each session ignores any thread whose last comment carries its own tag.
 
 Cheap, and it makes the PR readable to a human later. (The clean fix is a
@@ -175,14 +177,14 @@ of the two sessions questions is the one most in need of two.
 - **Pin the review to a SHA**, and state it. Do not rebase or force-push while
   a review is in flight — the inline anchors rot. Merge `main` in instead
   (PR #1 did; the anchors survived).
-- **Say what you could not verify.** pro-wsl-quicuts has no Mac: `CGEventTap`,
+- **Say what you could not verify.** The Windows sessions have no Mac: `CGEventTap`,
   AppKit, `plist` and `.app` bundling are static review only. An approving
   review is *not* evidence the code runs. mac-quicuts owes the same caveat
   pointed the other way.
 - **Run what you actually can.** The seam is wider than it looks:
   `quicuts-agent-mac`'s deps are target-gated and `activation.rs` is
-  platform-free, so pro-wsl-quicuts runs the macOS state machine's tests on the
-  Linux toolchain. `quicuts-manifest` is platform-free entirely, so **both**
+  platform-free, so the Windows sessions and CI run the macOS state machine's
+  tests. `quicuts-manifest` is platform-free entirely, so **both**
   manifest sets are parse-tested from either machine. Look for this seam on
   every review — a finding backed by a passing probe is not a suggestion, and
   it costs one round trip less.
