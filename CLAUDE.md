@@ -58,7 +58,7 @@ Toolchain: rustup (default host `x86_64-pc-windows-msvc`), VS 2022 Build Tools (
 The commands are the same as the WSL ones above, with these differences:
 
 - `just test` covers **every crate**, including `quicuts-app`, and builds `agent` + `ui` first, because `quicuts-app`'s build needs the staged sidecar and `ui/dist`.
-- `deploy` (and so `run`, `stage`, `dev-build`) kills the running instance first, since a running exe cannot be overwritten. `WINUSER` is not needed: the deploy folder comes from `%LOCALAPPDATA%`, and it is the **same `QuicutsDev` the WSL build deploys to**, so a deploy from either clone replaces the other's build.
+- `deploy` (and so `run`, `stage`, `dev-build`) kills the running instance first, since a running exe cannot be overwritten. `WINUSER` is not needed: the deploy folder comes from `%LOCALAPPDATA%`, and it is the **same `QuicutsDev` the WSL build deploys to**, so a WSL build on the same machine replaces the native one.
 - `just log` tails `%LOCALAPPDATA%\com.barbowza.quicuts\logs\Quicuts.log`.
 
 Two host hazards: Bitdefender quarantines unsigned debug exes unless `target\` and `QuicutsDev` have exceptions (symptom: `LNK1104`, or an exe that vanishes), and the Claude desktop app redirects `%LOCALAPPDATA%`, so build and deploy from the Claude Code CLI.
@@ -161,8 +161,8 @@ launches the day (sync, today's entry, VS Code, Claude), its steps switched in
 - `<machine>` is the word in the journal's `.machine` file (`mac`, `pro` or `zax`),
   never a guess;
 - **pull the journal before appending** (`git pull --rebase --autostash` in
-  it, not `just sync`, which would commit Michael's files): another session,
-  or Prometheus's other clone, may have appended to the same file, and two
+  it, not `just sync`, which would commit Michael's files): another session
+  may have appended to the same file, and two
   appends at its end conflict when the second is published;
 - publish it with `just sync-file <that path>` in the journal, which commits
   and pushes that one file, never Michael's half-written entries. If the push

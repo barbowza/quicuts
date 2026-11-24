@@ -183,8 +183,8 @@ of the two sessions questions is the one most in need of two.
   pointed the other way.
 - **Run what you actually can.** The seam is wider than it looks:
   `quicuts-agent-mac`'s deps are target-gated and `activation.rs` is
-  platform-free, so a WSL checkout runs the macOS state machine's tests on the
-  Linux toolchain. `quicuts-manifest` is platform-free entirely, so **both**
+  platform-free, so the Windows sessions and CI run the macOS state machine's
+  tests. `quicuts-manifest` is platform-free entirely, so **both**
   manifest sets are parse-tested from either machine. Look for this seam on
   every review — a finding backed by a passing probe is not a suggestion, and
   it costs one round trip less.

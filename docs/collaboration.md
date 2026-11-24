@@ -7,7 +7,7 @@ This document is the **model**: who decides what, which channel is
 authoritative, and where the line to Michael sits. The *review procedure* (the
 `gh` incantations, round shape, templates) lives in the `two-agent-flow` skill.
 The *rules and the incidents that produced them* live in
-`docs/two-agent-review-process.md`. The one-page summary that both sessions
+`docs/two-agent-review-process.md`. The one-page summary that every session
 always have in context is in `CLAUDE.md`.
 
 The sessions are named `<machine>-<project>`, one per machine. The lead is
@@ -30,7 +30,7 @@ the time.
 | **mac-quicuts** | the Mac | On-demand. The macOS port, deep peer review, and a duty to push back — having verified first. |
 
 **Michael does not push.** He stepped out of development on 2026-09-01, and the
-sessions do their own branch management. He remains available to both, but
+sessions do their own branch management. He remains available to all of them, but
 operates primarily through the lead: work flows Michael → pro-quicuts →
 zax-quicuts / mac-quicuts, and findings flow back the same way.
 
@@ -135,8 +135,7 @@ have to remember what needs testing. So:
 1. **Stage first.** `just stage` builds, terminates his running instance,
    deploys, relaunches and reports. On 2026-09-01 he spent an afternoon on an
    08:31 build while four merges landed, including a fix for a bug he could
-   have reproduced. **Windows sessions only** (both Prometheus clones deploy to
-   the same folder, so either one's stage replaces the other's build) — there
+   have reproduced. **Windows sessions only** (pro-quicuts and zax-quicuts) — there
    is no mac equivalent yet, and
    the Mac loop is a different shape (`mac-run` holds the terminal on
    `cargo tauri dev` rather than deploying and detaching), so `mac-stage`

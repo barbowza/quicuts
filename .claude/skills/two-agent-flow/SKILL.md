@@ -86,9 +86,9 @@ git show "<branch>:<path>" | grep -n "<pattern>"   # anchor line numbers
 Run what you can before writing a word of the review:
 
 ```bash
-just test          # both sessions: platform-free crates + the other's manifests
+just test          # every session: platform-free crates + the other's manifests
 just mac-test      # mac only: adds quicuts-agent-mac and quicuts-app
-just ui            # both: the Svelte build
+just ui            # every session: the Svelte build
 ```
 
 Post the review — summary and inline comments must land together, so use the
