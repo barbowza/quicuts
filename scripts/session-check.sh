@@ -9,7 +9,7 @@
 # called by deploy/stage on Windows and mac-build/mac-install on the Mac).
 # Docs-only commits on main do not make the installed build stale.
 # Always exits 0: a failed check must never block a session.
-set -u
+set -u   # macOS /bin/bash is 3.2: expand arrays that may be empty as ${a[@]+"${a[@]}"}
 cd "$(dirname "$0")/.." || exit 0
 export GIT_TERMINAL_PROMPT=0
 export GIT_SSH_COMMAND="${GIT_SSH_COMMAND:-ssh -o ConnectTimeout=8}"
@@ -21,7 +21,7 @@ case "$(uname -s)" in
   Darwin)
     stamp="$HOME/Library/Application Support/QuicutsDev/installed-commit"
     update_cmd="just mac-build && just mac-install && open /Applications/Quicuts.app"
-    running() { pgrep -f 'Quicuts.app/Contents/MacOS/' >/dev/null; } ;;
+    running() { pgrep -f 'Quicuts.app/Contents/MacOS/quicuts$' >/dev/null; } ;;
   MINGW*|MSYS*|CYGWIN*)
     stamp="$(cygpath -u "${LOCALAPPDATA:-}")/QuicutsDev/installed-commit"
     update_cmd="just stage"
@@ -77,13 +77,13 @@ if running; then notes+=("Quicuts is running"); else problems+=("run: Quicuts is
 
 if [ ${#problems[@]} -eq 0 ]; then
   echo "quicuts session check: up to date. On '$branch' at $(short HEAD); origin/main is $(short "$target")."
-  for n in "${notes[@]}"; do echo "  - $n"; done
+  for n in ${notes[@]+"${notes[@]}"}; do echo "  - $n"; done
   exit 0
 fi
 
 echo "quicuts session check: NOT up to date. On '$branch' at $(short HEAD); origin/main is $(short "$target")."
 for p in "${problems[@]}"; do echo "  ! $p"; done
-for n in "${notes[@]}"; do echo "  - $n"; done
+for n in ${notes[@]+"${notes[@]}"}; do echo "  - $n"; done
 cat <<EOF
 
 ACTION FOR CLAUDE (CLAUDE.md § Session start): before other work, tell Michael
