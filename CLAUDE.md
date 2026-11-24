@@ -8,6 +8,33 @@ Quicuts is a cross-platform (Windows-first, macOS fast-follow) clone of PowerToy
 
 Built with **Tauri v2** — Rust backend + Svelte 5/Vite frontend.
 
+## Session start: is this machine up to date?
+
+Every session (pro, zax and mac; on startup, resume and `/clear`) runs
+`scripts/session-check.sh` through the SessionStart hook in
+`.claude/settings.json`; `just check` runs it by hand. It fetches, then
+reports whether the clone is behind `origin/main`, whether the installed
+build lacks app code from `origin/main` (docs-only commits don't count), and
+whether Quicuts is running. The installed commit comes from the stamp that
+`deploy`/`stage` (Windows) and `mac-build` + `mac-install` (Mac) write via
+`just _stamp`: `%LOCALAPPDATA%\QuicutsDev\installed-commit`, or
+`~/Library/Application Support/QuicutsDev/installed-commit`.
+
+If it reports **NOT up to date**: before any other work, tell Michael what
+is behind and **ask him** (AskUserQuestion) whether to pull and update. Never
+pull, build or install without his yes. On a yes:
+
+1. Uncommitted changes? Stop and ask; never pull over them.
+2. Pull. On `main`: `git pull --ff-only`. On a branch whose PR is merged:
+   `git switch main && git pull --ff-only`. On a branch with open work: ask
+   whether to rebase it onto `origin/main` or to stage `main` instead.
+3. Install and launch: `just stage` on Windows; `just mac-build && just
+   mac-install && open /Applications/Quicuts.app` on the Mac (quit the
+   running copy first).
+4. Run `just check` again and report what it says.
+
+If it is up to date, say nothing about it unless asked.
+
 ## The two hard constraints (read before changing architecture)
 
 1. **All system-input access lives in sidecar processes, never the main app binary.** Each platform gets its own agent binary, shipped as a Tauri `externalBin` sidecar. On Windows that's `quicuts-agent-win` (keyboard hook, foreground-app watcher, taskbar reader); the macOS agent follows the same rule. This isolation is deliberate: on Windows it keeps AV/keylogger heuristics from flagging the main Quicuts app, and on both platforms it buys crash isolation plus one shared supervision path in `agent.rs`. Do not move hook/tap/input code into `quicuts-app`.
