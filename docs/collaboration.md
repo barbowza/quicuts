@@ -8,7 +8,7 @@ authoritative, and where the line to Michael sits. The *review procedure* (the
 `gh` incantations, round shape, templates) lives in the `two-agent-flow` skill.
 The *rules and the incidents that produced them* live in
 `docs/two-agent-review-process.md`. The one-page summary that every session
-always have in context is in `CLAUDE.md`.
+always has in context is in `CLAUDE.md`.
 
 The sessions are named `<machine>-<project>`, one per machine. The lead is
 `pro-quicuts`, the native Windows clone on Prometheus (named `pro-win-quicuts`
