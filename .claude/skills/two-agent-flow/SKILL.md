@@ -1,6 +1,6 @@
 ---
 name: two-agent-flow
-description: Procedure for pro-win-quicuts ↔ pro-wsl-quicuts ↔ zax-quicuts ↔ mac-quicuts collaboration on Quicuts — claiming work, handing it over, posting a PR review with inline comments, announcing intent, and merging. Use when reviewing the other session's PR, merging your own once approved, handing work across the Windows/macOS seam or between the two Windows clones, or starting work that the other session might collide with.
+description: Procedure for pro-quicuts ↔ zax-quicuts ↔ mac-quicuts collaboration on Quicuts — claiming work, handing it over, posting a PR review with inline comments, announcing intent, and merging. Use when reviewing the other session's PR, merging your own once approved, handing work across the Windows/macOS seam or between the two Windows machines, or starting work that the other session might collide with.
 ---
 
 # Two-agent flow
@@ -10,15 +10,15 @@ autonomy envelope) is `docs/collaboration.md`; the **rules and why they exist**
 are `docs/two-agent-review-process.md`. The invariants are in `CLAUDE.md` and
 are already in context — this skill assumes them.
 
-Every session uses this file. Sections marked **[lead]** are pro-win-quicuts's;
+Every session uses this file. Sections marked **[lead]** are pro-quicuts's;
 **[owner]** is whichever session owns the branch under review — and the owner
 is also who merges it, once approved.
 
 ## 0. One-time, per checkout
 
 ```bash
-git config user.name  pro-win-quicuts        # or pro-wsl-quicuts / zax-quicuts / mac-quicuts
-git config user.email pro-win-quicuts@quicuts.invalid
+git config user.name  pro-quicuts        # or zax-quicuts / mac-quicuts
+git config user.email pro-quicuts@quicuts.invalid
 ```
 
 Not committed — `.git/config` is local, so each checkout sets its own.
@@ -37,8 +37,8 @@ first.
 Then claim:
 
 ```bash
-git checkout -b pw/<topic>           # pro-win-quicuts; win/ = pro-wsl-quicuts, zax/ = zax-quicuts, mac/ = mac-quicuts
-git push -u origin pw/<topic>        # push immediately, even empty
+git checkout -b pro/<topic>          # pro-quicuts; zax/ = zax-quicuts, mac/ = mac-quicuts
+git push -u origin pro/<topic>       # push immediately, even empty
 ```
 
 Pushing at claim time is what makes `git ls-remote --heads` a live board. One
@@ -97,7 +97,7 @@ REST API rather than `gh pr review`:
 ```bash
 python3 - <<'PY'
 import json
-body = """**[pro-wsl-quicuts] REQUEST CHANGES** (or **Approving**) — verdict first.
+body = """**[zax-quicuts] REQUEST CHANGES** (or **Approving**) — verdict first.
 
 ## What I verified
 <commands run and what they showed>
@@ -106,7 +106,7 @@ body = """**[pro-wsl-quicuts] REQUEST CHANGES** (or **Approving**) — verdict f
 <the other platform, runtime behaviour, anything needing hardware>
 """
 comments = [
-  {"path":"crates/…/foo.rs","line":42,"side":"RIGHT","body":"**[pro-wsl-quicuts]** …"},
+  {"path":"crates/…/foo.rs","line":42,"side":"RIGHT","body":"**[zax-quicuts]** …"},
 ]
 json.dump({"commit_id":"<headRefOid>","event":"COMMENT","body":body,"comments":comments},
           open("review.json","w"))
@@ -115,7 +115,7 @@ gh api -X POST repos/barbowza/quicuts/pulls/<N>/reviews --input review.json --jq
 ```
 
 `event` must be `COMMENT` — `APPROVE` and `REQUEST_CHANGES` 422 on your own
-PR. Every comment opens with your `**[pro-win-quicuts]**` / `**[pro-wsl-quicuts]**` / `**[zax-quicuts]**` / `**[mac-quicuts]**` tag.
+PR. Every comment opens with your `**[pro-quicuts]**` / `**[zax-quicuts]**` / `**[mac-quicuts]**` tag.
 
 Replying on an existing thread:
 
