@@ -71,6 +71,7 @@ deploy: build
     cp crates/quicuts-app/binaries/quicuts-agent-{{triple}}.exe "{{deploy_dir}}/quicuts-agent.exe"
     cp manifests/*.yml "{{deploy_dir}}/manifests/"
     cp manifests/*.png "{{deploy_dir}}/manifests/" 2>/dev/null || true
+    @just _stamp "{{deploy_dir}}/installed-commit"
 
 # Launch on the Windows host.
 [unix]
@@ -140,6 +141,7 @@ deploy: build kill
     cp crates/quicuts-app/binaries/quicuts-agent-{{triple}}.exe "{{deploy_dir}}/quicuts-agent.exe"
     cp manifests/*.yml "{{deploy_dir}}/manifests/"
     cp manifests/*.png "{{deploy_dir}}/manifests/" 2>/dev/null || true
+    @just _stamp "{{deploy_dir}}/installed-commit"
 
 # Launch the deployed build.
 [windows]
@@ -238,7 +240,9 @@ mac-build: mac-agent-release mac-ui
         export APPLE_SIGNING_IDENTITY="Quicuts Local Signing"
     fi
     echo "signing identity: ${APPLE_SIGNING_IDENTITY:-(none: ad-hoc)}"
-    cd crates/quicuts-app && cargo tauri build --config conf/macos.json
+    (cd crates/quicuts-app && cargo tauri build --config conf/macos.json)
+    # Beside the bundle, not in it (that would break the seal); mac-install copies it.
+    just _stamp target/release/bundle/macos/quicuts-build-commit
 
 # Its own keychain; the login keychain is untouched. Read the script header first.
 # One-time: create the self-signed local signing identity.
@@ -252,6 +256,9 @@ mac-signing-identity:
 mac-install:
     rm -rf /Applications/Quicuts.app
     ditto target/release/bundle/macos/Quicuts.app /Applications/Quicuts.app
+    @mkdir -p "$HOME/Library/Application Support/QuicutsDev"
+    @cp target/release/bundle/macos/quicuts-build-commit "$HOME/Library/Application Support/QuicutsDev/installed-commit" 2>/dev/null \
+        || rm -f "$HOME/Library/Application Support/QuicutsDev/installed-commit"
     @echo "installed /Applications/Quicuts.app"
 
 # Dev run from the terminal (TCC attributes to the terminal app).
@@ -284,6 +291,18 @@ mac-input *ARGS:
 # Dump a RUNNING app's menu shortcuts as TSV: `just mac-menus iTerm`.
 mac-menus *ARGS:
     swift scripts/mac-menu-shortcuts.swift {{ARGS}}
+
+# --- Session start (CLAUDE.md § Session start) --------------------------------
+
+# Run by the SessionStart hook in .claude/settings.json. Read-only (it fetches).
+# Is the clone behind origin/main, is the installed build stale, is it running?
+check:
+    @bash scripts/session-check.sh
+
+# "<sha>" or "<sha> dirty" (built with uncommitted changes).
+# Record which commit an install holds; scripts/session-check.sh reads it.
+_stamp DEST:
+    @printf '%s%s\n' "$(git rev-parse HEAD)" "$([ -z "$(git status --porcelain)" ] || echo ' dirty')" > "{{DEST}}"
 
 # --- Collaboration (docs/collaboration.md, two-agent-flow skill) -------------
 
@@ -321,6 +340,7 @@ stage: build
     @cp crates/quicuts-app/binaries/quicuts-agent-{{triple}}.exe "{{deploy_dir}}/quicuts-agent.exe"
     @cp manifests/*.yml "{{deploy_dir}}/manifests/"
     @-cp manifests/*.png "{{deploy_dir}}/manifests/" 2>/dev/null || true
+    @just _stamp "{{deploy_dir}}/installed-commit"
     @cmd.exe /c start "" "C:\\Users\\{{winuser}}\\AppData\\Local\\QuicutsDev\\quicuts.exe"
     @echo "staged and relaunched:"
     @printf '  commit:  %s\n' "$(git log --format='%h %s' -1 | cut -c1-64)"
